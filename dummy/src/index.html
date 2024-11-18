@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <title>Bellver Defense</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-physics-system@1.6.0/dist/aframe-physics-system.min.js"></script>
+</head>
+<body>
+<a-scene physics>
+  <script src="/js/main.js"></script>
+  <a-assets>
+    <a-asset-item id="cart" src="/models/cart.glb"></a-asset-item>
+    <img id="cel" src="./textures/cel.jpg">
+    <img id="terra" src="/textures/terra.jpg">
+    <img id="terra-nrm" src="/textures/terra-nrm.jpg">
+    <img id="terra-bosc" src="/textures/terra-bosc.jpg">
+    <img id="terra-bosc-nrm" src="/textures/terra-bosc-nrm.jpg">
+  </a-assets>
+  <a-sky src="#cel" rotation="0 94 0"></a-sky>
+  <a-camera>
+    <a-cursor></a-cursor>
+  </a-camera>
+  <!-- Terra -->
+  <a-plane material="color: #FFF; src: #terra; repeat: 1 6; normal-map: #terra-nrm; normal-texture-repeat: 1 6; normal-scale: 1 -1; roughness: 0.9"
+           scale="4 20 1" rotation="-90 0 0"  static-body></a-plane>
+  <a-sphere color="#FFAA00" radius="0.5" position="-1 4 -4" dynamic-body></a-sphere>
+  <!--  <a-entity geometry="box" position="-1 1 -2" color="#D9614C"></a-entity>-->
+  <!--  <a-entity id="vagoneta" vagoneta="message: asdf" position="-1 1 -2"></a-entity>-->s
+  <a-entity gltf-model="#cart" scale="0.5 0.5 0.5" position="-1 2 -2" grabbable
+            dynamic-body="linearDamping: 0.8"></a-entity>
+</a-scene>
+</body>
+
+</html>
