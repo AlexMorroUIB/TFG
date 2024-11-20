@@ -1,8 +1,8 @@
 // terra
 AFRAME.registerComponent('terra', {
   schema: {
-    scale: {type: 'number', default: '10 4 1'},
-    rotation: {type: 'number', default: '-90 0 0'},
+    // scale: {type: 'vector', default: '10 4 1'},
+    // rotation: {type: 'vector', default: '-90 0 0'},
     material: {type: 'asset', default: '/textures/ferro.png'},
     culor: {type: 'color', default: 'red'},
     message: {type: 'string'}
