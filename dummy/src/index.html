@@ -24,6 +24,16 @@
     <a-camera active="true">
       <a-cursor></a-cursor>
     </a-camera>
+    <!-- Ma esquerra -->
+    <a-entity static-body="shape: sphere; sphereRadius: 0.05" physics-collider collision-filter="group: hands; collidesWith:interactable; collisionForces: false" 
+    super-hands="colliderEvent: collisions; colliderEventProperty: els; colliderEndEvent: collisions; colliderEndEventProperty: clearedEls; 
+    grabStartButtons: gripdown, triggerdown, gripclose; grabEndButtons: gripup, triggerup, gripclose" hand-controls="hand: left" hand-tracking-controls="hand: left" 
+    shadow="cast: false" velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls hp-mixed-reality></a-entity>
+    <!-- Ma dreta -->
+  <a-entity static-body="shape: sphere; sphereRadius: 0.05" physics-collider collision-filter="group: hands; collidesWith:interactable; collisionForces: false" 
+  super-hands="colliderEvent: collisions; colliderEventProperty: els; colliderEndEvent: collisions; colliderEndEventProperty: clearedEls; 
+  grabStartButtons: gripdown, triggerdown, gripclose; grabEndButtons: gripup, triggerup, gripclose" hand-controls="hand: right" hand-tracking-controls="hand: right" 
+  shadow="cast: false" velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls hp-mixed-reality></a-entity>
   </a-entity>
   <!-- Terra -->
   <a-plane
