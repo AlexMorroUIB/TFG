@@ -1,0 +1,17 @@
+{
+  "name": "dummy",
+  "version": "0.0.1",
+  "description": "",
+  "private": true,
+  "license": "",
+  "author": "Alex Morro",
+  "dependencies": {
+    "express": "~4.21.1",
+    "aframe": "~1.6.0",
+    "super-hands": "3.0.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  }
+}
