@@ -8,6 +8,7 @@
   "dependencies": {
     "express": "~4.21.1",
     "aframe": "~1.6.0",
+    "ammo.js": "~0.0.10",
     "super-hands": "3.0.4"
   },
   "scripts": {

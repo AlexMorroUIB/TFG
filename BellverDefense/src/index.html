@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.js"></script>
 </head>
 <body>
-<a-scene physics>
+<a-scene physics=" driver: ammo; debug: true; debugDrawMode: 1;">
   <script src="/js/main.js"></script>
   <a-assets>
     <a-asset-item id="cart" src="/models/cart.glb"></a-asset-item>
@@ -25,29 +25,35 @@
       <a-cursor></a-cursor>
     </a-camera>
     <!-- Ma esquerra -->
-    <a-entity static-body="shape: sphere; sphereRadius: 0.05" physics-collider collision-filter="group: hands; collidesWith:interactable; collisionForces: false" 
-    super-hands="colliderEvent: collisions; colliderEventProperty: els; colliderEndEvent: collisions; colliderEndEventProperty: clearedEls; 
-    grabStartButtons: gripdown, triggerdown, gripclose; grabEndButtons: gripup, triggerup, gripclose" hand-controls="hand: left" hand-tracking-controls="hand: left" 
+    <a-entity static-body="shape: sphere; sphereRadius: 0.05" physics-collider collision-filter="group: hands; collidesWith:interactable; collisionForces: false"
+    super-hands="colliderEvent: collisions; colliderEventProperty: els; colliderEndEvent: collisions; colliderEndEventProperty: clearedEls;
+    grabStartButtons: gripdown, triggerdown, gripclose; grabEndButtons: gripup, triggerup, gripclose" hand-controls="hand: left" hand-tracking-controls="hand: left"
     shadow="cast: false" velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls hp-mixed-reality></a-entity>
     <!-- Ma dreta -->
-  <a-entity static-body="shape: sphere; sphereRadius: 0.05" physics-collider collision-filter="group: hands; collidesWith:interactable; collisionForces: false" 
-  super-hands="colliderEvent: collisions; colliderEventProperty: els; colliderEndEvent: collisions; colliderEndEventProperty: clearedEls; 
-  grabStartButtons: gripdown, triggerdown, gripclose; grabEndButtons: gripup, triggerup, gripclose" hand-controls="hand: right" hand-tracking-controls="hand: right" 
+  <a-entity static-body="shape: sphere; sphereRadius: 0.05" physics-collider collision-filter="group: hands; collidesWith:interactable; collisionForces: false"
+  super-hands="colliderEvent: collisions; colliderEventProperty: els; colliderEndEvent: collisions; colliderEndEventProperty: clearedEls;
+  grabStartButtons: gripdown, triggerdown, gripclose; grabEndButtons: gripup, triggerup, gripclose" hand-controls="hand: right" hand-tracking-controls="hand: right"
   shadow="cast: false" velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls hp-mixed-reality></a-entity>
   </a-entity>
   <!-- Terra -->
   <a-plane
     material="color: #FFF; src: #terra; repeat: 1 6; normal-map: #terra-nrm; normal-texture-repeat: 1 6; normal-scale: 1 -1; roughness: 0.9"
-    scale="4 20 1" rotation="-90 0 0" static-body></a-plane>
-  <a-sphere color="#FFAA00" radius="0.5" position="-1 4 -4" dynamic-body="linearDamping: 0.01">
-    <a-animation ></a-animation>
+    scale="4 20 1" rotation="-90 0 0" ammo-body="type: static; collisionFilterGroup: 1; collisionFilterMask: 1;" ammo-shape="type: box"></a-plane>
+  <a-sphere color="#FFAA00" radius="0.5" position="-1 4 -4" ammo-body="type: dynamic; collisionFilterGroup: 1; collisionFilterMask: 1;" ammo-shape="type: sphere">
   </a-sphere>
   <!--  <a-entity geometry="box" position="-1 1 -2" color="#D9614C"></a-entity>-->
   <!--  <a-entity id="vagoneta" vagoneta="message: asdf" position="-1 1 -2"></a-entity>-->
-  <a-entity gltf-model="#cart" scale="0.5 0.5 0.5" position="-1 0.9 -2" grabbable
-            dynamic-body="linearDamping: 0.8">
-    <a-animation attribute="position" to="2 10 0" dur="1000" easing="linear"></a-animation>
+  <a-entity gltf-model="#cart" scale="0.5 0.5 0.5" position="0 0.9 -2" rotation="0 270 0"
+            animation__moure="property: position; to: 0 0.9 50; dur: 20000; easing: linear; loop: false">
   </a-entity>
+  <a-entity
+  geometry="primitive: box"
+  material="color: red"
+  animation__mouseenter="property: components.material.material.color; type: color; to: blue; startEvents: mouseenter; dur: 500";
+  animation__mouseleave="property: components.material.material.color; type: color; to: red; startEvents: mouseleave; dur: 500";>
+</a-entity>
+<!-- animacio quan el ratolí passa per damunt
+    -->
 </a-scene>
 </body>
 
