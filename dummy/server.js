@@ -18,3 +18,4 @@ app.get('/', function (req, res) {
 })
 
 https.createServer(options, app).listen(PORT);
+console.log("https://localhost")
