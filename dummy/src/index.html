@@ -7,11 +7,13 @@
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.4.0/dist/aframe-extras.min.js"></script>
   <script src="./js/super-hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.145/examples/js/utils/BufferGeometryUtils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.2/examples/js/controls/TransformControls.js"></script>
+
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.js"></script>
-  <script src="js/main.js"></script>
+  <script type="module" src="js/main.js"></script>
 </head>
 <body>
-<a-scene physics="" obb-collider="showColliders: false">
+<a-scene physics="" obb-collider="showColliders: true">
   <a-assets>
     <!--    Mans -->
     <a-mixin id="mans" super-hands
@@ -22,7 +24,7 @@
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
              event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"></a-mixin>-->
     <a-asset-item id="cart" src="/models/cart.glb"></a-asset-item>
-    <a-asset-item id="arc" src="/models/arc.glb"></a-asset-item>
+    <a-asset-item id="arcAsset" src="/models/arc.glb"></a-asset-item>
     <img id="cel" src="./textures/cel.jpg">
     <img id="terra" src="/textures/terra.jpg">
     <img id="terra-nrm" src="/textures/terra-nrm.jpg">
@@ -49,9 +51,10 @@
               hand-controls="hand: right" shadow="cast: false"
               velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls
               hp-mixed-reality></a-entity>-->
-    <!--    Arc -->
-    <a-entity id="arc" class="a-grab-cursor" position="-0.5 1 -0.5" arc="event: event1; message: Hello, Metaverse!"
-              grabbable></a-entity>
+    <!--    Arc  arc="event: event1; message: Hello, Metaverse!"-->
+  </a-entity>
+  <a-entity id="arc" arc="asset: #arcAsset; agafat: copyTransform" class="" position="-0.5 1 -5.5" grabbable>
+    <a-entity corda></a-entity>
   </a-entity>
 
   <!-- Terra -->

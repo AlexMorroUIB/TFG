@@ -1,7 +1,97 @@
+const loader = new THREE.GLTFLoader();
 // Escena
 let escena = document.querySelector('a-scene');
+let cordaBone
 // Arc
 AFRAME.registerComponent('arc', {
+  schema: {
+    asset: {type: 'asset'},
+    width: {type: 'number', default: 0.4},
+    height: {type: 'number', default: 0.6},
+    depth: {type: 'number', default: 0.2},
+    agafat: {type: 'boolean', default: false}
+  },
+  init: function () {
+    let data = this.data;
+    let el = this.el;
+    loader.load(data.asset, function (gltf) {
+      el.setObject3D('mesh', gltf.scene);
+      cordaBone = gltf.scene.getObjectByName('String')
+    }), undefined, function (error) {
+      console.error(error);
+    };
+  },
+  update: function (oldData) {
+    let data = this.data;  // Component property values.
+    let element = this.el;  // Reference to the component's entity.
+
+    // Funcionalitat d'agafar l'arc i substituir la má per l'arc
+    this.el.addEventListener('grab-start', () => {
+      data.agafat = true;
+      el.sceneEl.removeEventListener('tick', this.updatePosition.bind(this, hand, element));
+    });
+
+    /*corda.el.addEventListener('grab-start', () => {
+      this.updatePosition.bind(this, hand, element);
+    });*/
+
+    this.el.addEventListener('grab-end', (event) => {
+      const hand = event.detail.hand; // Obtén la mano que soltó el objeto
+      // Aquí puedes agregar lógica para soltar el objeto si es necesario
+    });
+  },
+  updatePosition: function (hand, object) {
+    // Copia la posición y rotación de la mano al objeto
+    const handPosition = hand.getAttribute('position');
+    const handRotation = hand.getAttribute('rotation');
+
+    object.setAttribute('position', handPosition);
+    object.setAttribute('rotation', handRotation);
+  }
+});
+AFRAME.registerComponent('corda', {
+  schema: {
+    width: {type: 'number', default: 0.4},
+    height: {type: 'number', default: 0.2},
+    depth: {type: 'number', default: 0.2},
+    agafat: {type: 'boolean', default: false}
+  },
+  init: function () {
+    if (AFRAME.components.arc.initialized) {
+      let data = this.data;
+      let el = this.el;
+      cordaBone.add(new THREE.Mesh(new THREE.BoxGeometry(data.width, data.height, data.depth),
+        new THREE.MeshBasicMaterial()));
+    }
+  },
+  update: function (oldData) {
+    let data = this.data;  // Component property values.
+    let element = this.el;  // Reference to the component's entity.
+    if (data.agafat) {
+      cordaBone.add(new THREE.Mesh(new THREE.BoxGeometry(data.width, data.height, data.depth),
+        new THREE.MeshBasicMaterial()));
+    }
+
+    // Funcionalitat d'agafar l'arc i substituir la má per l'arc
+    this.el.addEventListener('grab-start', () => {
+      data.agafat = true;
+      el.sceneEl.removeEventListener('tick', this.updatePosition.bind(this, hand, element));
+    });
+
+    this.el.addEventListener('grab-end', (event) => {
+      const hand = event.detail.hand; // Obtén la mano que soltó el objeto
+      // Aquí puedes agregar lógica para soltar el objeto si es necesario
+    });
+  },
+  updatePosition: function (hand, object) {
+    // Copia la posició de la mà a la corda
+    const handPosition = hand.getAttribute('position');
+    object.setAttribute('position', handPosition);
+  }
+});
+
+
+AFRAME.registerComponent('threeArc', {
   schema: {
     width: {type: 'number', default: 0.25},
     height: {type: 'number', default: 1},
@@ -19,22 +109,22 @@ AFRAME.registerComponent('arc', {
     // Generar la corva Catmull-Rom per dibuixar l'arc
     let curve = new THREE.CatmullRomCurve3([
       // per estirar modificar x ([X,Y,Z])
-        new THREE.Vector3(0.75, 1, 0),
-        new THREE.Vector3(0.15, 0.25, 0),
-        new THREE.Vector3(0.15, -0.25, 0),
-        new THREE.Vector3(0.75, -1, 0)
-      ]);
+      new THREE.Vector3(0.75, 1, 0),
+      new THREE.Vector3(0.15, 0.25, 0),
+      new THREE.Vector3(0.15, -0.25, 0),
+      new THREE.Vector3(0.75, -1, 0)
+    ]);
     let points = curve.getPoints(50);
-    let arcGeometry =  new THREE.BufferGeometry().setFromPoints(points);
+    let arcGeometry = new THREE.BufferGeometry().setFromPoints(points);
     arcGeometry.computeBoundingBox();
     arcGeometry.computeVertexNormals();
     // Generar la corva de la corda de l'arc
-    let corda = new THREE.CatmullRomCurve3( [
-      new THREE.Vector3( 0.72, 0.96, 0 ),
-      new THREE.Vector3( 1.5, 0.05, 0 ),
-      new THREE.Vector3( 1.5, -0.05, 0 ),
-      new THREE.Vector3( 0.72, -0.96, 0 )
-    ] );
+    let corda = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.72, 0.96, 0),
+      new THREE.Vector3(1.5, 0.05, 0),
+      new THREE.Vector3(1.5, -0.05, 0),
+      new THREE.Vector3(0.72, -0.96, 0)
+    ]);
     let pointsCorda = corda.getPoints(50);
     let cordaGeometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
     cordaGeometry.computeBoundingBox();
@@ -104,11 +194,11 @@ AFRAME.registerComponent('arc', {
   }
 });
 window.onload = () => {
-  let arcEl = document.querySelector('#arcID');
+  /*let arcEl = document.querySelector('#arc');
   console.log(arcEl)
   arcEl.setAttribute('arc', {event: 'event2', message: 'event2'});
   console.log(arcEl)
-  arcEl.emit('event2');
+  arcEl.emit('event2');*/
 }
 
 // Component enemics

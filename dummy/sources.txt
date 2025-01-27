@@ -7,3 +7,7 @@ CC0
 cel: https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
 terra: https://polyhaven.com/a/gravel_road
 terra-bosc: https://polyhaven.com/a/forrest_ground_01
+
+
+que un objecte miri cap a la camara tot es temps
+https://stackoverflow.com/questions/59126800/a-frame-entity-positioning-and-rotation
