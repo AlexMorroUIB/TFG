@@ -1,5 +1,8 @@
 */.idea
 
+dummy/test/
+dummy/src/js/three/
+
 # Logs
 logs
 *.log
