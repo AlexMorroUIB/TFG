@@ -14,11 +14,16 @@ let keysActions = {
   "KeyR": 'reset'
 };
 
+// Variable que evita que es canvii de marxa multiples vegades amb la mateixa polsació de tecla
+let canviantMarxa = false;
+
 window.addEventListener('keydown', keydown);
 window.addEventListener('keyup', keyup);
 
 function keyup(e) {
   if (keysActions[e.code]) {
+    // Permetre tornar a canviar de marxa
+    if (e.code === "KeyQ" || e.code === "KeyE") canviantMarxa = false;
     actions[keysActions[e.code]] = false;
     e.preventDefault();
     e.stopPropagation();
@@ -28,6 +33,17 @@ function keyup(e) {
 
 function keydown(e) {
   if (keysActions[e.code]) {
+    // Evitar múltiples events de pujada o baixada de marxa.
+    // Si es pressiona una tecla de canvi de marxa es marca com que s'està canviant de marxa
+    // i es segueix el camí normal. Si és la repetició (canviantMarxa = true)
+    // s'evita marcar l'acció com a true
+    if (e.code === "KeyQ" || e.code === "KeyE") {
+      if (canviantMarxa) {
+        actions[keysActions[e.code]] = false;
+        return;
+      }
+      canviantMarxa = true;
+    }
     actions[keysActions[e.code]] = true;
     e.preventDefault();
     e.stopPropagation();

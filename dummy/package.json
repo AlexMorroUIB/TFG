@@ -5,7 +5,7 @@
   "private": true,
   "license": "",
   "author": "Alex Morro",
-  "main": "server.js",
+  "main": "main.js",
   "type": "module",
   "dependencies": {
     "aframe": "~1.6.0",
@@ -24,7 +24,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
+    "start": "vite",
     "start:dev": "node ./dev-build/main.js",
     "start:prod": "node ./prod-build/main.js",
     "build:dev": "webpack --config webpack.dev.js --mode development",

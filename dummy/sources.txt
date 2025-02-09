@@ -24,3 +24,6 @@ rpm from kmph
 https://x-engineer.org/calculate-wheel-vehicle-speed-engine-speed/
 https://motoristo.com/tools/vehicle-speed-calculator?wheelSizeIn=17&tyreWidthMm=205&tyreHeightRatio=50&rpmMax=7200&finalDrive=4.266&gears=3.3%2C2.25%2C1.75%2C1%2C0.85%2C0.8
 https://legacypic.uk/transmission/graph.php
+
+wheel radius
+https://x-engineer.org/calculate-wheel-radius/

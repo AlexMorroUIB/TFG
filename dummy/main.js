@@ -12,13 +12,23 @@ let rpm = 850;
 let tercera = true
 
 Ammo().then(function (Ammo) {
+  // Constants
+
+
+  const container = document.getElementById('container');
+  const speedometer = document.getElementById('speedometer');
+  const rpmContainer = document.getElementById('rpm-container');
+  const indicadorMarxa = document.getElementById('indicadorMarxa');
+  const svgContainer = document.getElementById('svgContainer');
+  const svgRpm = document.getElementById('svgRpm');
+
   // - Global variables -
   let DISABLE_DEACTIVATION = 4;
   let TRANSFORM_AUX = new Ammo.btTransform();
   let ZERO_QUATERNION = new three.Quaternion(0, 0, 0, 1);
 
   // Graphics variables
-  let container, stats, speedometer;
+  let stats;
   let camera, scene, renderer, cameraHolder//, controls;
   let clock = new three.Clock();
   let materialDynamic, materialStatic, materialInteractive;
@@ -45,15 +55,12 @@ Ammo().then(function (Ammo) {
   // - Functions -
 
   function initGraphics() {
-
-    container = document.getElementById('container');
-    speedometer = document.getElementById('speedometer');
     document.getElementById("botoCamera").onclick = canvia13persona;
 
     // Crea la escena 3D
     scene = new three.Scene();
 
-    camera = new three.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50);
+    camera = new three.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.1, 50);
     //controls = new OrbitControls( camera );
 
     renderer = new three.WebGLRenderer({antialias: true});
@@ -63,13 +70,13 @@ Ammo().then(function (Ammo) {
 
     // Afegir compatibilitat amb VR
     cameraHolder = new three.Group(); // Entitat que conté la camera per poder mourer-la
-    renderer.setAnimationLoop(tick);
     document.body.appendChild(VRButton.createButton(renderer));
     renderer.xr.enabled = true;
-    renderer.xr.setReferenceSpaceType( 'local' );
+    renderer.xr.setReferenceSpaceType('local');
 
     // Quan comença la sessió VR afegeix la càmera al cotxe
     renderer.xr.addEventListener('sessionstart', () => {
+      renderer.setAnimationLoop(tick);
       // Afegeix i mou l'entitat que contindrà la càmera al cotxe
       chassisMesh.add(cameraHolder);
       cameraHolder.position.x = 0.32;
@@ -101,14 +108,14 @@ Ammo().then(function (Ammo) {
 
     stats = new Stats();
     stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = '0px';
+    stats.domElement.style.top = '0%';
     container.appendChild(stats.domElement);
 
     window.addEventListener('resize', onWindowResize, false);
   }
 
   /**
-   * Inicialització de la reproducció d'audio
+   * Inicialització de la reproducció d'àudio
    */
   function initAudio() {
     // Crea l'interície de so per la càmera
@@ -121,7 +128,7 @@ Ammo().then(function (Ammo) {
     // Càrrega de sons ------
     const audioLoader = new three.AudioLoader();
     // Engegar motor, quan acaba d'engegar-se s'inicia automàticament el so de motorRalenti
-    audioLoader.load('src/assets/audio/start-engine.mp3', function (buffer) {
+    audioLoader.load('src/assets/audio/start-engine.ogg', function (buffer) {
       motorEngegar.setBuffer(buffer);
       motorEngegar.setLoop(false);
       motorEngegar.setVolume(0.1);
@@ -222,6 +229,7 @@ Ammo().then(function (Ammo) {
     let cylinderGeometry = new three.CylinderGeometry(radius, radius, width, 23, 1);
     cylinderGeometry.rotateZ(Math.PI / 2);
     mesh = new three.Mesh(cylinderGeometry, materialInteractive);
+    mesh.layers.set(3);
     loader.load('./src/assets/models/rx-7-roda.glb', (gltf) => {
       gltf.scene.position.copy(mesh.position)
       // Posiciona correctament la roda al chassi
@@ -244,7 +252,7 @@ Ammo().then(function (Ammo) {
   function createChassisMesh(w, h, d) {
     let shape = new three.BoxGeometry(w, h, d, 1, 1, 1);
     let mesh = new three.Mesh(shape, materialInteractive);
-    mesh.material.colorWrite = false;
+    mesh.layers.set(3); // layer 0 els 2 ulls - layer 1 ull esquerra - layer 2 ull dret
     loader.load('./src/assets/models/bmw-sense-rodes.glb', (gltf) => {
       //gltf.scene.add(camera)
       gltf.scene.position.copy(mesh.position)
@@ -255,7 +263,7 @@ Ammo().then(function (Ammo) {
     // moure la càmera a la posicio de conducció
     camera.position.y += 1.2;
     camera.position.x -= 4.5//0.3;
-    camera.position.z += 0.3;
+    camera.position.z -= 1;
     camera.rotation.y = Math.PI + 1.2; // la camera mira a l'eix -z per defecte, es rota 180º perque miri cap envant
     scene.add(mesh);
     return mesh;
@@ -270,19 +278,19 @@ Ammo().then(function (Ammo) {
     let chassisLength = 4.1;
     let massVehicle = 1200;
     // Ratios [R, 1, 2, 3, 4, 5, 6]
-    let ratiosMarxes = [3.2, 3.6, 2.2, 1.5, 1.2, 1, 0.76];
+    let ratiosMarxes = [3.44, 3.63, 2.19, 1.54, 1.21, 1.0, 0.77];
     let diferencial = 4.1;
 
     let wheelAxisPositionBack = -(chassisLength / 3);
     let wheelHalfTrackBack = chassisWidth / 1.8;
-    let wheelRadiusBack = .4;
-    let wheelWidthBack = .2;
+    let wheelRadiusBack = .339;
+    let wheelWidthBack = .225;
     let wheelAxisHeightBack = .3;
 
     let wheelAxisFrontPosition = chassisLength / 2.8;
     let wheelHalfTrackFront = chassisWidth / 1.8;
-    let wheelRadiusFront = .4;
-    let wheelWidthFront = .2;
+    let wheelRadiusFront = .339;
+    let wheelWidthFront = .225;
     let wheelAxisHeightFront = .3;
 
     let friction = 1000;
@@ -373,40 +381,37 @@ Ammo().then(function (Ammo) {
       if (potenciometre === 0.0) potenciometre = 1.0
       if (!gamepad && eix > -0.1 && eix < 0.1) eix = 1.0
 
-      /*if ((actions.baixarMarxa || boto === 2) && (marxa > 1 || (marxa === 1 && speed < 1))) marxa--;
-      if ((actions.pujarMarxa || boto === 2) && (marxa < 6 || (marxa === 0 && speed > -1))) marxa++;*/
+      if ((actions.baixarMarxa || boto === 2) && (marxa > 1 || (marxa === 1 && speed < 1))) {
+        marxa--;
+        actions.baixarMarxa = false;
+      }
+      if ((actions.pujarMarxa || boto === 2) && (marxa < 6 || (marxa === 0 && speed > -1))) {
+        marxa++;
+        actions.pujarMarxa = false;
+      }
       if (actions.accelerar || boto === 7) {
-        if (embragatge) {
-          if (speed > -0.12) {
-            engineForce = maxEngineForce * ratiosMarxes[marxa] * diferencial * potenciometre;
-            vehicle.applyEngineForce(engineForce, BACK_LEFT);
-            vehicle.applyEngineForce(engineForce, BACK_RIGHT);
-            rpm += 10 * potenciometre;
-            canviarMarxa(speed);
-          } else if (marxa === 0) {
+        if (rpm <= 7200) {
+          if (marxa === 0) {
             engineForce = -(maxEngineForce * ratiosMarxes[marxa] * diferencial * potenciometre);
             vehicle.applyEngineForce(engineForce, BACK_LEFT);
             vehicle.applyEngineForce(engineForce, BACK_RIGHT);
-            rpm += 10 * potenciometre;
+          } else {
+            engineForce = maxEngineForce * ratiosMarxes[marxa] * diferencial * potenciometre;
+            vehicle.applyEngineForce(engineForce, BACK_LEFT);
+            vehicle.applyEngineForce(engineForce, BACK_RIGHT);
+            //canviarMarxa(speed);
           }
         } else {
-          if (marxa === 0) rpm = 850;
-          embragatge = true
+          rpm = 7100
         }
       }
       if (actions.frenar || boto === 6) {
-        if (embragatge && speed < 1) {
-          // Posar marxa enrere
-          marxa = 0;
-        }
         breakingForce = maxBreakingForce * potenciometre;
         vehicle.setBrake(breakingForce, FRONT_LEFT);
         vehicle.setBrake(breakingForce, FRONT_RIGHT);
         vehicle.setBrake(breakingForce * 0.85, BACK_LEFT);
         vehicle.setBrake(breakingForce * 0.85, BACK_RIGHT);
-        if (speed > 1 && rpm >= 850) {
-          rpm -= 10 * potenciometre;
-        } else {
+        if (rpm >= 1000 && (speed < 0.5 || speed > -0.5)) {
           embragatge = true;
         }
       }
@@ -442,7 +447,7 @@ Ammo().then(function (Ammo) {
         }
       }
 
-      // Si està en tercera persona rota la càmera un poc cap al costat
+      // Si està en tercera persona rota la càmera un poc cap al costat quan es gira
       /*if (tercera) {
         // Opcio 1 ----------
         camera.position.x = vehicleSteering;
@@ -453,6 +458,12 @@ Ammo().then(function (Ammo) {
       }*/
       vehicle.setSteeringValue(vehicleSteering, FRONT_LEFT);
       vehicle.setSteeringValue(vehicleSteering, FRONT_RIGHT);
+
+      //rpm = 3.6*Math.PI*wheelRadiusBack/speed*30*ratiosMarxes[marxa]*diferencial;
+      rpm = Math.abs(32.02 * speed * ratiosMarxes[marxa]).toFixed(0);
+      if (rpm < 1000) rpm = 1000;
+
+      motorRalenti.setPlaybackRate(rpm / 1000);
 
       let rodesTransform, rodesOrigin, rodesRotacio, idx;
       let numRodes = vehicle.getNumWheels();
@@ -476,7 +487,15 @@ Ammo().then(function (Ammo) {
       // Actualitza l'HTML amb la velocitat, rpm i marxa actuals
       let mostraMarxa = 'N';
       if (marxa === 0) mostraMarxa = 'R'
+      indicadorMarxa.innerHTML = speed < 0.1 ? mostraMarxa : marxa;
       speedometer.innerHTML = rpm + ' rpm<br>' + Math.abs(speed).toFixed(1) + ' km/h - ' + (speed < 0.1 ? mostraMarxa : marxa);
+      rpmContainer.style.setProperty("stroke-dashoffset", Number(-0.06483 * rpm + 588.83).toString());
+      document.getElementById("inner-circle").style.setProperty("stroke-opacity","0.15");
+      if (rpm > 7000) {
+        rpmContainer.style.setProperty("stroke", "#FF0000");
+        document.getElementById("inner-circle").style.setProperty("stroke-opacity","1");
+      } else if (rpm > 6000) rpmContainer.style.setProperty("stroke", "#FFFF00");
+      else rpmContainer.style.setProperty("stroke", "#FFFFFF");
     }
 
     syncList.push(sync);
@@ -525,15 +544,27 @@ Ammo().then(function (Ammo) {
       camera.position.x = 0.32;
       camera.position.y = 0.6;
       camera.position.z = -0.4;
-      camera.rotation.x = 1;
       camera.rotation.y = Math.PI;
+      speedometer.style.top = "65%";
+      speedometer.style.left = "44%";
+      svgContainer.style.top = "65%";
+      svgContainer.style.left = "44%";
+      svgRpm.style.width = "10em";
+      svgRpm.style.height = "10em";
+      indicadorMarxa.style.setProperty("font-size", "2.5em");
       tercera = false;
     } else {
       camera.position.x = 0;
-      camera.position.y = 2;
+      camera.position.y = 1.8;
       camera.position.z = -5;
-      camera.rotation.x = 0;
       camera.rotation.y = Math.PI;
+      speedometer.style.top = "86%";
+      speedometer.style.left = "85%";
+      svgContainer.style.top = "76%";
+      svgContainer.style.left = "85%";
+      svgRpm.style.width = "20em";
+      svgRpm.style.height = "20em";
+      indicadorMarxa.style.setProperty("font-size", "5em");
       tercera = true;
     }
   }
@@ -542,16 +573,16 @@ Ammo().then(function (Ammo) {
 
 function canviarMarxa(velocitat) {
   let marxaOrg = marxa;
-  if (marxa === 1 && velocitat > 36) marxa += 1;
-  else if (marxa === 2 && velocitat > 75) marxa += 1;
-  else if (marxa === 3 && velocitat > 98) marxa += 1;
-  else if (marxa === 4 && velocitat > 158) marxa += 1;
-  else if (marxa === 5 && velocitat > 194) marxa += 1;
-  else if (marxa === 2 && velocitat < 22) marxa -= 1;
-  else if (marxa === 3 && velocitat < 70) marxa -= 1;
-  else if (marxa === 4 && velocitat < 94) marxa -= 1;
-  else if (marxa === 5 && velocitat < 150) marxa -= 1;
-  else if (marxa === 6 && velocitat < 184) marxa -= 1;
-  else if (marxa === 0 && velocitat > 0) marxa = 1;
+  if (marxa === 1 && velocitat > 59) marxa += 1;
+  else if (marxa === 2 && velocitat > 99) marxa += 1;
+  else if (marxa === 3 && velocitat > 140) marxa += 1;
+  else if (marxa === 4 && velocitat > 178) marxa += 1;
+  else if (marxa === 5 && velocitat > 216) marxa += 1;
+  else if (marxa === 2 && velocitat < 35) marxa -= 1;
+  else if (marxa === 3 && velocitat < 80) marxa -= 1;
+  else if (marxa === 4 && velocitat < 130) marxa -= 1;
+  else if (marxa === 5 && velocitat < 160) marxa -= 1;
+  else if (marxa === 6 && velocitat < 200) marxa -= 1;
+  else if (marxa === 0 && velocitat > -1) marxa = 1;
   if (marxaOrg !== marxa) embragatge = false;
 }
