@@ -486,9 +486,10 @@ Ammo().then(function (Ammo) {
 
 
       // Actualitza l'HTML amb la velocitat, rpm i marxa actuals
-      let mostraMarxa = 'N';
+      /*let mostraMarxa = 'N';
       if (marxa === 0) mostraMarxa = 'R'
-      indicadorMarxa.innerHTML = speed < 0.1 ? mostraMarxa : marxa;
+      indicadorMarxa.innerHTML = speed < 0.1 ? mostraMarxa : marxa;*/
+      indicadorMarxa.innerHTML = marxa === 0 ? 'R' : marxa;
       speedometer.innerHTML = Math.abs(speed).toFixed(0);// + ' km/h' + rpm + ' rpm<br>';
       iluminacioRpm.style.setProperty("stroke-dashoffset", Number(-0.02633 * rpm + 606.376).toString());
       cercleMarxa.style.setProperty("stroke-opacity","0.15");
