@@ -16,9 +16,10 @@ Ammo().then(function (Ammo) {
 
 
   const container = document.getElementById('container');
-  const speedometer = document.getElementById('speedometer');
-  const rpmContainer = document.getElementById('rpm-container');
-  const indicadorMarxa = document.getElementById('indicadorMarxa');
+  const speedometer = document.getElementById('velocitat');
+  const iluminacioRpm = document.getElementById('iluminacio-rpm');
+  const indicadorMarxa = document.getElementById('indicador-marxa');
+  const cercleMarxa = document.getElementById('cercle-marxa');
   const svgContainer = document.getElementById('svgContainer');
   const svgRpm = document.getElementById('svgRpm');
 
@@ -60,7 +61,7 @@ Ammo().then(function (Ammo) {
     // Crea la escena 3D
     scene = new three.Scene();
 
-    camera = new three.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.1, 50);
+    camera = new three.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50);
     //controls = new OrbitControls( camera );
 
     renderer = new three.WebGLRenderer({antialias: true});
@@ -302,7 +303,7 @@ Ammo().then(function (Ammo) {
 
     let steeringIncrement = .04;
     let steeringClamp = .5;
-    let maxEngineForce = 200;
+    let maxEngineForce = 250;
     let maxBreakingForce = 75;
 
     // Chassis
@@ -390,7 +391,7 @@ Ammo().then(function (Ammo) {
         actions.pujarMarxa = false;
       }
       if (actions.accelerar || boto === 7) {
-        if (rpm <= 7200) {
+        if (rpm <= 8000) {
           if (marxa === 0) {
             engineForce = -(maxEngineForce * ratiosMarxes[marxa] * diferencial * potenciometre);
             vehicle.applyEngineForce(engineForce, BACK_LEFT);
@@ -488,14 +489,14 @@ Ammo().then(function (Ammo) {
       let mostraMarxa = 'N';
       if (marxa === 0) mostraMarxa = 'R'
       indicadorMarxa.innerHTML = speed < 0.1 ? mostraMarxa : marxa;
-      speedometer.innerHTML = rpm + ' rpm<br>' + Math.abs(speed).toFixed(1) + ' km/h - ' + (speed < 0.1 ? mostraMarxa : marxa);
-      rpmContainer.style.setProperty("stroke-dashoffset", Number(-0.06483 * rpm + 588.83).toString());
-      document.getElementById("inner-circle").style.setProperty("stroke-opacity","0.15");
+      speedometer.innerHTML = Math.abs(speed).toFixed(0);// + ' km/h' + rpm + ' rpm<br>';
+      iluminacioRpm.style.setProperty("stroke-dashoffset", Number(-0.02633 * rpm + 606.376).toString());
+      cercleMarxa.style.setProperty("stroke-opacity","0.15");
       if (rpm > 7000) {
-        rpmContainer.style.setProperty("stroke", "#FF0000");
-        document.getElementById("inner-circle").style.setProperty("stroke-opacity","1");
-      } else if (rpm > 6000) rpmContainer.style.setProperty("stroke", "#FFFF00");
-      else rpmContainer.style.setProperty("stroke", "#FFFFFF");
+        iluminacioRpm.style.setProperty("stroke", "#FF0000");
+        cercleMarxa.style.setProperty("stroke-opacity","1");
+      } else if (rpm > 6000) iluminacioRpm.style.setProperty("stroke", "#FFFF00");
+      else iluminacioRpm.style.setProperty("stroke", "#FFFFFF");
     }
 
     syncList.push(sync);
@@ -524,6 +525,7 @@ Ammo().then(function (Ammo) {
   initAudio();
   initPhysics();
   createObjects();
+  //test();
   tick();
 
   /**
@@ -540,31 +542,26 @@ Ammo().then(function (Ammo) {
    */
   function canvia13persona() {
     if (tercera) {
-      // Si és tercera persona canvia a primera
+      // Primera persona
       camera.position.x = 0.32;
       camera.position.y = 0.6;
       camera.position.z = -0.4;
       camera.rotation.y = Math.PI;
-      speedometer.style.top = "65%";
-      speedometer.style.left = "44%";
-      svgContainer.style.top = "65%";
-      svgContainer.style.left = "44%";
-      svgRpm.style.width = "10em";
-      svgRpm.style.height = "10em";
-      indicadorMarxa.style.setProperty("font-size", "2.5em");
+      svgContainer.style.top = "62%";
+      svgContainer.style.left = "43%";
+      svgRpm.style.width = "22em";
+      svgRpm.style.height = "22em";
       tercera = false;
     } else {
+      // Tercera persona
       camera.position.x = 0;
       camera.position.y = 1.8;
-      camera.position.z = -5;
+      camera.position.z = -6;
       camera.rotation.y = Math.PI;
-      speedometer.style.top = "86%";
-      speedometer.style.left = "85%";
-      svgContainer.style.top = "76%";
-      svgContainer.style.left = "85%";
-      svgRpm.style.width = "20em";
-      svgRpm.style.height = "20em";
-      indicadorMarxa.style.setProperty("font-size", "5em");
+      svgContainer.style.top = "65%";
+      svgContainer.style.left = "80%";
+      svgRpm.style.width = "35em";
+      svgRpm.style.height = "35em";
       tercera = true;
     }
   }

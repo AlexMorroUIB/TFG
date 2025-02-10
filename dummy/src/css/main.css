@@ -25,19 +25,13 @@ body {
   position: absolute;
 }
 
-#rpm-container {
-  stroke-dasharray: 615;
+#iluminacio-rpm {
+  stroke-dasharray: 602;
 }
 
-#indicadorMarxa {
+#indicador-marxa {
   color: white;
-  font-size: 2.5em;
-  line-height: 100%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  position: absolute;
-  bottom: -0.4em;
-  z-index: 1;
+  text-align: center;
 }
 
 #info {
