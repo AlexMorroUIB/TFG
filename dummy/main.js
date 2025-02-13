@@ -50,7 +50,7 @@ Ammo().then(function (Ammo) {
   let time = 0;
 
   // Dades del vehicle
-  let vehiclePosicioOrigen = new three.Vector3(0, 2, -20);
+  let vehiclePosicioOrigen = new three.Vector3(0, 2, 0);
   let chassisMesh;
 
   // - Functions -
@@ -61,7 +61,7 @@ Ammo().then(function (Ammo) {
     // Crea la escena 3D
     scene = new three.Scene();
 
-    camera = new three.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50);
+    camera = new three.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
     //controls = new OrbitControls( camera );
 
     renderer = new three.WebGLRenderer({antialias: true});
@@ -102,7 +102,6 @@ Ammo().then(function (Ammo) {
     materialDynamic = new three.MeshPhongMaterial({color: 0xfca400});
     materialStatic = new three.MeshPhongMaterial({color: 0x999999});
     materialInteractive = new three.MeshBasicMaterial({color: 0xFFFFFF});
-    materialInteractive.alphaMap = 0x000000;
 
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
@@ -178,15 +177,25 @@ Ammo().then(function (Ammo) {
   function createBox(pos, quat, w, l, h, mass, friction) {
     let material = mass > 0 ? materialDynamic : materialStatic;
     let shape = new three.BoxGeometry(w, l, h, 1, 1, 1);
-    let geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
+    let geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.7, l * 0.5, h * 0.5));
 
     if (!mass) mass = 0;
     if (!friction) friction = 1;
 
-    let mesh = new three.Mesh(shape, material);
+    let mesh = new three.Mesh(shape, materialStatic);
+    loader.load('./src/assets/models/circuit.glb', (gltf) => {
+      gltf.scene.position.copy(mesh.position)
+      gltf.scene.position.y += 1.1;
+      //gltf.scene.quaternion.y = Math.PI/2;
+      //geometry = gltf.geometry;
+      //shape = new three.BoxGeometry(gltf.scene.getObjectByName("Plane").scale.x, gltf.scene.getObjectByName("Plane").scale.y, gltf.scene.getObjectByName("Plane").scale.z);
+      //mesh.attach(gltf.scene)
+      scene.add(gltf.scene)
+    });
     mesh.position.copy(pos);
     mesh.quaternion.copy(quat);
-    scene.add(mesh);
+    //mesh.layers.set(3);
+    //scene.add(mesh);
 
     let transform = new Ammo.btTransform();
     transform.setIdentity();
@@ -503,20 +512,48 @@ Ammo().then(function (Ammo) {
     syncList.push(sync);
   }
 
-  function createObjects() {
+  function crearCircuit() {
+    /*let pos = new three.Vector3(0, -0.5, 0);
+    let mass = 0;
+    let friction = 2;
+    let quat = ZERO_QUATERNION;
 
-    createBox(new three.Vector3(0, -0.5, 0), ZERO_QUATERNION, 200, 1, 200, 0, 2);
+    let shape = new three.BoxGeometry(500, 0.2, 300);
+    let geometry = new Ammo.btBoxShape(new Ammo.btVector3(500, 300, 0.5));
+    let mesh = new three.Mesh(shape, materialStatic);
+    /!*loader.load('./src/assets/models/circuit.glb', (gltf) => {
+      mesh.attach(gltf.scene);
+    })*!/
+    mesh.position.copy(pos);
+    mesh.quaternion.copy(quat);
+    scene.add(mesh)
+    let transform = new Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+    transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+    let motionState = new Ammo.btDefaultMotionState(transform);
 
-    let quaternion = new three.Quaternion(0, 0, 0, 1);
+    let localInertia = new Ammo.btVector3(0, 0, 0);
+    geometry.calculateLocalInertia(mass, localInertia);
+
+    let rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, geometry, localInertia);
+    let body = new Ammo.btRigidBody(rbInfo);
+
+    body.setFriction(friction);
+    physicsWorld.addRigidBody(body);*/
+    createBox(new three.Vector3(0, -0.5, 0), ZERO_QUATERNION, 500, 2, 300, 0, 2);
+
+    // Rampa
+    /*let quaternion = new three.Quaternion(0, 0, 0, 1);
     quaternion.setFromAxisAngle(new three.Vector3(1, 0, 0), -Math.PI / 18);
-    createBox(new three.Vector3(0, -1.5, 0), quaternion, 8, 4, 10, 0);
+    createBox(new three.Vector3(0, -1.5, 0), quaternion, 8, 4, 10, 0);*/
 
-    let size = .75;
+    /*let size = .75;
     let nw = 8;
     let nh = 6;
     for (let j = 0; j < nw; j++)
       for (let i = 0; i < nh; i++)
-        createBox(new three.Vector3(size * j - (size * (nw - 1)) / 2, size * i, 10), ZERO_QUATERNION, size, size, size, 10);
+        createBox(new three.Vector3(size * j - (size * (nw - 1)) / 2, size * i, 10), ZERO_QUATERNION, size, size, size, 10);*/
 
     createVehicle(vehiclePosicioOrigen, ZERO_QUATERNION);
   }
@@ -525,7 +562,7 @@ Ammo().then(function (Ammo) {
   initGraphics();
   initAudio();
   initPhysics();
-  createObjects();
+  crearCircuit();
   //test();
   tick();
 
