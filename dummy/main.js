@@ -50,7 +50,7 @@ Ammo().then(function (Ammo) {
   let time = 0;
 
   // Dades del vehicle
-  let vehiclePosicioOrigen = new three.Vector3(0, 2, 0);
+  let vehiclePosicioOrigen = new three.Vector3(0, 1.5, 0);
   let chassisMesh;
 
   // - Functions -
@@ -100,7 +100,7 @@ Ammo().then(function (Ammo) {
     scene.add(dirLight);
 
     materialDynamic = new three.MeshPhongMaterial({color: 0xfca400});
-    materialStatic = new three.MeshPhongMaterial({color: 0x999999});
+    materialStatic = new three.MeshPhongMaterial({color: 0xa5956b}); // 0xbcc1a2
     materialInteractive = new three.MeshBasicMaterial({color: 0xFFFFFF});
 
     container.innerHTML = "";
@@ -177,15 +177,90 @@ Ammo().then(function (Ammo) {
   function createBox(pos, quat, w, l, h, mass, friction) {
     let material = mass > 0 ? materialDynamic : materialStatic;
     let shape = new three.BoxGeometry(w, l, h, 1, 1, 1);
-    let geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.7, l * 0.5, h * 0.5));
+    let geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
 
-    if (!mass) mass = 0;
-    if (!friction) friction = 1;
+    //if (!mass) mass = 0;
+    //if (!friction) friction = 1;
 
     let mesh = new three.Mesh(shape, materialStatic);
     loader.load('./src/assets/models/circuit.glb', (gltf) => {
-      gltf.scene.position.copy(mesh.position)
-      gltf.scene.position.y += 1.1;
+      /*let circuit;
+      console.log(gltf.scene.children[2])
+      circuit = gltf.scene.children[1]
+      //circuit.scale.set(scale,scale,scale)
+      circuit.position.set(0, 0, 0)
+      circuit.castShadow = false
+
+      scene.add(circuit)
+
+      //physics
+
+      const transform = new Ammo.btTransform();
+      transform.setIdentity();
+      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+      transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+
+      const shape = new Ammo.btConvexHullShape();
+
+      //new ammo triangles
+      let triangle_mesh = new Ammo.btTriangleMesh;
+
+      //declare triangles position vectors
+      let vectA = new Ammo.btVector3(0, 0, 0);
+      let vectB = new Ammo.btVector3(0, 0, 0);
+      let vectC = new Ammo.btVector3(0, 0, 0);
+
+      //retrieve vertices positions from object
+      let verticesPos = circuit.geometry.getAttribute('position').array;
+      console.log(verticesPos)
+      let triangles = [];
+      for (let i = 0; i < verticesPos.length; i += 3) {
+        triangles.push({
+          x: verticesPos[i],
+          y: verticesPos[i + 1],
+          z: verticesPos[i + 2]
+        })
+      }
+
+      //use triangles data to draw ammo shape
+      for (let i = 0; i < triangles.length - 3; i += 3) {
+
+        vectA.setX(triangles[i].x);
+        vectA.setY(triangles[i].y);
+        vectA.setZ(triangles[i].z);
+        shape.addPoint(vectA, true);
+
+        vectB.setX(triangles[i + 1].x);
+        vectB.setY(triangles[i + 1].y);
+        vectB.setZ(triangles[i + 1].z);
+        shape.addPoint(vectB, true);
+
+        vectC.setX(triangles[i + 2].x);
+        vectC.setY(triangles[i + 2].y);
+        vectC.setZ(triangles[i + 2].z);
+        shape.addPoint(vectC, true);
+
+        triangle_mesh.addTriangle(vectA, vectB, vectC, true);
+      }
+
+      Ammo.destroy(vectA);
+      Ammo.destroy(vectB);
+      Ammo.destroy(vectC);
+
+      shape.setMargin(0.05);
+      const motionState = new Ammo.btDefaultMotionState(transform);
+
+      const localInertia = new Ammo.btVector3(0, 0, 0);
+      shape.calculateLocalInertia(mass, localInertia);
+
+      const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
+
+      const rBody = new Ammo.btRigidBody(rbInfo);
+      rBody.setFriction(friction);
+      physicsWorld.addRigidBody(rBody)
+      circuit.userData.physicsBody = rBody*/
+
+      gltf.scene.position.y = 0.51;
       //gltf.scene.quaternion.y = Math.PI/2;
       //geometry = gltf.geometry;
       //shape = new three.BoxGeometry(gltf.scene.getObjectByName("Plane").scale.x, gltf.scene.getObjectByName("Plane").scale.y, gltf.scene.getObjectByName("Plane").scale.z);
@@ -193,9 +268,9 @@ Ammo().then(function (Ammo) {
       scene.add(gltf.scene)
     });
     mesh.position.copy(pos);
-    mesh.quaternion.copy(quat);
+    // mesh.quaternion.copy(quat);
     //mesh.layers.set(3);
-    //scene.add(mesh);
+    scene.add(mesh);
 
     let transform = new Ammo.btTransform();
     transform.setIdentity();
@@ -501,10 +576,10 @@ Ammo().then(function (Ammo) {
       indicadorMarxa.innerHTML = marxa === 0 ? 'R' : marxa;
       speedometer.innerHTML = Math.abs(speed).toFixed(0);// + ' km/h' + rpm + ' rpm<br>';
       iluminacioRpm.style.setProperty("stroke-dashoffset", Number(-0.02633 * rpm + 606.376).toString());
-      cercleMarxa.style.setProperty("stroke-opacity","0.15");
+      cercleMarxa.style.setProperty("stroke-opacity", "0.15");
       if (rpm > 7000) {
         iluminacioRpm.style.setProperty("stroke", "#FF0000");
-        cercleMarxa.style.setProperty("stroke-opacity","1");
+        cercleMarxa.style.setProperty("stroke-opacity", "1");
       } else if (rpm > 6000) iluminacioRpm.style.setProperty("stroke", "#FFFF00");
       else iluminacioRpm.style.setProperty("stroke", "#FFFFFF");
     }
@@ -541,7 +616,7 @@ Ammo().then(function (Ammo) {
 
     body.setFriction(friction);
     physicsWorld.addRigidBody(body);*/
-    createBox(new three.Vector3(0, -0.5, 0), ZERO_QUATERNION, 500, 2, 300, 0, 2);
+    createBox(new three.Vector3(0, -0.5, 0), ZERO_QUATERNION, 700, 2, 300, 0, 0.9);
 
     // Rampa
     /*let quaternion = new three.Quaternion(0, 0, 0, 1);
