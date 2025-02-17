@@ -5,8 +5,7 @@
   "private": true,
   "license": "",
   "author": "Alex Morro",
-  "main": "main.js",
-  "type": "module",
+  "main": "src/js/main.js",
   "dependencies": {
     "aframe": "~1.6.0",
     "ammo.js": "^0.0.10",
