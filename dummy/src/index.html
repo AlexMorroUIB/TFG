@@ -23,7 +23,7 @@
     <!--    Mans -->
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
-             sphere-collider="objects: a-sphere, #arc;"></a-mixin>
+             sphere-collider="objects: a-sphere, #arc, #corda;"></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
@@ -66,11 +66,15 @@
             grabbable draggable>
   </a-entity>
 
-  <!-- Terra -->
+  <!-- Terra
+  ammojs:
+   collisionFilterGroup: 1; collisionFilterMask: 1;
+   shape="type: box"
+   -->
   <a-plane
     material="color: #FFF; src: #terra; repeat: 1 6; normal-map: #terra-nrm; normal-texture-repeat: 1 6; normal-scale: 1 -1; roughness: 0.9"
-    scale="4 20 1" rotation="-90 0 0" body="type: static; collisionFilterGroup: 1; collisionFilterMask: 1;"
-    shape="type: box"></a-plane>
+    scale="4 20 1" rotation="-90 0 0" body="type: static;"
+    ></a-plane>
 
   <a-sphere grabbable color="#FFAA00" radius="0.5" position="-1 4 -4" dynamic-body>
   </a-sphere>

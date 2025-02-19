@@ -5,8 +5,11 @@ let escena = document.querySelector('a-scene');
 let arcEntity = document.getElementById('arc');
 let cordaBone
 let anchorDBone
+let cordaEntity = document.createElement('a-entity');
+let fletxaEntity = document.createElement('a-entity');
 const arcBones = {};
-let ikSolver;
+let maArc;
+let maCorda;
 
 // Arc
 AFRAME.registerComponent('arc', {
@@ -37,10 +40,14 @@ AFRAME.registerComponent('arc', {
       el.setObject3D('mesh', gltf.scene);
 
       //document.getElementById('arc').innerHTML = '<a-entity corda grabbable></a-entity>';
-      let cordaEntity = document.createElement('a-entity');
-      cordaEntity.setAttribute('corda', '')
-      cordaEntity.setAttribute('grabbable', '')
-      escena.appendChild(cordaEntity)
+      //let cordaEntity = document.createElement('a-entity');
+      cordaEntity.setAttribute('id', 'corda')
+      cordaEntity.setAttribute('cordamath', '')
+      //cordaEntity.setAttribute('grabbable', '')
+      fletxaEntity.setAttribute('class', 'fletxa')
+      fletxaEntity.setAttribute('fletxa', '')
+      fletxaEntity.setAttribute('grabbable', '')
+      //escena.appendChild(cordaEntity)
       //gltf.scene.position.set(document.getElementById('maEsquerra').object3D.position)
     }), undefined, function (error) {
       console.error(error);
@@ -62,14 +69,24 @@ AFRAME.registerComponent('arc', {
         let htmlMa = document.getElementById(ma.id)
         data.agafat = true;
         ma.setAttribute('gltf-model', data.asset);
+        element.parentNode.removeChild(element)
+        //ma.appendChild(element)
+        //element.setAttribute('position', '0 0 0')
+        console.log(ma.object3D.position)
+        console.log(escena)
+        ma.appendChild(cordaEntity);
+        cordaEntity.setAttribute('position', '0 0 0.28')
+        cordaEntity.setAttribute('rotation', '-30 0 0')
         /*htmlMa.Object3D.attach(cordaBone);
         cordaBone.setWorldTransform(htmlMa.object3D.worldMatrix);*/
         //this.parentNode.removeChild(this);
         if (ma.id === "maEsquerra") {
           // Canviar la ma dreta per una fletxa
+          maCorda = document.getElementById("maDreta")
           //document.getElementById("maDreta").setAttribute('gltf-model', data.fletxa);
         } else {
           // Canviar la ma esquerra per una fletxa
+          maCorda = document.getElementById("maEsquerra")
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
       }
@@ -166,7 +183,7 @@ let cordaHTML = document.getElementById('corda');
 let arcEntity = document.createElement('a-entity');
 let cordaEntity = document.createElement('a-entity');*/
 
-AFRAME.registerComponent('arcMath', {
+AFRAME.registerComponent('arcmath', {
   schema: {
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.25},
@@ -275,14 +292,15 @@ AFRAME.registerComponent('arcMath', {
     element.remove();
   }
 });
-AFRAME.registerComponent('cordaMath', {
+AFRAME.registerComponent('cordamath', {
   schema: {
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.25},
     depth: {type: 'number', default: 0.05},
     color: {type: 'color', default: '#2D2D2D'},
     event: {type: 'string', default: ''},
-    message: {type: 'string', default: '----------------------------'}
+    ma: {type: 'asset'},
+    posInicial: {type: 'array', default: [0, 0, 0.3]}
   },
   init: function () {
     let data = this.data;
@@ -295,14 +313,15 @@ AFRAME.registerComponent('cordaMath', {
     this.mesh = new THREE.Mesh(geometry, material);
     el.setObject3D('mesh', this.mesh);
 
-    cordaEntity.setAttribute('id', 'cordaDibuixada')
-    el.appendChild(cordaEntity)
+    let cordaDibuixada = document.createElement('a-entity')
+    cordaDibuixada.setAttribute('id', 'cordaDibuixada')
+    el.appendChild(cordaDibuixada)
     // Generar la corva de la corda de l'arc
     let corda = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0.97, 0),
-      new THREE.Vector3(0, 0.05, 0),
-      new THREE.Vector3(0, -0.05, 0),
-      new THREE.Vector3(0, -0.97, 0)
+      new THREE.Vector3(0, 0.86, 0),
+      new THREE.Vector3(0, 0.25, 0.3),
+      new THREE.Vector3(0, 0.15, 0.3),
+      new THREE.Vector3(0, -0.58, 0)
     ]);
     let pointsCorda = corda.getPoints(50);
     geometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
@@ -312,9 +331,9 @@ AFRAME.registerComponent('cordaMath', {
       linewidth: 1
     });
     // Create mesh.
-    cordaEntity.mesh = new THREE.Line(geometry, material);
+    cordaDibuixada.mesh = new THREE.Line(geometry, material);
     // Set mesh on entity.
-    cordaEntity.setObject3D('mesh', cordaEntity.mesh);
+    cordaDibuixada.setObject3D('mesh', cordaDibuixada.mesh);
 
     // Store a reference to the handler so we can later remove it.
     this.eventHandlerFn = function () {
@@ -325,38 +344,115 @@ AFRAME.registerComponent('cordaMath', {
     let data = this.data;  // Component property values.
     let element = this.el;  // Reference to the component's entity.
 
-    // If `oldData` is empty, we're in the initialization.
-    if (Object.keys(oldData).length === 0) {
-      return;
-    }
+    this.el.addEventListener('grab-start', (event) => {
+      let ma = event.detail.hand;
+      data.ma = document.getElementById(ma.id);
+      data.agafat = true;
+    });
+    this.el.addEventListener('grab-end', (event) => {
+      data.agafat = false;
+      el.setAttribute('position', data.posInicial.toString())
+    });
 
-    // Geometry-related properties
-    if (data.width !== oldData.width ||
-      data.height !== oldData.height ||
-      data.depth !== oldData.depth) {
-      el.getObject3D('mesh').geometry = new THREE.BoxGeometry(data.width, data.height,
-        data.depth);
-    }
-
-    // Material-related properties changed. Update the material.
-    if (data.event !== oldData.event) {
-      // Remove the previous event listener, if it exists.
-      if (oldData.event) {
-        element.removeEventListener(oldData.event, this.eventHandlerFn);
-      }
-      // Add listener for new event, if it exists.
-      if (data.event) {
-        element.addEventListener(data.event, this.eventHandlerFn);
-      }
-    }
-
-    if (!data.event) {
-      console.log(data.message);
-    }
   },
   tick: function (time, timeDelta) {
     let data = this.data;
-    if (data.agafat) updatePosition()
+    let el = this.el;
+    /*if (data.agafat) {
+      // Solo actualizamos la posición en Z
+      el.setAttribute('position', {
+        x: data.posInicial[0],
+        y: data.posInicial[1],
+        z: data.ma.object3D.position.z
+      });
+    }*/
+  },
+  remove: function () {
+    let data = this.data;
+    let element = this.el;
+
+    // Remove event listener.
+    if (data.event) {
+      el.removeEventListener(data.event, this.eventHandlerFn);
+    }
+    // Remove element.
+    element.remove();
+  }
+});
+AFRAME.registerComponent('fletxa', {
+  schema: {
+    width: {type: 'number', default: 0.05},
+    height: {type: 'number', default: 0.05},
+    depth: {type: 'number', default: 0.25},
+    color: {type: 'color', default: '#2D2D2D'},
+    event: {type: 'string', default: ''},
+    ma: {type: 'asset'},
+    posInicial: {type: 'array', default: [0, 0, 0.3]}
+  },
+  init: function () {
+    let data = this.data;
+    let el = this.el;
+    // Closure to access fresh `this.data` from event handler context.
+    let self = this;
+
+    let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
+    let material = new THREE.MeshBasicMaterial({color: data.color});
+    this.mesh = new THREE.Mesh(geometry, material);
+    el.setObject3D('mesh', this.mesh);
+
+    let cordaDibuixada = document.createElement('a-entity')
+    cordaDibuixada.setAttribute('id', 'cordaDibuixada')
+    el.appendChild(cordaDibuixada)
+    // Generar la corva de la corda de l'arc
+    let corda = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0.86, 0),
+      new THREE.Vector3(0, 0.25, 0.3),
+      new THREE.Vector3(0, 0.15, 0.3),
+      new THREE.Vector3(0, -0.58, 0)
+    ]);
+    let pointsCorda = corda.getPoints(50);
+    geometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
+    // Create material.
+    material = new THREE.LineBasicMaterial({
+      color: data.color,
+      linewidth: 1
+    });
+    // Create mesh.
+    cordaDibuixada.mesh = new THREE.Line(geometry, material);
+    // Set mesh on entity.
+    cordaDibuixada.setObject3D('mesh', cordaDibuixada.mesh);
+
+    // Store a reference to the handler so we can later remove it.
+    this.eventHandlerFn = function () {
+      console.log(self.data.message);
+    };
+  },
+  update: function (oldData) {
+    let data = this.data;  // Component property values.
+    let element = this.el;  // Reference to the component's entity.
+
+    this.el.addEventListener('grab-start', (event) => {
+      let ma = event.detail.hand;
+      data.ma = document.getElementById(ma.id);
+      data.agafat = true;
+    });
+    this.el.addEventListener('grab-end', (event) => {
+      data.agafat = false;
+      el.setAttribute('position', data.posInicial.toString())
+    });
+
+  },
+  tick: function (time, timeDelta) {
+    let data = this.data;
+    let el = this.el;
+    /*if (data.agafat) {
+      // Solo actualizamos la posición en Z
+      el.setAttribute('position', {
+        x: data.posInicial[0],
+        y: data.posInicial[1],
+        z: data.ma.object3D.position.z
+      });
+    }*/
   },
   remove: function () {
     let data = this.data;
