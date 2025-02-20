@@ -1,8 +1,9 @@
 const loader = new THREE.GLTFLoader();
 
 // Escena
-let escena = document.querySelector('a-scene');
+let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
+let controls = document.getElementById('controls');
 let cordaBone
 let anchorDBone
 let cordaEntity = document.createElement('a-entity');
@@ -41,13 +42,12 @@ AFRAME.registerComponent('arc', {
 
       //document.getElementById('arc').innerHTML = '<a-entity corda grabbable></a-entity>';
       //let cordaEntity = document.createElement('a-entity');
-      cordaEntity.setAttribute('id', 'corda')
-      cordaEntity.setAttribute('cordamath', '')
+      cordaEntity.setAttribute('id', 'corda');
+      cordaEntity.setAttribute('cordamath', '');
       //cordaEntity.setAttribute('grabbable', '')
-      fletxaEntity.setAttribute('class', 'fletxa')
-      fletxaEntity.setAttribute('fletxa', '')
-      fletxaEntity.setAttribute('grabbable', '')
-      //escena.appendChild(cordaEntity)
+      fletxaEntity.setAttribute('class', 'fletxa');
+      fletxaEntity.setAttribute('fletxa', '');
+      fletxaEntity.setAttribute('grabbable', '');
       //gltf.scene.position.set(document.getElementById('maEsquerra').object3D.position)
     }), undefined, function (error) {
       console.error(error);
@@ -66,17 +66,23 @@ AFRAME.registerComponent('arc', {
       if (!data.agafat) {
         let ma = event.detail.hand;
         data.ma = ma.id
-        let htmlMa = document.getElementById(ma.id)
+        maArc = document.getElementById(ma.id);
         data.agafat = true;
         ma.setAttribute('gltf-model', data.asset);
         element.parentNode.removeChild(element)
         //ma.appendChild(element)
         //element.setAttribute('position', '0 0 0')
-        console.log(ma.object3D.position)
-        console.log(escena)
         ma.appendChild(cordaEntity);
-        cordaEntity.setAttribute('position', '0 0 0.28')
-        cordaEntity.setAttribute('rotation', '-30 0 0')
+        //ma.appendChild(fletxaEntity);
+        cordaEntity.setAttribute('position', '0 0 0.28');
+        cordaEntity.setAttribute('rotation', '-30 0 0');
+        // Moure una fletxa a l'arc
+        fletxaEntity.setAttribute('position',
+          `${controls.object3D.position.x - ma.object3D.position.x}
+         ${ma.object3D.position.y}
+          ${controls.object3D.position.z - ma.object3D.position.z}`);
+        escena.appendChild(fletxaEntity);
+        //fletxaEntity.setAttribute('rotation', '-32 0 0');
         /*htmlMa.Object3D.attach(cordaBone);
         cordaBone.setWorldTransform(htmlMa.object3D.worldMatrix);*/
         //this.parentNode.removeChild(this);
@@ -113,7 +119,7 @@ AFRAME.registerComponent('arc', {
 
 function calculateTension(maFletxa) {
   let maArc
-  if (maFletxa.getAttribute(id) === "maDreta"){
+  if (maFletxa.getAttribute(id) === "maDreta") {
     maArc = document.getElementById("maEsquerra");
   } else {
     maArc = document.getElementById("maDreta");
@@ -379,15 +385,16 @@ AFRAME.registerComponent('cordamath', {
     element.remove();
   }
 });
+
 AFRAME.registerComponent('fletxa', {
   schema: {
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.05},
-    depth: {type: 'number', default: 0.25},
-    color: {type: 'color', default: '#2D2D2D'},
+    depth: {type: 'number', default: 0.5},
+    color: {type: 'color', default: '#FFAA00'},
     event: {type: 'string', default: ''},
     ma: {type: 'asset'},
-    posInicial: {type: 'array', default: [0, 0, 0.3]}
+    posInicial: {type: 'array', default: [0, 0, 0]}
   },
   init: function () {
     let data = this.data;
@@ -399,33 +406,6 @@ AFRAME.registerComponent('fletxa', {
     let material = new THREE.MeshBasicMaterial({color: data.color});
     this.mesh = new THREE.Mesh(geometry, material);
     el.setObject3D('mesh', this.mesh);
-
-    let cordaDibuixada = document.createElement('a-entity')
-    cordaDibuixada.setAttribute('id', 'cordaDibuixada')
-    el.appendChild(cordaDibuixada)
-    // Generar la corva de la corda de l'arc
-    let corda = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0.86, 0),
-      new THREE.Vector3(0, 0.25, 0.3),
-      new THREE.Vector3(0, 0.15, 0.3),
-      new THREE.Vector3(0, -0.58, 0)
-    ]);
-    let pointsCorda = corda.getPoints(50);
-    geometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
-    // Create material.
-    material = new THREE.LineBasicMaterial({
-      color: data.color,
-      linewidth: 1
-    });
-    // Create mesh.
-    cordaDibuixada.mesh = new THREE.Line(geometry, material);
-    // Set mesh on entity.
-    cordaDibuixada.setObject3D('mesh', cordaDibuixada.mesh);
-
-    // Store a reference to the handler so we can later remove it.
-    this.eventHandlerFn = function () {
-      console.log(self.data.message);
-    };
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
@@ -433,26 +413,53 @@ AFRAME.registerComponent('fletxa', {
 
     this.el.addEventListener('grab-start', (event) => {
       let ma = event.detail.hand;
-      data.ma = document.getElementById(ma.id);
-      data.agafat = true;
+      if (ma.id !== maArc.id) {
+        data.ma = document.getElementById(ma.id);
+        data.agafat = true;
+        console.log("Fletxa: ")
+        console.log(fletxaEntity.getAttribute('position'));
+        console.log("ma: ")
+        console.log(ma.object3D.position);
+        console.log("maArc: ")
+        console.log(maArc.object3D.position);
+        console.log("escena: ")
+        console.log(controls.object3D.position);
+        data.posInicial[0] = fletxaEntity.getAttribute('position').x;
+        data.posInicial[1] = fletxaEntity.getAttribute('position').y;
+        data.posInicial[2] = fletxaEntity.getAttribute('position').z;
+      }
     });
+
     this.el.addEventListener('grab-end', (event) => {
-      data.agafat = false;
-      el.setAttribute('position', data.posInicial.toString())
+      let ma = event.detail.hand;
+      if (ma.id !== maArc.id) {
+        data.agafat = false;
+        fletxaEntity.setAttribute('position',
+          `${controls.object3D.position.x - maArc.object3D.position.x}
+         ${maArc.object3D.position.y}
+          ${controls.object3D.position.z - maArc.object3D.position.z}`);
+        console.log("dispar");
+      }
     });
 
   },
   tick: function (time, timeDelta) {
     let data = this.data;
     let el = this.el;
-    /*if (data.agafat) {
+    if (data.agafat) {
       // Solo actualizamos la posición en Z
       el.setAttribute('position', {
-        x: data.posInicial[0],
-        y: data.posInicial[1],
-        z: data.ma.object3D.position.z
+        x: controls.object3D.position.x - maArc.object3D.position.x,
+        y: maArc.object3D.position.y,
+        z: controls.object3D.position.z - (maArc.object3D.position.z + data.ma.object3D.position.z)/2
       });
-    }*/
+    } else {
+      // Moure una fletxa a l'arc
+      fletxaEntity.setAttribute('position',
+        `${controls.object3D.position.x - maArc.object3D.position.x}
+         ${maArc.object3D.position.y}
+          ${controls.object3D.position.z - maArc.object3D.position.z}`);
+    }
   },
   remove: function () {
     let data = this.data;

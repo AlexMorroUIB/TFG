@@ -18,12 +18,12 @@
   <script type="module" src="./js/main.js"></script>
 </head>
 <body>
-<a-scene physics="" obb-collider="showColliders: true">
+<a-scene id="escena" physics="" obb-collider="showColliders: true">
   <a-assets>
     <!--    Mans -->
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
-             sphere-collider="objects: a-sphere, #arc, #corda;"></a-mixin>
+             sphere-collider="objects: a-sphere, #arc, #corda, .fletxa;"></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
@@ -39,7 +39,7 @@
   <a-sky src="#cel" rotation="0 94 0"></a-sky>
   <!-- Entitat de camera -->
   <!-- constraint="target: #cart" -->
-  <a-entity position="-1 0 -6" rotation="0 180 0">
+  <a-entity id="controls" position="-1 0 -6" rotation="0 180 0">
     <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
     <a-camera active="true">
       <a-cursor></a-cursor>
