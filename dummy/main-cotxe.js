@@ -651,7 +651,6 @@ Ammo().then(function (Ammo) {
 
   /**
    * Canvia la càmera de primera a tercera persona i viceversa.
-   * @param tercera
    */
   function canvia13persona() {
     if (tercera) {

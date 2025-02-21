@@ -81,6 +81,7 @@ AFRAME.registerComponent('arc', {
           `${controls.object3D.position.x - ma.object3D.position.x}
          ${ma.object3D.position.y}
           ${controls.object3D.position.z - ma.object3D.position.z}`);
+        fletxaEntity.setAttribute('rotation', '20 0 0');
         escena.appendChild(fletxaEntity);
         //fletxaEntity.setAttribute('rotation', '-32 0 0');
         /*htmlMa.Object3D.attach(cordaBone);
@@ -117,18 +118,12 @@ AFRAME.registerComponent('arc', {
   }
 });
 
-function calculateTension(maFletxa) {
-  let maArc
-  if (maFletxa.getAttribute(id) === "maDreta") {
-    maArc = document.getElementById("maEsquerra");
-  } else {
-    maArc = document.getElementById("maDreta");
-  }
+function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
-  const distance = Math.abs(maArc.position.distanceTo(maFletxa.position));
-  console.log(distance)
+  const distance = Math.abs(maArc.object3D.position.distanceTo(maCorda.object3D.position));
+  console.log("distancia mans: " + distance)
   // Definir un factor de tensión (puedes ajustar este valor según sea necesario)
-  const tensionFactor = 0.5; // Ajusta este valor según la escala de tu modelo
+  const tensionFactor = 1//2; // Ajusta este valor según la escala de tu modelo
 
   // Calcular la tensión (puedes usar una fórmula más compleja si es necesario)
   return distance * tensionFactor;
@@ -394,7 +389,12 @@ AFRAME.registerComponent('fletxa', {
     color: {type: 'color', default: '#FFAA00'},
     event: {type: 'string', default: ''},
     ma: {type: 'asset'},
-    posInicial: {type: 'array', default: [0, 0, 0]}
+    posInicial: {type: 'array', default: [0, 0, 0]},
+    posDispar: {type: 'array', default: [0, 0, 0]},
+    disparada: {type: 'boolean', default: false},
+    //rotacio: {type: 'boolean', default: false},
+    forca: {type: 'number', default: 0},
+    temps: {type: 'number', default: 0}
   },
   init: function () {
     let data = this.data;
@@ -416,14 +416,6 @@ AFRAME.registerComponent('fletxa', {
       if (ma.id !== maArc.id) {
         data.ma = document.getElementById(ma.id);
         data.agafat = true;
-        console.log("Fletxa: ")
-        console.log(fletxaEntity.getAttribute('position'));
-        console.log("ma: ")
-        console.log(ma.object3D.position);
-        console.log("maArc: ")
-        console.log(maArc.object3D.position);
-        console.log("escena: ")
-        console.log(controls.object3D.position);
         data.posInicial[0] = fletxaEntity.getAttribute('position').x;
         data.posInicial[1] = fletxaEntity.getAttribute('position').y;
         data.posInicial[2] = fletxaEntity.getAttribute('position').z;
@@ -434,11 +426,18 @@ AFRAME.registerComponent('fletxa', {
       let ma = event.detail.hand;
       if (ma.id !== maArc.id) {
         data.agafat = false;
-        fletxaEntity.setAttribute('position',
+        data.forca = calculateTension()
+        /*fletxaEntity.setAttribute('position',
           `${controls.object3D.position.x - maArc.object3D.position.x}
          ${maArc.object3D.position.y}
-          ${controls.object3D.position.z - maArc.object3D.position.z}`);
-        console.log("dispar");
+          ${controls.object3D.position.z - maArc.object3D.position.z}`);*/
+        let worldDirection = element.object3D.getWorldDirection(new THREE.Vector3())
+        data.posDispar[0] = worldDirection.x;
+        data.posDispar[1] = worldDirection.y;
+        data.posDispar[2] = worldDirection.z;
+        data.disparada = true;
+        //fletxaEntity.setAttribute('dynamic-body', '')
+        // Moure una nova fletxa a l'arc
       }
     });
 
@@ -446,19 +445,24 @@ AFRAME.registerComponent('fletxa', {
   tick: function (time, timeDelta) {
     let data = this.data;
     let el = this.el;
-    if (data.agafat) {
+    if (data.disparada) {
+      el.object3D.position.set(data.posDispar[0], data.posDispar[1], data.posDispar[2]).multiplyScalar(data.temps * data.forca);
+      data.temps += 0.01;
+    } else if (data.agafat) {
       // Solo actualizamos la posición en Z
       el.setAttribute('position', {
         x: controls.object3D.position.x - maArc.object3D.position.x,
         y: maArc.object3D.position.y,
         z: controls.object3D.position.z - (maArc.object3D.position.z + data.ma.object3D.position.z)/2
       });
+      igualaRotacio(el);
     } else {
-      // Moure una fletxa a l'arc
-      fletxaEntity.setAttribute('position',
-        `${controls.object3D.position.x - maArc.object3D.position.x}
-         ${maArc.object3D.position.y}
-          ${controls.object3D.position.z - maArc.object3D.position.z}`);
+      el.setAttribute('position', {
+        x: controls.object3D.position.x - maArc.object3D.position.x,
+        y: maArc.object3D.position.y,
+        z: controls.object3D.position.z - maArc.object3D.position.z
+      });
+      igualaRotacio(el);
     }
   },
   remove: function () {
@@ -473,6 +477,17 @@ AFRAME.registerComponent('fletxa', {
     element.remove();
   }
 });
+
+/**
+ * Iguala la rotació de la fletxa mab la rotació de l'arc
+ * @param fletxa fletxa actualment a l'arc
+ */
+function igualaRotacio(fletxa) {
+  fletxa.object3D.quaternion.x = -maArc.object3D.quaternion.x;
+  fletxa.object3D.quaternion.y = maArc.object3D.quaternion.y;
+  fletxa.object3D.quaternion.z = -maArc.object3D.quaternion.z;
+  fletxa.object3D.quaternion.w = maArc.object3D.quaternion.w;
+}
 
 function updatePosition() {
   // Copia la posició i rotació de la mà a l'arc
