@@ -79,10 +79,22 @@ AFRAME.registerComponent('arc', {
         // Moure una fletxa a l'arc
         fletxaEntity.setAttribute('position',
           `${controls.object3D.position.x - ma.object3D.position.x}
-         ${ma.object3D.position.y}
+          ${ma.object3D.position.y}
           ${controls.object3D.position.z - ma.object3D.position.z}`);
         fletxaEntity.setAttribute('rotation', '20 0 0');
         escena.appendChild(fletxaEntity);
+        console.log("ma agafa")
+        /*let normals = ma.object3D.normalMatrix.elements
+        let normalIndices = [];
+        console.log(normals)
+        for (let i = 0; i < normals.length; i+=3) {
+          const  normX = normals[i];
+          const  normY = normals[i+1];
+          const  normZ = normals[i+2];
+
+          normalIndices.push(new THREE.Vector3(normX, normY, normZ));
+        }
+        console.log(normalIndices)*/
         //fletxaEntity.setAttribute('rotation', '-32 0 0');
         /*htmlMa.Object3D.attach(cordaBone);
         cordaBone.setWorldTransform(htmlMa.object3D.worldMatrix);*/
@@ -420,6 +432,7 @@ AFRAME.registerComponent('fletxa', {
         data.posInicial[1] = fletxaEntity.getAttribute('position').y;
         data.posInicial[2] = fletxaEntity.getAttribute('position').z;
       }
+      console.log(element.object3D.getWorldDirection(new THREE.Vector3()))
     });
 
     this.el.addEventListener('grab-end', (event) => {
@@ -446,23 +459,38 @@ AFRAME.registerComponent('fletxa', {
     let data = this.data;
     let el = this.el;
     if (data.disparada) {
-      el.object3D.position.set(data.posDispar[0], data.posDispar[1], data.posDispar[2]).multiplyScalar(data.temps * data.forca);
+      /*el.setAttribute('position', {
+        x: el.getAttribute('position').x + data.temps * data.forca,
+        y: el.getAttribute('position').y - data.temps * 0.1,
+        z: el.getAttribute('position').z + data.temps * data.forca
+      });*/
+      el.object3D.translateZ(data.temps * data.forca);
+      //el.object3D.position.set(data.posDispar[0], data.posDispar[1], data.posDispar[2]).multiplyScalar(data.temps * data.forca);
       data.temps += 0.01;
     } else if (data.agafat) {
       // Solo actualizamos la posición en Z
-      el.setAttribute('position', {
-        x: controls.object3D.position.x - maArc.object3D.position.x,
+      /*el.setAttribute('position', {
+        x: controls.object3D.position.x - (maArc.object3D.position.x + data.ma.object3D.position.x) / 2,
         y: maArc.object3D.position.y,
-        z: controls.object3D.position.z - (maArc.object3D.position.z + data.ma.object3D.position.z)/2
-      });
-      igualaRotacio(el);
-    } else {
-      el.setAttribute('position', {
+        z: controls.object3D.position.z - (maArc.object3D.position.z + data.ma.object3D.position.z) / 2
+      });*/
+      /*el.setAttribute('position', {
         x: controls.object3D.position.x - maArc.object3D.position.x,
         y: maArc.object3D.position.y,
         z: controls.object3D.position.z - maArc.object3D.position.z
-      });
-      igualaRotacio(el);
+      });*/
+      igualaPosicioRotacio(el);
+      // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.5 metres
+      el.object3D.translateZ(
+        Math.max(((maArc.object3D.position.z - data.ma.object3D.position.z) / 2), -0.5)
+      );
+    } else {
+      /*el.setAttribute('position', {
+        x: controls.object3D.position.x - maArc.object3D.position.x,
+        y: maArc.object3D.position.y,
+        z: controls.object3D.position.z - maArc.object3D.position.z
+      });*/
+      igualaPosicioRotacio(el);
     }
   },
   remove: function () {
@@ -482,7 +510,12 @@ AFRAME.registerComponent('fletxa', {
  * Iguala la rotació de la fletxa mab la rotació de l'arc
  * @param fletxa fletxa actualment a l'arc
  */
-function igualaRotacio(fletxa) {
+function igualaPosicioRotacio(fletxa) {
+  fletxa.setAttribute('position', {
+    x: controls.object3D.position.x - maArc.object3D.position.x,
+    y: maArc.object3D.position.y,
+    z: controls.object3D.position.z - maArc.object3D.position.z
+  });
   fletxa.object3D.quaternion.x = -maArc.object3D.quaternion.x;
   fletxa.object3D.quaternion.y = maArc.object3D.quaternion.y;
   fletxa.object3D.quaternion.z = -maArc.object3D.quaternion.z;
