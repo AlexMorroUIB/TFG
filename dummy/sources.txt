@@ -27,3 +27,7 @@ https://legacypic.uk/transmission/graph.php
 
 wheel radius
 https://x-engineer.org/calculate-wheel-radius/
+
+
+euler rotation (radians) to quaternion
+https://www.andre-gaschler.com/rotationconverter/
