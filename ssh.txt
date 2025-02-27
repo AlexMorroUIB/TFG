@@ -1,3 +1,4 @@
+e:
 cd Projects\uib\TFG
 
 scp -r .\BellverDefense\* towerdefense@towerdefense.ltim.uib.es:app

@@ -5,14 +5,28 @@
   "private": true,
   "license": "",
   "author": "Alex Morro",
+  "main": "src/js/main.js",
   "dependencies": {
-    "express": "~4.21.1",
     "aframe": "~1.6.0",
-    "ammo.js": "~0.0.10",
-    "super-hands": "3.0.4"
+    "ammo.js": "^0.0.10",
+    "express": "~4.21.1",
+    "super-hands": "3.0.5",
+    "three": "^0.173.0"
+  },
+  "devDependencies": {
+    "@babel/core": "latest",
+    "babel-loader": "latest",
+    "vite": "^6.0.11",
+    "webpack": "latest",
+    "webpack-cli": "latest",
+    "webpack-node-externals": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node ./server.js",
+    "start:dev": "node ./dev-build/main.js",
+    "start:prod": "node ./prod-build/main.js",
+    "build:dev": "webpack --config webpack.dev.js --mode development",
+    "build:prod": "node --config webpack.prod.js --mode production"
   }
 }

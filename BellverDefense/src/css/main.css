@@ -1,0 +1,47 @@
+body {
+  color: #61443e;
+  font-family: Monospace, serif;
+  font-size: 13px;
+  text-align: center;
+
+  background-color: #bfd1e5;
+  margin: 0px;
+  overflow: hidden;
+}
+
+#speedometer {
+  color: #FFFFFF;
+  background-color: #000000;
+  font-size: 2em;
+  position: absolute;
+  top: 60%;
+  left: 44%;
+  padding: 0.5rem;
+}
+
+#svgContainer {
+  top: 55%;
+  left: 40%;
+  position: absolute;
+}
+
+#iluminacio-rpm {
+  stroke-dasharray: 602;
+}
+
+#indicador-marxa {
+  color: white;
+  text-align: center;
+}
+
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 5px;
+}
+
+a {
+
+  color: #a06851;
+}

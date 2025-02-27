@@ -6,6 +6,7 @@ const TAMANYCARCAIX = 16
 let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
+let vagoneta = document.getElementById('vagoneta');
 /*let cordaBone
 let anchorDBone*/
 let cordaEntity = document.createElement('a-entity');
@@ -94,6 +95,10 @@ AFRAME.registerComponent('arc', {
         for (let i = 0; i < TAMANYCARCAIX; i++) {
           const fletxaTemp = carcaixTemp[i];
           fletxaTemp.setAttribute('class', 'fletxa');
+          //fletxaTemp.parent = vagoneta
+          console.log(fletxaTemp)
+          console.log(vagoneta);
+          vagoneta.attach(fletxaTemp);
           escena.components.pool__fletxa.returnEntity(fletxaTemp);
         }
 
@@ -149,7 +154,6 @@ function crearFletxes() {
     fletxa.setAttribute('class', 'fletxa');
     fletxa.setAttribute('fletxa', '');
     fletxa.setAttribute('grabbable', '');
-    console.log(fletxa)
     escena.components.pool__fletxa.returnEntity(fletxa);
   }
 }
@@ -157,7 +161,6 @@ function crearFletxes() {
 function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
   const distance = Math.abs(maArc.object3D.position.distanceTo(maCorda.object3D.position));
-  console.log("distancia mans: " + distance)
   // Definir un factor de tensión (puedes ajustar este valor según sea necesario)
   const tensionFactor = 1//2; // Ajusta este valor según la escala de tu modelo
 
@@ -206,9 +209,9 @@ AFRAME.registerComponent('cordamath', {
    let material = new THREE.LineBasicMaterial({
      color: data.color,
      linewidth: 1
-   });
-   // Create mesh.*/
-   this.mesh = calcularCorda(0.0)//new THREE.Line(geometry, material);
+   });*/
+   // Create mesh.
+    this.mesh = calcularCorda(0.0)//new THREE.Line(geometry, material);
     // Set mesh on entity.
     el.setObject3D('mesh', this.mesh);
 
@@ -233,9 +236,9 @@ AFRAME.registerComponent('cordamath', {
 
   },
   tick: function (time, timeDelta) {
-    let data = this.data;
+    /*let data = this.data;
     let el = this.el;
-    /*if (data.agafat) {
+    if (data.agafat) {
       // Solo actualizamos la posición en Z
       el.setAttribute('position', {
         x: data.posInicial[0],
@@ -277,6 +280,7 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
+    asset: {type: 'asset', default: '../assets/models/fletxatest.glb'},
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.05},
     depth: {type: 'number', default: 0.5},
@@ -293,12 +297,17 @@ AFRAME.registerComponent('fletxa', {
   init: function () {
     let data = this.data;
     let el = this.el;
-
     let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
     let material = new THREE.MeshBasicMaterial({color: data.color});
     this.mesh = new THREE.Mesh(geometry, material);
     el.setObject3D('mesh', this.mesh);
-    //el.setAttribute('')
+    vagoneta.appendChild(el)
+
+    loader.load(data.asset, function (gltf) {
+      el.setObject3D('mesh', gltf.scene);
+    }), undefined, function (error) {
+      console.error(error);
+    };
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
@@ -377,8 +386,9 @@ AFRAME.registerComponent('fletxa', {
         z: controls.object3D.position.z - maArc.object3D.position.z
       });*/
       igualaPosicioRotacio(el);
-      // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.5 metres
-      const distanciaMans = Math.max(((maArc.object3D.position.z - data.ma.object3D.position.z) / 2), -0.5);
+      // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.4 metres
+      let distanciaMans = Math.max(((maArc.object3D.position.z - data.ma.object3D.position.z) / 2), -0.35);
+      if (distanciaMans > 0.0) distanciaMans = 0.0;
       el.object3D.translateZ(distanciaMans);
       cordaEntity.setObject3D('mesh', calcularCorda(-distanciaMans));
     } else {
@@ -404,6 +414,7 @@ AFRAME.registerComponent('fletxa', {
  * @param fletxa fletxa actualment a l'arc
  */
 function igualaPosicioRotacio(fletxa) {
+  //console.log(vagoneta.object3D.position)
   fletxa.setAttribute('position', {
     x: controls.object3D.position.x - maArc.object3D.position.x,
     y: maArc.object3D.position.y,
