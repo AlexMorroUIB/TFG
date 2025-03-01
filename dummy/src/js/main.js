@@ -2,11 +2,14 @@ const loader = new THREE.GLTFLoader();
 
 // Constants del joc
 const TAMANYCARCAIX = 16
+const NUMENEMICS = 3
 // Escena
 let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
 let vagoneta = document.getElementById('vagoneta');
+let jugant = false;
+let enemicsEnPantalla = 0;
 /*let cordaBone
 let anchorDBone*/
 let cordaEntity = document.createElement('a-entity');
@@ -56,6 +59,7 @@ AFRAME.registerComponent('arc', {
     //let poolFletxes = document.createElement('a-entity');
     //let opcions = "mixin: fletxa; size: ".concat(TAMANYCARCAIX.toString());
     escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`)
+    escena.setAttribute('pool__enemic', `mixin: enemic; size: ${NUMENEMICS}; dynamic: true`)
 
     //escena.appendChild(poolFletxes)
     //crearFletxes();
@@ -95,27 +99,25 @@ AFRAME.registerComponent('arc', {
         for (let i = 0; i < TAMANYCARCAIX; i++) {
           const fletxaTemp = carcaixTemp[i];
           fletxaTemp.setAttribute('class', 'fletxa');
-          //fletxaTemp.parent = vagoneta
-          console.log(fletxaTemp)
-          console.log(vagoneta);
-          vagoneta.attach(fletxaTemp);
           escena.components.pool__fletxa.returnEntity(fletxaTemp);
+        }
+        let enemicsTemp = [];
+        for (let i = 0; i < NUMENEMICS; i++) {
+          enemicsTemp.push(escena.components.pool__enemic.requestEntity());
+        }
+        for (let i = 0; i < NUMENEMICS; i++) {
+          const enemicTemp = enemicsTemp[i];
+          enemicTemp.setAttribute('class', 'enemic');
+          escena.components.pool__enemic.returnEntity(enemicTemp);
         }
 
         // Moure una fletxa a l'arc
         fletxaActual = escena.components.pool__fletxa.requestEntity();
         fletxaActual.play();
-        fletxaActual.setAttribute('position',
-          `${controls.object3D.position.x - ma.object3D.position.x}
-          ${ma.object3D.position.y}
-          ${controls.object3D.position.z - ma.object3D.position.z}`);
-        //fletxaActual.setAttribute('rotation', '20 0 0');
-        //fletxaActual.setAttribute('class', 'fletxa');
+        jugant = true;
+        /*let enemic = escena.components.pool__enemic.requestEntity();
+        enemic.play();*/
 
-        //fletxaEntity.setAttribute('rotation', '-32 0 0');
-        /*htmlMa.Object3D.attach(cordaBone);
-        cordaBone.setWorldTransform(htmlMa.object3D.worldMatrix);*/
-        //this.parentNode.removeChild(this);
         if (ma.id === "maEsquerra") {
           // Canviar la ma dreta per una fletxa
           maCorda = document.getElementById("maDreta")
@@ -126,6 +128,7 @@ AFRAME.registerComponent('arc', {
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
       }
+      controladorEnemics();
     });
 
     /*corda.el.addEventListener('grab-start', () => {
@@ -210,7 +213,7 @@ AFRAME.registerComponent('cordamath', {
      color: data.color,
      linewidth: 1
    });*/
-   // Create mesh.
+    // Create mesh.
     this.mesh = calcularCorda(0.0)//new THREE.Line(geometry, material);
     // Set mesh on entity.
     el.setObject3D('mesh', this.mesh);
@@ -221,7 +224,7 @@ AFRAME.registerComponent('cordamath', {
     };
   },
   update: function (oldData) {
-    let data = this.data;  // Component property values.
+    /*let data = this.data;  // Component property values.
     let element = this.el;  // Reference to the component's entity.
 
     this.el.addEventListener('grab-start', (event) => {
@@ -232,7 +235,7 @@ AFRAME.registerComponent('cordamath', {
     this.el.addEventListener('grab-end', (event) => {
       data.agafat = false;
       el.setAttribute('position', data.posInicial.toString())
-    });
+    });*/
 
   },
   tick: function (time, timeDelta) {
@@ -301,7 +304,6 @@ AFRAME.registerComponent('fletxa', {
     let material = new THREE.MeshBasicMaterial({color: data.color});
     this.mesh = new THREE.Mesh(geometry, material);
     el.setObject3D('mesh', this.mesh);
-    vagoneta.appendChild(el)
 
     loader.load(data.asset, function (gltf) {
       el.setObject3D('mesh', gltf.scene);
@@ -353,9 +355,14 @@ AFRAME.registerComponent('fletxa', {
     });
 
     this.el.addEventListener('hitstart', (event) => {
-      console.log("hit")
-      console.log(event.detail.intersectedEls)
-      escena.removeChild(event.detail.intersectedEls[0])
+      let hit = event.detail.intersectedEls[0]
+      /*console.log(hit.getAttribute('class'))
+      console.log(hit.getAttribute('class') === 'enemic')*/
+      if (hit.getAttribute('class') === 'enemic') {
+        escena.components.pool__enemic.returnEntity(hit);
+        enemicsEnPantalla--;
+        console.log(enemicsEnPantalla)
+      }
       data.disparada = false
       escena.components.pool__fletxa.returnEntity(this.el);
     });
@@ -372,7 +379,7 @@ AFRAME.registerComponent('fletxa', {
       });*/
       el.object3D.translateZ(data.temps * data.forca);
       data.temps += 0.01;
-      if (data.temps >= 2) escena.components.pool__fletxa.returnEntity(this.el);
+      if (data.temps >= 10) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
       // Solo actualizamos la posición en Z
       /*el.setAttribute('position', {
@@ -414,16 +421,19 @@ AFRAME.registerComponent('fletxa', {
  * @param fletxa fletxa actualment a l'arc
  */
 function igualaPosicioRotacio(fletxa) {
-  //console.log(vagoneta.object3D.position)
+  //console.log(vagoneta.object3D.position)- controls.object3D.position.x - controls.object3D.position.z
+  const maWorldPos = new THREE.Vector3();
+  maArc.object3D.getWorldPosition(maWorldPos);
   fletxa.setAttribute('position', {
-    x: controls.object3D.position.x - maArc.object3D.position.x,
-    y: maArc.object3D.position.y,
-    z: controls.object3D.position.z - maArc.object3D.position.z
+    x: maWorldPos.x,
+    y: maWorldPos.y,
+    z: maWorldPos.z
   });
   //let offset = Math.cos(20)+Math.sin(20)*(0.0 + 1.0 + 0.0)
   let offset = new THREE.Quaternion(0.2474, 0.0, 0.0, 0.9689)
   let maQuaternion = new THREE.Quaternion(-maArc.object3D.quaternion.x,
     maArc.object3D.quaternion.y, -maArc.object3D.quaternion.z, maArc.object3D.quaternion.w)
+  fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(offset));
   /*console.log(offset)
   console.log(offset.invert())
   console.log(maQuaternion)*/
@@ -431,7 +441,6 @@ function igualaPosicioRotacio(fletxa) {
   fletxa.object3D.quaternion.y = maArc.object3D.quaternion.y;
   fletxa.object3D.quaternion.z = -maArc.object3D.quaternion.z;
   fletxa.object3D.quaternion.w = +maArc.object3D.quaternion.w;*/
-  fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(offset));
   //fletxa.object3D.rotation.x += 0.5
   //console.log(fletxa.object3D.quaternion)
 }
@@ -456,27 +465,49 @@ function updatePosition() {
 }
 
 window.onload = () => {
-  /*let arcEl = document.querySelector('#arc');
-  console.log(arcEl)
-  arcEl.setAttribute('arc', {event: 'event2', message: 'event2'});
-  console.log(arcEl)
-  arcEl.emit('event2');*/
+
+}
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+async function controladorEnemics() {
+  const xMin = 4;
+  const xMax = 8;
+  console.log(escena.components.pool__enemic)
+  while (jugant) {
+    console.log(jugant)
+    if (enemicsEnPantalla < 5) {
+      const enemic = escena.components.pool__enemic.requestEntity();
+      //console.log(enemic)
+      enemic.setAttribute('position',
+        `${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)}
+       1 ${vagoneta.object3D.position.z + 20}`)
+      enemic.play();
+      console.log("new enemic")
+      enemicsEnPantalla++
+    }
+    await delay(5000);
+  }
 }
 
 // Component enemics
 AFRAME.registerComponent('enemic', {
   schema: {
     event: {type: 'string', default: ''},
+    width: {type: 'number', default: 0.5},
+    height: {type: 'number', default: 1.75},
+    depth: {type: 'number', default: 0.5},
+    color: {type: 'color', default: '#FF9A00'},
     message: {type: 'string', default: 'enemic'}
   },
   init: function () {
-    // Closure to access fresh `this.data` from event handler context.
-    let self = this;
-
-    // Store a reference to the handler so we can later remove it.
-    this.eventHandlerFn = function () {
-      console.log(self.data.message);
-    };
+    let data = this.data;
+    let el = this.el;
+    let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
+    let material = new THREE.MeshBasicMaterial({color: data.color});
+    this.mesh = new THREE.Mesh(geometry, material);
+    el.setObject3D('mesh', this.mesh);
+    el.setAttribute('position', '-6 1 20')
+    //el.object3D.lookAt(controls.object3D);
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
@@ -491,10 +522,6 @@ AFRAME.registerComponent('enemic', {
       if (data.event) {
         element.addEventListener(data.event, this.eventHandlerFn);
       }
-    }
-
-    if (!data.event) {
-      console.log(data.message);
     }
   },
   remove: function () {

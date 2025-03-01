@@ -23,6 +23,7 @@
              static-body="shape: sphere; sphereRadius: 0.02;"
              sphere-collider="objects: a-sphere, #arc, .fletxa;"></a-mixin>
     <a-mixin id="fletxa" fletxa grabbable aabb-collider="objects: .enemic"></a-mixin>
+    <a-mixin id="enemic" enemic></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
@@ -40,7 +41,7 @@
   <!-- constraint="target: #cart" -->
 
   <a-entity id="vagoneta" gltf-model="#cart" scale="0.5 0.5 0.5" position="0 0.9 -2"
-            animation__moure="property: position; to: 0 0.9 50; dur: 20000; easing: linear; loop: false">
+            animation__moure="property: position; to: 0 0.9 10; dur: 20; easing: linear; loop: false">
     <a-entity id="controls" rotation="0 180 0" position="0 0 -1">
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
       <a-camera active="true">
