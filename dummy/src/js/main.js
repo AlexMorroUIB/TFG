@@ -101,15 +101,6 @@ AFRAME.registerComponent('arc', {
           fletxaTemp.setAttribute('class', 'fletxa');
           escena.components.pool__fletxa.returnEntity(fletxaTemp);
         }
-        let enemicsTemp = [];
-        for (let i = 0; i < NUMENEMICS; i++) {
-          enemicsTemp.push(escena.components.pool__enemic.requestEntity());
-        }
-        for (let i = 0; i < NUMENEMICS; i++) {
-          const enemicTemp = enemicsTemp[i];
-          enemicTemp.setAttribute('class', 'enemic');
-          escena.components.pool__enemic.returnEntity(enemicTemp);
-        }
 
         // Moure una fletxa a l'arc
         fletxaActual = escena.components.pool__fletxa.requestEntity();
@@ -128,6 +119,8 @@ AFRAME.registerComponent('arc', {
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
       }
+      vagoneta.setAttribute('animation__moure','property: position; to: 0 0.9 10; dur: 20000; easing: linear; loop: false');
+      vagoneta.play();
       controladorEnemics();
     });
 
@@ -394,10 +387,10 @@ AFRAME.registerComponent('fletxa', {
       });*/
       igualaPosicioRotacio(el);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.4 metres
-      let distanciaMans = Math.max(((maArc.object3D.position.z - data.ma.object3D.position.z) / 2), -0.35);
-      if (distanciaMans > 0.0) distanciaMans = 0.0;
-      el.object3D.translateZ(distanciaMans);
-      cordaEntity.setObject3D('mesh', calcularCorda(-distanciaMans));
+      let distanciaMans = Math.min((Math.abs(maArc.object3D.position.z - data.ma.object3D.position.z) / 2), 0.35);
+      //if (distanciaMans < 0.0) distanciaMans = 0.0;
+      el.object3D.translateZ(-distanciaMans);
+      cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans));
     } else {
       igualaPosicioRotacio(el);
     }
@@ -477,6 +470,7 @@ async function controladorEnemics() {
     console.log(jugant)
     if (enemicsEnPantalla < 5) {
       const enemic = escena.components.pool__enemic.requestEntity();
+      enemic.setAttribute('class', 'enemic');
       //console.log(enemic)
       enemic.setAttribute('position',
         `${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)}
