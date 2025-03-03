@@ -22,7 +22,7 @@
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
              sphere-collider="objects: a-sphere, #arc, .fletxa;"></a-mixin>
-    <a-mixin id="fletxa" fletxa grabbable aabb-collider="objects: .enemic; interval: 40"></a-mixin>
+    <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1" aabb-collider="objects: .enemic; interval: 10"></a-mixin>
     <a-mixin id="enemic" enemic></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"

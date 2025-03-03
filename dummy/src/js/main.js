@@ -119,7 +119,7 @@ AFRAME.registerComponent('arc', {
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
       }
-      vagoneta.setAttribute('animation__moure','property: position; to: 0 0.9 10; dur: 20000; easing: linear; loop: false');
+      vagoneta.setAttribute('animation__moure', 'property: position; to: 0 0.9 10; dur: 20000; easing: linear; loop: false');
       vagoneta.play();
       controladorEnemics();
     });
@@ -256,6 +256,11 @@ AFRAME.registerComponent('cordamath', {
   }
 });
 
+/**
+ * Genera una THREE.Line a partir d'una THREE.CatmullRomCurve3 simulant la corda de l'arc.
+ * @param distanciaMans Distància entre les mans, si és 0.0, la corda és recta.
+ * @returns {Line} La THREE.Line que simula la corda.
+ */
 function calcularCorda(distanciaMans) {
   let corda = new THREE.CatmullRomCurve3([
     new THREE.Vector3(0, cordaEntity.components.cordamath.data.anclaSuperior, 0),
@@ -309,8 +314,11 @@ AFRAME.registerComponent('fletxa', {
     let element = this.el;  // Reference to the component's entity.
 
     this.el.addEventListener('grab-start', (event) => {
+      console.log("start")
+      console.log(event.detail.buttonEvent)
+      console.log(event.detail.buttonEvent.type)
       let ma = event.detail.hand;
-      if (ma.id !== maArc.id) {
+      if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerdown") {
         data.ma = document.getElementById(ma.id);
         data.agafada = true;
         data.posInicial[0] = element.getAttribute('position').x;
@@ -320,8 +328,10 @@ AFRAME.registerComponent('fletxa', {
     });
 
     this.el.addEventListener('grab-end', (event) => {
+      console.log("end: ")
+      console.log(event.detail.buttonEvent.type)
       let ma = event.detail.hand;
-      if (ma.id !== maArc.id) {
+      if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerup") {
         data.agafada = false;
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
@@ -351,13 +361,13 @@ AFRAME.registerComponent('fletxa', {
       let hit = event.detail.intersectedEls[0]
       /*console.log(hit.getAttribute('class'))
       console.log(hit.getAttribute('class') === 'enemic')*/
-      if (hit.getAttribute('class') === 'enemic') {
-        escena.components.pool__enemic.returnEntity(hit);
-        enemicsEnPantalla--;
-        console.log(enemicsEnPantalla)
-      }
-      data.disparada = false
+      //if (hit.getAttribute('class') === 'enemic') {
+      escena.components.pool__enemic.returnEntity(hit);
+      enemicsEnPantalla--;
+      console.log(enemicsEnPantalla)
+      //}
       escena.components.pool__fletxa.returnEntity(this.el);
+      data.disparada = false
     });
 
   },
@@ -467,16 +477,18 @@ async function controladorEnemics() {
   const xMax = 8;
   console.log(escena.components.pool__enemic)
   while (jugant) {
-    console.log(jugant)
     if (enemicsEnPantalla < 5) {
       const enemic = escena.components.pool__enemic.requestEntity();
       enemic.setAttribute('class', 'enemic');
       //console.log(enemic)
-      enemic.setAttribute('position',
-        `${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)}
-       1 ${vagoneta.object3D.position.z + 20}`)
+      enemic.object3D.position.x = (Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1);
+      enemic.object3D.position.y = 1;
+      enemic.object3D.position.z = (vagoneta.object3D.position.z + 20);
+      /*enemic.setAttribute('position',
+        `${}
+       1 ${vagoneta.object3D.position.z + 20}`)*/
       enemic.play();
-      console.log("new enemic")
+      console.log(enemic)
       enemicsEnPantalla++
     }
     await delay(5000);
@@ -500,7 +512,6 @@ AFRAME.registerComponent('enemic', {
     let material = new THREE.MeshBasicMaterial({color: data.color});
     this.mesh = new THREE.Mesh(geometry, material);
     el.setObject3D('mesh', this.mesh);
-    el.setAttribute('position', '-6 1 20')
     //el.object3D.lookAt(controls.object3D);
   },
   update: function (oldData) {
