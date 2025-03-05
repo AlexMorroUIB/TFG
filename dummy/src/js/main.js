@@ -2,7 +2,7 @@ const loader = new THREE.GLTFLoader();
 
 // Constants del joc
 const TAMANYCARCAIX = 16
-const NUMENEMICS = 3
+//const NUMENEMICS = 3
 // Escena
 let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
@@ -33,18 +33,6 @@ AFRAME.registerComponent('arc', {
     let data = this.data;
     let el = this.el;
     loader.load(data.asset, function (gltf) {
-      /*gltf.scene.traverse(n => {
-        if (n.name === 'Armature') arcBones.armature = n;
-        if (n.name === 'String') arcBones.corda = n;
-        if (n.name === 'IKD') arcBones.IKD = n;
-        if (n.name === 'IKI') arcBones.IKI = n;
-        if (n.name === 'BoneD') arcBones.boneD = n;
-        if (n.name === 'Bone013') arcBones.lastBoneD = n;
-        if (n.name === 'BoneI') arcBones.boneI = n;
-      });
-      //console.log(gltf.scene)
-      cordaBone = gltf.scene.getObjectByName('String');
-      anchorDBone = gltf.scene.getObjectByName('IKD');*/
       el.setObject3D('mesh', gltf.scene);
       //gltf.scene.position.set(document.getElementById('maEsquerra').object3D.position)
     }), undefined, function (error) {
@@ -59,7 +47,7 @@ AFRAME.registerComponent('arc', {
     //let poolFletxes = document.createElement('a-entity');
     //let opcions = "mixin: fletxa; size: ".concat(TAMANYCARCAIX.toString());
     escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`)
-    escena.setAttribute('pool__enemic', `mixin: enemic; size: ${NUMENEMICS}; dynamic: true`)
+    //escena.setAttribute('pool__enemic', `mixin: enemic; size: ${NUMENEMICS}; dynamic: true`)
 
     //escena.appendChild(poolFletxes)
     //crearFletxes();
@@ -281,7 +269,7 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/fletxatest.glb'},
+    asset: {type: 'asset', default: '../assets/models/fletxa.glb'},
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.05},
     depth: {type: 'number', default: 0.5},
@@ -314,9 +302,9 @@ AFRAME.registerComponent('fletxa', {
     let element = this.el;  // Reference to the component's entity.
 
     this.el.addEventListener('grab-start', (event) => {
-      console.log("start")
+      /*console.log("start")
       console.log(event.detail.buttonEvent)
-      console.log(event.detail.buttonEvent.type)
+      console.log(event.detail.buttonEvent.type)*/
       let ma = event.detail.hand;
       if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerdown") {
         data.ma = document.getElementById(ma.id);
@@ -324,12 +312,14 @@ AFRAME.registerComponent('fletxa', {
         data.posInicial[0] = element.getAttribute('position').x;
         data.posInicial[1] = element.getAttribute('position').y;
         data.posInicial[2] = element.getAttribute('position').z;
+        fletxaActual.removeAttribute('aabb-collider');
+        fletxaActual.setAttribute('aabb-collider', 'objects: .enemic; interval: 20');
       }
     });
 
     this.el.addEventListener('grab-end', (event) => {
-      console.log("end: ")
-      console.log(event.detail.buttonEvent.type)
+      /*console.log("end: ")
+      console.log(event.detail.buttonEvent.type)*/
       let ma = event.detail.hand;
       if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerup") {
         data.agafada = false;
@@ -358,18 +348,17 @@ AFRAME.registerComponent('fletxa', {
     });
 
     this.el.addEventListener('hitstart', (event) => {
-      let hit = event.detail.intersectedEls[0]
-      /*console.log(hit.getAttribute('class'))
-      console.log(hit.getAttribute('class') === 'enemic')*/
+      //let enemic = event.detail.intersectedEls[0]
+      //console.log(enemic)
+      //console.log(hit.getAttribute('class') === 'enemic')
       //if (hit.getAttribute('class') === 'enemic') {
-      escena.components.pool__enemic.returnEntity(hit);
-      enemicsEnPantalla--;
-      console.log(enemicsEnPantalla)
-      //}
+      /*console.log("fletxa: ")
+      console.log(this.el.object3D.position)*/
       escena.components.pool__fletxa.returnEntity(this.el);
-      data.disparada = false
+      enemicsEnPantalla--;
+      //}
+      element.data.disparada = false;
     });
-
   },
   tick: function (time, timeDelta) {
     let data = this.data;
@@ -475,21 +464,33 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 async function controladorEnemics() {
   const xMin = 4;
   const xMax = 8;
-  console.log(escena.components.pool__enemic)
+  //console.log(escena.components.pool__enemic)
   while (jugant) {
     if (enemicsEnPantalla < 5) {
-      const enemic = escena.components.pool__enemic.requestEntity();
+      const enemic = document.createElement('a-entity');
+      enemic.setAttribute('enemic', '');
       enemic.setAttribute('class', 'enemic');
       //console.log(enemic)
-      enemic.object3D.position.x = (Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1);
+      /*enemic.setAttribute('animation', `property: position;
+      to: ${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)} 1 ${vagoneta.object3D.position.z + 20};
+      dur: 1; easing: linear; loop: false`);*/
+      enemic.setAttribute('position', {
+        x: (Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1),
+        y: 1,
+        z: vagoneta.object3D.position.z + 20
+      });
+      //enemic.setAttribute('aabb-collider', 'objects: .fletxa; interval: 20');
+      /*enemic.object3D.position.x = (Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1);
       enemic.object3D.position.y = 1;
-      enemic.object3D.position.z = (vagoneta.object3D.position.z + 20);
+      enemic.object3D.position.z = (vagoneta.object3D.position.z + 20);*/
       /*enemic.setAttribute('position',
         `${}
        1 ${vagoneta.object3D.position.z + 20}`)*/
+      escena.appendChild(enemic);
       enemic.play();
-      console.log(enemic)
-      enemicsEnPantalla++
+      /*console.log("enemic: ")
+      console.log(enemic.getAttribute('position'))*/
+      enemicsEnPantalla++;
     }
     await delay(5000);
   }
@@ -507,31 +508,34 @@ AFRAME.registerComponent('enemic', {
   },
   init: function () {
     let data = this.data;
-    let el = this.el;
+    let element = this.el;
+    //el.object3D.lookAt(controls.object3D);
     let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
     let material = new THREE.MeshBasicMaterial({color: data.color});
     this.mesh = new THREE.Mesh(geometry, material);
-    el.setObject3D('mesh', this.mesh);
-    //el.object3D.lookAt(controls.object3D);
+    element.setObject3D('mesh', this.mesh);
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
     let element = this.el;  // Reference to the component's entity.
 
-    if (data.event !== oldData.event) {
-      // Remove the previous event listener, if it exists.
-      if (oldData.event) {
-        element.removeEventListener(oldData.event, this.eventHandlerFn);
-      }
-      // Add listener for new event, if it exists.
-      if (data.event) {
-        element.addEventListener(data.event, this.eventHandlerFn);
-      }
-    }
+    this.el.addEventListener('hitstart', (event) => {
+      console.log("enemic hit")
+      this.remove();
+    });
+
+  },
+  tick: function (time, timeDelta){
+    let data = this.data;
+    let element = this.el
+    const controlsWorldPos = new THREE.Vector3();
+    controls.object3D.getWorldPosition(controlsWorldPos);
+    element.object3D.lookAt(controlsWorldPos);
   },
   remove: function () {
     // Remove element.
-    this.el.remove();
+    escena.removeChild(this.el);
+    this.el.removeFromParent();
   }
 });
 // vagoneta
