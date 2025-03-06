@@ -75,8 +75,8 @@ AFRAME.registerComponent('arc', {
 
         // Afegir la corda a la posició de la mà amb l'offset corresponent
         ma.appendChild(cordaEntity);
-        cordaEntity.setAttribute('position', '0 0 0.28');
-        cordaEntity.setAttribute('rotation', '-30 0 0');
+        cordaEntity.setAttribute('position', '0 0.12 0.22');
+        cordaEntity.setAttribute('rotation', '-60 0 0');
 
         // Afegir la classe fletxa a totes les entitats de la pool de fletxes
         // perque l'sphere-collider de les mans les detecti
@@ -154,10 +154,10 @@ function calculateTension() {
 
 AFRAME.registerComponent('cordamath', {
   schema: {
-    anclaSuperior: {type: 'number', default: 0.86},
-    anclaInferior: {type: 'number', default: -0.58},
-    puntIntermigSuperior: {type: 'number', default: 0.25},
-    puntIntermigInferior: {type: 'number', default: 0.15},
+    anclaSuperior: {type: 'number', default: 0.82},
+    anclaInferior: {type: 'number', default: -0.56},
+    puntIntermigSuperior: {type: 'number', default: 0.14},
+    puntIntermigInferior: {type: 'number', default: 0.12},
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.25},
     depth: {type: 'number', default: 0.05},
@@ -269,7 +269,7 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/fletxa.glb'},
+    asset: {type: 'asset', default: '../assets/models/fletxatest.glb'},
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.05},
     depth: {type: 'number', default: 0.5},
@@ -386,10 +386,10 @@ AFRAME.registerComponent('fletxa', {
       });*/
       igualaPosicioRotacio(el);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.4 metres
-      let distanciaMans = Math.min((Math.abs(maArc.object3D.position.z - data.ma.object3D.position.z) / 2), 0.35);
+      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(data.ma.object3D.position) / 4), 0.2);
       //if (distanciaMans < 0.0) distanciaMans = 0.0;
       el.object3D.translateZ(-distanciaMans);
-      cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans));
+      cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans * 2));
     } else {
       igualaPosicioRotacio(el);
     }
@@ -422,7 +422,7 @@ function igualaPosicioRotacio(fletxa) {
     z: maWorldPos.z
   });
   //let offset = Math.cos(20)+Math.sin(20)*(0.0 + 1.0 + 0.0)
-  let offset = new THREE.Quaternion(0.2474, 0.0, 0.0, 0.9689)
+  let offset = new THREE.Quaternion(0.501213, 0.0, 0.0, 0.8653239)
   let maQuaternion = new THREE.Quaternion(-maArc.object3D.quaternion.x,
     maArc.object3D.quaternion.y, -maArc.object3D.quaternion.z, maArc.object3D.quaternion.w)
   fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(offset));
@@ -525,7 +525,7 @@ AFRAME.registerComponent('enemic', {
     });
 
   },
-  tick: function (time, timeDelta){
+  tick: function (time, timeDelta) {
     let data = this.data;
     let element = this.el
     const controlsWorldPos = new THREE.Vector3();
