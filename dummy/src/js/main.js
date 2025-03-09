@@ -1,23 +1,36 @@
 const loader = new THREE.GLTFLoader();
 
 // Constants del joc
-const TAMANYCARCAIX = 16
-//const NUMENEMICS = 3
-// Escena
+const TAMANYCARCAIX = 16;
+const CAMINSENDAVANT = 60;
+const avancVagoneta = 150;
+const jocAcabatEvent = new Event('jocAcabat');
+
+// Variables del joc
+let vida = 10;
+let punts = 0;
+let numEnemicsMax = 5;  // Num d'enemics màxims simultàniament en pantalla
+let delayGeneracioEnemics = 4000; // Temps en ms que tarda el controlador en generar un nou enemic.
+
+// Variables i constants de l'escena
+const OFFSETFLETXA = new THREE.Quaternion(0.501213, 0.0, 0.0, 0.8653239);
 let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
 let vagoneta = document.getElementById('vagoneta');
 let jugant = false;
 let enemicsEnPantalla = 0;
+let numCaminsEndavant = 0;
+let posicioCamins = 0;
+let vidaEntity;
 /*let cordaBone
 let anchorDBone*/
 let cordaEntity = document.createElement('a-entity');
 //let carcaix = new Array(TAMANYCARCAIX);
-let fletxaActual;
+let fletxaActual; // entitat HTML de la fletxa que està actualment a l'arc i no s'ha disparat
 const arcBones = {};
-let maArc;
-let maCorda;
+let maArc; // entitat HTML de la ma que ha agafat l'arc
+let maCorda; // entitat HTML de la ma que ha d'agafar les fletxes
 
 // Arc
 AFRAME.registerComponent('arc', {
@@ -107,7 +120,8 @@ AFRAME.registerComponent('arc', {
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
       }
-      vagoneta.setAttribute('animation__moure', 'property: position; to: 0 0.9 10; dur: 20000; easing: linear; loop: false');
+      generarCamins();
+      vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta}; dur: 120000; easing: linear; loop: false`);
       vagoneta.play();
       controladorEnemics();
     });
@@ -162,61 +176,19 @@ AFRAME.registerComponent('cordamath', {
     height: {type: 'number', default: 0.25},
     depth: {type: 'number', default: 0.05},
     color: {type: 'color', default: '#2D2D2D'},
-    event: {type: 'string', default: ''},
-    ma: {type: 'asset'},
-    posInicial: {type: 'array', default: [0, 0, 0.3]}
+    cordaRecta: {type: 'number', default: 0.0}
   },
   init: function () {
     let data = this.data;
     let el = this.el;
-    // Closure to access fresh `this.data` from event handler context.
-    let self = this;
 
-    /*let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
-    let material = new THREE.MeshBasicMaterial({color: data.color});
-    this.mesh = new THREE.Mesh(geometry, material);
-    el.setObject3D('mesh', this.mesh);*/
-
-    /*let cordaDibuixada = document.createElement('a-entity')
-    cordaDibuixada.setAttribute('id', 'cordaDibuixada')
-    el.appendChild(cordaDibuixada)*/
-    // Generar la corva de la corda de l'arc
-    /*let corda = new THREE.CatmullRomCurve3([
-     new THREE.Vector3(0, data.anclaSuperior, 0),
-     new THREE.Vector3(0, data.puntIntermigSuperior, 0.3),
-     new THREE.Vector3(0, data.puntIntermigInferior, 0.3),
-     new THREE.Vector3(0, data.anclaInferior, 0)
-   ]);
-   let pointsCorda = corda.getPoints(50);
-   let geometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
-   // Create material.
-   let material = new THREE.LineBasicMaterial({
-     color: data.color,
-     linewidth: 1
-   });*/
     // Create mesh.
-    this.mesh = calcularCorda(0.0)//new THREE.Line(geometry, material);
+    this.mesh = calcularCorda(data.cordaRecta)
     // Set mesh on entity.
     el.setObject3D('mesh', this.mesh);
 
-    // Store a reference to the handler so we can later remove it.
-    this.eventHandlerFn = function () {
-      console.log(self.data.message);
-    };
   },
   update: function (oldData) {
-    /*let data = this.data;  // Component property values.
-    let element = this.el;  // Reference to the component's entity.
-
-    this.el.addEventListener('grab-start', (event) => {
-      let ma = event.detail.hand;
-      data.ma = document.getElementById(ma.id);
-      data.agafat = true;
-    });
-    this.el.addEventListener('grab-end', (event) => {
-      data.agafat = false;
-      el.setAttribute('position', data.posInicial.toString())
-    });*/
 
   },
   tick: function (time, timeDelta) {
@@ -413,7 +385,7 @@ AFRAME.registerComponent('fletxa', {
  * @param fletxa fletxa actualment a l'arc
  */
 function igualaPosicioRotacio(fletxa) {
-  //console.log(vagoneta.object3D.position)- controls.object3D.position.x - controls.object3D.position.z
+  // Mou la fletxa a la ma
   const maWorldPos = new THREE.Vector3();
   maArc.object3D.getWorldPosition(maWorldPos);
   fletxa.setAttribute('position', {
@@ -421,20 +393,13 @@ function igualaPosicioRotacio(fletxa) {
     y: maWorldPos.y,
     z: maWorldPos.z
   });
-  //let offset = Math.cos(20)+Math.sin(20)*(0.0 + 1.0 + 0.0)
-  let offset = new THREE.Quaternion(0.501213, 0.0, 0.0, 0.8653239)
-  let maQuaternion = new THREE.Quaternion(-maArc.object3D.quaternion.x,
-    maArc.object3D.quaternion.y, -maArc.object3D.quaternion.z, maArc.object3D.quaternion.w)
-  fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(offset));
-  /*console.log(offset)
-  console.log(offset.invert())
-  console.log(maQuaternion)*/
-  /*fletxa.object3D.quaternion.x = -maArc.object3D.quaternion.x;
-  fletxa.object3D.quaternion.y = maArc.object3D.quaternion.y;
-  fletxa.object3D.quaternion.z = -maArc.object3D.quaternion.z;
-  fletxa.object3D.quaternion.w = +maArc.object3D.quaternion.w;*/
-  //fletxa.object3D.rotation.x += 0.5
-  //console.log(fletxa.object3D.quaternion)
+  // iguala la rotació de la ma
+  let maQuaternion = new THREE.Quaternion(
+    -maArc.object3D.quaternion.x,
+    maArc.object3D.quaternion.y,
+    -maArc.object3D.quaternion.z,
+    maArc.object3D.quaternion.w)
+  fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(OFFSETFLETXA));
 }
 
 function updatePosition() {
@@ -457,7 +422,7 @@ function updatePosition() {
 }
 
 window.onload = () => {
-
+  generarCamins();
 }
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -466,7 +431,7 @@ async function controladorEnemics() {
   const xMax = 8;
   //console.log(escena.components.pool__enemic)
   while (jugant) {
-    if (enemicsEnPantalla < 5) {
+    if (enemicsEnPantalla <= numEnemicsMax) {
       const enemic = document.createElement('a-entity');
       enemic.setAttribute('enemic', '');
       enemic.setAttribute('class', 'enemic');
@@ -479,20 +444,14 @@ async function controladorEnemics() {
         y: 1,
         z: vagoneta.object3D.position.z + 20
       });
-      //enemic.setAttribute('aabb-collider', 'objects: .fletxa; interval: 20');
-      /*enemic.object3D.position.x = (Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1);
-      enemic.object3D.position.y = 1;
-      enemic.object3D.position.z = (vagoneta.object3D.position.z + 20);*/
-      /*enemic.setAttribute('position',
-        `${}
-       1 ${vagoneta.object3D.position.z + 20}`)*/
+
       escena.appendChild(enemic);
       enemic.play();
       /*console.log("enemic: ")
       console.log(enemic.getAttribute('position'))*/
       enemicsEnPantalla++;
     }
-    await delay(5000);
+    await delay(delayGeneracioEnemics);
   }
 }
 
@@ -504,7 +463,8 @@ AFRAME.registerComponent('enemic', {
     height: {type: 'number', default: 1.75},
     depth: {type: 'number', default: 0.5},
     color: {type: 'color', default: '#FF9A00'},
-    message: {type: 'string', default: 'enemic'}
+    maxDistanciaVagoneta: {type: 'number', default: 40},
+    enEscena: {type: 'boolean', default: true}
   },
   init: function () {
     let data = this.data;
@@ -520,44 +480,135 @@ AFRAME.registerComponent('enemic', {
     let element = this.el;  // Reference to the component's entity.
 
     this.el.addEventListener('hitstart', (event) => {
-      console.log("enemic hit")
+      punts++;
       this.remove();
     });
 
   },
   tick: function (time, timeDelta) {
     let data = this.data;
-    let element = this.el
-    const controlsWorldPos = new THREE.Vector3();
-    controls.object3D.getWorldPosition(controlsWorldPos);
-    element.object3D.lookAt(controlsWorldPos);
+    if (data.enEscena) {
+      let element = this.el
+      let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
+      if (distanciaVagoneta < vagoneta.object3D.position.z) {
+        data.enEscena = false;
+        enemicsEnPantalla--;
+        vida--;
+        this.remove();
+      }
+      const controlsWorldPos = new THREE.Vector3();
+      controls.object3D.getWorldPosition(controlsWorldPos);
+      element.object3D.lookAt(controlsWorldPos);
+    }
   },
   remove: function () {
     // Remove element.
-    escena.removeChild(this.el);
+    this.el.removeFromParent();
+  }
+});
+
+function generarCamins() {
+  for (let i = numCaminsEndavant; i < CAMINSENDAVANT; i++) {
+    const terraNou = document.createElement('a-entity');
+    terraNou.setAttribute('terra', 'asset: #terraAsset')
+    terraNou.setAttribute('position', `0 0 ${posicioCamins}`)
+    posicioCamins += 6;
+    escena.appendChild(terraNou);
+  }
+}
+
+AFRAME.registerComponent('terra', {
+  schema: {
+    asset: {type: 'asset', default: '../assets/models/terra.glb'},
+    maxDistanciaVagoneta: {type: 'number', default: 60},
+    enEscena: {type: 'boolean', default: true}
+  },
+  init: function () {
+    let data = this.data;
+    let el = this.el;
+
+    loader.load(data.asset, function (gltf) {
+      el.setObject3D('mesh', gltf.scene);
+    }), undefined, function (error) {
+      console.error(error);
+    };
+  },
+  update: function (oldData) {
+    let data = this.data;  // Component property values.
+    let element = this.el;  // Reference to the component's entity.
+
+
+  },
+  tick: function (time, timeDelta) {
+    let data = this.data;
+    if (data.enEscena) {
+      let element = this.el;
+      let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
+      if (distanciaVagoneta < vagoneta.object3D.position.z) {
+        data.enEscena = false;
+        numCaminsEndavant--;
+        generarCamins();
+        this.remove();
+      }
+    }
+  },
+  remove: function () {
+    // Remove element.
     this.el.removeFromParent();
   }
 });
 // vagoneta
-/*AFRAME.registerComponent('vagoneta', {
+AFRAME.registerComponent('vagoneta', {
   schema: {
+    asset: {type: 'asset', default: '../assets/models/cart.glb'},
+    cor: {type: 'asset', default: '../assets/models/cor.png'},
     width: {type: 'number', default: 5},
-    height: {type: 'number', default: 5},
-    material: {type: 'asset', default: '/textures/ferro.png'},
-    culor: {type: 'color', default: 'red'},
-    message: {type: 'string'}
+    height: {type: 'number', default: 5}
   },
   init: function () {
-    let data = this.data
-    console.log(data.message);
-    this.geometry = new THREE.PlaneGeometry(data.width, data.height);
-    // Create material.
-    this.material = new THREE.MeshStandardMaterial({color: data.culor, side: THREE.DoubleSide});
-    // Create mesh.
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
-  }
-});*/
+    let data = this.data;
+    let element = this.el
 
+    loader.load(data.asset, function (gltf) {
+      element.setObject3D('mesh', gltf.scene);
+    }), undefined, function (error) {
+      console.error(error);
+    };
+    element.setAttribute('scale', '0.5 0.5 0.5');
+    element.setAttribute('position', '0 0.85 0');
+
+    vidaEntity = document.createElement('a-entity');
+    vidaEntity.setAttribute('text', `value: Vida: ${vida};align: center`);
+    vidaEntity.setAttribute('rotation', `-20 180 0`);
+    vidaEntity.setAttribute('position', `0 0.2 1`);
+    /*vidaEntity.setAttribute('src', data.cor);
+    vidaEntity.setAttribute('repeat', vida);*/
+    vagoneta.appendChild(vidaEntity);
+  },
+  update: function (oldData) {
+    let data = this.data;  // Component property values.
+    let element = this.el;  // Reference to the component's entity.
+
+
+  },
+  tick: function (time, timeDelta) {
+    let data = this.data;
+    let element = this.el
+    if (vida > 0) {
+      vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
+    } else {
+      jugant = false;
+      document.dispatchEvent(jocAcabatEvent);
+      //jocAcabat();
+    }
+
+    // check camins enrrere
+  }
+});
+
+document.addEventListener('jocAcabat', () =>{
+  alert("Joc acabat!")
+});
 
 // Follow component
 /*AFRAME.registerComponent('follow', {
