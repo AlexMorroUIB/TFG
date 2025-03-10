@@ -22,8 +22,9 @@
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
              sphere-collider="objects: a-sphere, #arc, .fletxa;"></a-mixin>
-    <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1" aabb-collider="objects: .enemic; interval: 20"></a-mixin>
+    <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1" aabb-collider="objects: .enemic, .boto; interval: 40"></a-mixin>
     <a-mixin id="enemic" enemic></a-mixin>
+    <a-mixin id="terra" terra="asset: #terraAsset"></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
@@ -45,7 +46,7 @@
     <a-entity id="controls" rotation="0 180 0" position="0 0 -1">
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
       <a-camera active="true">
-        <a-cursor></a-cursor>
+        <a-plane id="hud"></a-plane>
       </a-camera>
       <a-entity id="maEsquerra" hand-controls="hand: left" mixin="mans"></a-entity>
       <a-entity id="maDreta" hand-controls="hand: right" mixin="mans"></a-entity>

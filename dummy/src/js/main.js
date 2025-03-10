@@ -18,6 +18,7 @@ let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
 let vagoneta = document.getElementById('vagoneta');
+let hud = document.getElementById('hud');
 let jugant = false;
 let enemicsEnPantalla = 0;
 let numCaminsEndavant = 0;
@@ -76,7 +77,7 @@ AFRAME.registerComponent('arc', {
 
 
     this.el.addEventListener('grab-start', (event) => {
-      if (!data.agafat) {
+      if (!data.agafat && event.detail.buttonEvent.type === "gripdown" || event.detail.buttonEvent.type === "triggerdown") {
         let ma = event.detail.hand;
         data.ma = ma.id
         // Funcionalitat d'agafar l'arc i substituir la má per l'arc
@@ -119,11 +120,12 @@ AFRAME.registerComponent('arc', {
           maCorda = document.getElementById("maEsquerra")
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
+
+        //generarCamins();
+        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta}; dur: 120; easing: linear; loop: false`);
+        vagoneta.play();
+        controladorEnemics();
       }
-      generarCamins();
-      vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta}; dur: 120000; easing: linear; loop: false`);
-      vagoneta.play();
-      controladorEnemics();
     });
 
     /*corda.el.addEventListener('grab-start', () => {
@@ -327,7 +329,6 @@ AFRAME.registerComponent('fletxa', {
       /*console.log("fletxa: ")
       console.log(this.el.object3D.position)*/
       escena.components.pool__fletxa.returnEntity(this.el);
-      enemicsEnPantalla--;
       //}
       element.data.disparada = false;
     });
@@ -422,8 +423,15 @@ function updatePosition() {
 }
 
 window.onload = () => {
+  escena.setAttribute('pool__cami', `mixin: terra; size: ${CAMINSENDAVANT}`)
+  diley();
+}
+
+async function diley() {
+  await delay(500);
   generarCamins();
 }
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 async function controladorEnemics() {
@@ -480,6 +488,7 @@ AFRAME.registerComponent('enemic', {
     let element = this.el;  // Reference to the component's entity.
 
     this.el.addEventListener('hitstart', (event) => {
+      enemicsEnPantalla--;
       punts++;
       this.remove();
     });
@@ -503,17 +512,21 @@ AFRAME.registerComponent('enemic', {
   },
   remove: function () {
     // Remove element.
+    escena.removeChild(this.el);
     this.el.removeFromParent();
   }
 });
 
 function generarCamins() {
-  for (let i = numCaminsEndavant; i < CAMINSENDAVANT; i++) {
-    const terraNou = document.createElement('a-entity');
-    terraNou.setAttribute('terra', 'asset: #terraAsset')
-    terraNou.setAttribute('position', `0 0 ${posicioCamins}`)
+  while (numCaminsEndavant < CAMINSENDAVANT) {
+    let terraNou = escena.components.pool__cami.requestEntity();
+    /*const terraNou = document.createElement('a-entity');
+    terraNou.setAttribute('terra', 'asset: #terraAsset')*/
+    terraNou.setAttribute('position', `0 0 ${posicioCamins}`);
     posicioCamins += 6;
-    escena.appendChild(terraNou);
+    terraNou.play();
+    numCaminsEndavant++;
+    //escena.appendChild(terraNou);
   }
 }
 
@@ -546,15 +559,16 @@ AFRAME.registerComponent('terra', {
       let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
       if (distanciaVagoneta < vagoneta.object3D.position.z) {
         data.enEscena = false;
-        numCaminsEndavant--;
-        generarCamins();
         this.remove();
       }
     }
   },
   remove: function () {
     // Remove element.
-    this.el.removeFromParent();
+    escena.components.pool__cami.returnEntity(this.el);
+    numCaminsEndavant--;
+    generarCamins();
+    //this.el.removeFromParent();
   }
 });
 // vagoneta
@@ -584,6 +598,21 @@ AFRAME.registerComponent('vagoneta', {
     /*vidaEntity.setAttribute('src', data.cor);
     vidaEntity.setAttribute('repeat', vida);*/
     vagoneta.appendChild(vidaEntity);
+
+    element.addEventListener("animationcomplete", () => {
+      jugant = false;
+      let botoContinuar = document.createElement('a-box');
+      botoContinuar.setAttribute('class', 'boto');
+      botoContinuar.setAttribute('position', '0 1.5 5');
+      botoContinuar.setAttribute('color', '#12FF12');
+
+      botoContinuar.addEventListener('hitstart', () => {
+        console.log("hit cont")
+        element.setAttribute('animation__moure', `property: position; to: 0 0.9 ${element.object3D.position.z + avancVagoneta}; dur: 120; easing: linear; loop: false`);
+        botoContinuar.removeFromParent();
+      });
+      element.appendChild(botoContinuar);
+    });
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
@@ -594,20 +623,78 @@ AFRAME.registerComponent('vagoneta', {
   tick: function (time, timeDelta) {
     let data = this.data;
     let element = this.el
-    if (vida > 0) {
-      vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
-    } else {
-      jugant = false;
-      document.dispatchEvent(jocAcabatEvent);
-      //jocAcabat();
+    if (jugant) {
+      if (vida > 0) {
+        vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
+      } else {
+        jugant = false;
+        document.dispatchEvent(jocAcabatEvent);
+      }
     }
 
-    // check camins enrrere
   }
 });
 
-document.addEventListener('jocAcabat', () =>{
-  alert("Joc acabat!")
+document.addEventListener('jocAcabat', () => {
+  let fonsAcabat = document.createElement('a-box');
+  //fonsAcabat.setAttribute('overlay', '');
+  fonsAcabat.setAttribute('position', '0 1.5 5');
+  vagoneta.appendChild(fonsAcabat);
+});
+
+AFRAME.registerComponent("overlay", {
+  schema: {
+    posicio: {type: 'string', default: '0 0 -2'},
+    width: {type: 'number', default: '1'},
+    height: {type: 'number', default: '1'},
+    color: {type: 'string', default: '#525252'}
+    //position="0 0 -2" width="1" height="1"
+  },
+  dependencies: ['material'],
+  init: function () {
+    let data = this.data;
+    let element = this.el;
+    this.el.sceneEl.renderer.sortObjects = true;
+    this.el.object3D.renderOrder = 100;
+    this.el.components.material.material.depthTest = false;
+
+    let textAcabat = document.createElement('a-entity');
+    element.setAttribute('height', data.height);
+    element.setAttribute('width', data.width);
+    element.setAttribute('color', data.color);
+    element.setAttribute('position', data.posicio);
+    textAcabat.setAttribute('position', '0 0 0.5');
+    textAcabat.setAttribute('text', 'value: Joc acabat!;align: center;');
+
+    // Boto el qual reiniciara la partida quan se li dispari una fletxa
+    let botoReiniciar = document.createElement('a-box');
+    botoReiniciar.setAttribute('class', 'boto');
+
+    botoReiniciar.addEventListener('hitstart', () => {
+      // TODO reiniciar les variables del joc
+      vida = 10;
+      punts = 0;
+      vagoneta.setAttribute('position', '0 0.9 0');
+      /*TODO destriurCamins();
+      posicioCamins = 0;
+      generarCamins();*/
+
+      escena.removeChild(element);
+      element.removeFromParent();
+    });
+
+    element.appendChild(textAcabat);
+    element.appendChild(botoReiniciar);
+
+    // Afegir laser al control que agafa les fletxes.
+    maCorda.setAttribute('laser-controls', '');
+    maCorda.setAttribute('raycaster', 'objects: .links; far: 5');
+    /*if (maCorda.id === "maDreta") {
+      maCorda.setAttribute('laser-controls', 'hand: right');
+    } else {
+      maCorda.setAttribute('laser-controls', 'hand: left');
+    }*/
+  }
 });
 
 // Follow component
