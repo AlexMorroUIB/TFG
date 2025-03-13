@@ -1,6 +1,6 @@
 e:
 cd Projects\uib\TFG
 
-scp -r .\BellverDefense\* towerdefense@towerdefense.ltim.uib.es:app
+scp -r .\BellverDefense\src\* towerdefense@towerdefense.ltim.uib.es:app/src
 
 scp -r .\dummy\src\* towerdefense@towerdefense.ltim.uib.es:app/src

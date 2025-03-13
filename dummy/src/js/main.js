@@ -423,8 +423,8 @@ function updatePosition() {
 }
 
 window.onload = () => {
-  escena.setAttribute('pool__cami', `mixin: terra; size: ${CAMINSENDAVANT}`)
-  diley();
+  //escena.setAttribute('pool__cami', `mixin: terra; size: ${CAMINSENDAVANT}`)
+  //diley();
 }
 
 async function diley() {
@@ -554,14 +554,14 @@ AFRAME.registerComponent('terra', {
   },
   tick: function (time, timeDelta) {
     let data = this.data;
-    if (data.enEscena) {
+    /*if (data.enEscena) {
       let element = this.el;
       let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
       if (distanciaVagoneta < vagoneta.object3D.position.z) {
         data.enEscena = false;
         this.remove();
       }
-    }
+    }*/
   },
   remove: function () {
     // Remove element.
@@ -601,17 +601,21 @@ AFRAME.registerComponent('vagoneta', {
 
     element.addEventListener("animationcomplete", () => {
       jugant = false;
-      let botoContinuar = document.createElement('a-box');
+      // TODO fer component boto amb schema accio: {type: 'string', default: 'continuar/reiniciar'}
+      let botoContinuar = document.createElement('a-entity');
       botoContinuar.setAttribute('class', 'boto');
-      botoContinuar.setAttribute('position', '0 1.5 5');
-      botoContinuar.setAttribute('color', '#12FF12');
+      botoContinuar.setAttribute('geometry', 'primitive: box');
+      botoContinuar.setAttribute('material', 'color: #12FF12');
+      botoContinuar.setAttribute('position', `0 1.5 ${element.object3D.position.z + 5}`);
+      console.log(botoContinuar);
 
       botoContinuar.addEventListener('hitstart', () => {
         console.log("hit cont")
         element.setAttribute('animation__moure', `property: position; to: 0 0.9 ${element.object3D.position.z + avancVagoneta}; dur: 120; easing: linear; loop: false`);
         botoContinuar.removeFromParent();
+        // carregar cami davant i eliminar anterior
       });
-      element.appendChild(botoContinuar);
+      escena.appendChild(botoContinuar);
     });
   },
   update: function (oldData) {
