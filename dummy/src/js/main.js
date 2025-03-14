@@ -330,7 +330,7 @@ AFRAME.registerComponent('fletxa', {
       console.log(this.el.object3D.position)*/
       escena.components.pool__fletxa.returnEntity(this.el);
       //}
-      element.data.disparada = false;
+      this.data.disparada = false;
     });
   },
   tick: function (time, timeDelta) {
@@ -599,14 +599,15 @@ AFRAME.registerComponent('vagoneta', {
     vidaEntity.setAttribute('repeat', vida);*/
     vagoneta.appendChild(vidaEntity);
 
-    element.addEventListener("animationcomplete", () => {
+    this.el.addEventListener("animationcomplete", () => {
       jugant = false;
       // TODO fer component boto amb schema accio: {type: 'string', default: 'continuar/reiniciar'}
       let botoContinuar = document.createElement('a-entity');
-      botoContinuar.setAttribute('class', 'boto');
+      botoContinuar.setAttribute('class', 'enemic');
       botoContinuar.setAttribute('geometry', 'primitive: box');
       botoContinuar.setAttribute('material', 'color: #12FF12');
       botoContinuar.setAttribute('position', `0 1.5 ${element.object3D.position.z + 5}`);
+      console.log("botoContinuar");
       console.log(botoContinuar);
 
       botoContinuar.addEventListener('hitstart', () => {
@@ -616,6 +617,7 @@ AFRAME.registerComponent('vagoneta', {
         // carregar cami davant i eliminar anterior
       });
       escena.appendChild(botoContinuar);
+      //botoContinuar.play();
     });
   },
   update: function (oldData) {
@@ -640,17 +642,17 @@ AFRAME.registerComponent('vagoneta', {
 });
 
 document.addEventListener('jocAcabat', () => {
-  let fonsAcabat = document.createElement('a-box');
+  let botoAcabat = document.createElement('a-entity');
   //fonsAcabat.setAttribute('overlay', '');
-  fonsAcabat.setAttribute('position', '0 1.5 5');
-  vagoneta.appendChild(fonsAcabat);
+  botoAcabat.setAttribute('boto', 'reiniciar');
+  //vagoneta.appendChild(fonsAcabat);
 });
 
 AFRAME.registerComponent("overlay", {
   schema: {
     posicio: {type: 'string', default: '0 0 -2'},
-    width: {type: 'number', default: '1'},
-    height: {type: 'number', default: '1'},
+    width: {type: 'number', default: 1},
+    height: {type: 'number', default: 1},
     color: {type: 'string', default: '#525252'}
     //position="0 0 -2" width="1" height="1"
   },
@@ -665,7 +667,7 @@ AFRAME.registerComponent("overlay", {
     let textAcabat = document.createElement('a-entity');
     element.setAttribute('height', data.height);
     element.setAttribute('width', data.width);
-    element.setAttribute('color', data.color);
+    //element.setAttribute('color', data.color);
     element.setAttribute('position', data.posicio);
     textAcabat.setAttribute('position', '0 0 0.5');
     textAcabat.setAttribute('text', 'value: Joc acabat!;align: center;');

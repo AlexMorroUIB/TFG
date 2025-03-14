@@ -10,8 +10,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.4.0/dist/aframe-extras.min.js"></script>
   <script src="./js/aframe-aabb-collider-component.min.js"></script>
-  <!--  <script src="https://unpkg.com/aframe-aabb-collider-component@3.2.2/dist/aframe-aabb-collider-component.min.js"></script>-->
-  <script src="https://unpkg.com/super-hands@^3.0.4/dist/super-hands.min.js"></script>
+  <script src="./js/super-hands.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.js"></script>
   <script type="module" src="./js/main.js"></script>
 </head>
@@ -22,8 +21,10 @@
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
              sphere-collider="objects: #arc, .fletxa;"></a-mixin>
-    <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1" aabb-collider="objects: .enemic, .boto; interval: 40"></a-mixin>
+    <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1"
+             aabb-collider="objects: .enemic, .boto; interval: 20"></a-mixin>
     <a-mixin id="enemic" enemic></a-mixin>
+    <a-mixin id="boto" boto></a-mixin>
     <a-mixin id="terra" terra="asset: #terraAsset"></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
@@ -46,7 +47,7 @@
     <a-entity id="controls" rotation="0 180 0" position="0 0 -1">
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
       <a-camera active="true">
-        <a-plane id="hud"></a-plane>
+<!--        <a-plane id="hud"></a-plane>-->
       </a-camera>
       <a-entity id="maEsquerra" hand-controls="hand: left" mixin="mans"></a-entity>
       <a-entity id="maDreta" hand-controls="hand: right" mixin="mans"></a-entity>
@@ -91,7 +92,7 @@
   <!--  <a-entity geometry="box" position="-1 1 -2" color="#D9614C"></a-entity>-->
   <!--  <a-entity id="vagoneta" vagoneta="message: asdf" position="-1 1 -2"></a-entity>-->
   <!-- animacio quan el ratolí passa per damunt -->
-  <a-entity grabbable class="enemic"
+  <a-entity grabbable class="boto"
             geometry="primitive: box"
             material="color: red"
             position="1 1 -4"
