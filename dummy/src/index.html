@@ -22,7 +22,7 @@
              static-body="shape: sphere; sphereRadius: 0.02;"
              sphere-collider="objects: #arc, .fletxa;"></a-mixin>
     <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1"
-             aabb-collider="objects: .enemic, .boto; interval: 20"></a-mixin>
+             aabb-collider="objects: .enemic; interval: 20"></a-mixin>
     <a-mixin id="enemic" enemic></a-mixin>
     <a-mixin id="boto" boto></a-mixin>
     <a-mixin id="terra" terra="asset: #terraAsset"></a-mixin>
@@ -39,11 +39,11 @@
     <img id="terra-bosc" src="./assets/textures/terra-bosc.jpg">
     <img id="terra-bosc-nrm" src="./assets/textures/terra-bosc-nrm.jpg">
   </a-assets>
-  <a-sky src="#cel" rotation="0 94 0"></a-sky>
   <!-- Entitat de camera  position="-1 0 -6"-->
   <!-- constraint="target: #cart" -->
 
   <a-entity id="vagoneta" vagoneta="asset: #cart;">
+    <a-sky src="#cel" rotation="0 94 0"></a-sky>
     <a-entity id="controls" rotation="0 180 0" position="0 0 -1">
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
       <a-camera active="true">

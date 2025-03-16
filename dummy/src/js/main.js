@@ -601,22 +601,8 @@ AFRAME.registerComponent('vagoneta', {
 
     this.el.addEventListener("animationcomplete", () => {
       jugant = false;
-      // TODO fer component boto amb schema accio: {type: 'string', default: 'continuar/reiniciar'}
-      let botoContinuar = document.createElement('a-entity');
-      botoContinuar.setAttribute('class', 'enemic');
-      botoContinuar.setAttribute('geometry', 'primitive: box');
-      botoContinuar.setAttribute('material', 'color: #12FF12');
-      botoContinuar.setAttribute('position', `0 1.5 ${element.object3D.position.z + 5}`);
-      console.log("botoContinuar");
-      console.log(botoContinuar);
-
-      botoContinuar.addEventListener('hitstart', () => {
-        console.log("hit cont")
-        element.setAttribute('animation__moure', `property: position; to: 0 0.9 ${element.object3D.position.z + avancVagoneta}; dur: 120; easing: linear; loop: false`);
-        botoContinuar.removeFromParent();
-        // carregar cami davant i eliminar anterior
-      });
-      escena.appendChild(botoContinuar);
+      // TODO
+      modalContinuarPatida();
       //botoContinuar.play();
     });
   },
@@ -640,6 +626,52 @@ AFRAME.registerComponent('vagoneta', {
 
   }
 });
+
+function modalContinuarPatida() {
+  let fonsModal = document.createElement('a-entity');
+  let titolModal = document.createElement('a-entity');
+  let texteModal = document.createElement('a-entity');
+  let botoContinuar = document.createElement('a-entity');
+  let texteContinuar = document.createElement('a-entity');
+
+  // Fons del modal
+  fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
+  fonsModal.setAttribute('material', 'color: #323232');
+  fonsModal.setAttribute('position', `0 2 ${vagoneta.object3D.position.z + 3}`);
+
+  // Texte del modal
+  fonsModal.appendChild(titolModal);
+  fonsModal.appendChild(texteModal);
+  titolModal.setAttribute('text', 'value: Punt de control; align: center;');
+  titolModal.setAttribute('position', '0 0.6 -0.1');
+  titolModal.setAttribute('rotation', '0 180 0');
+  titolModal.setAttribute('scale', '4 4 1');
+  texteModal.setAttribute('text', 'value: Descansa, beu aigua i continua quan estiguis llest.; align: center; width: 0.75');
+  texteModal.setAttribute('position', '0 0.2 -0.1');
+  texteModal.setAttribute('rotation', '0 180 0');
+  texteModal.setAttribute('scale', '3 3 1');
+
+  // Boto Continuar
+  fonsModal.appendChild(botoContinuar);
+  botoContinuar.setAttribute('class', 'enemic');
+  botoContinuar.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
+  botoContinuar.setAttribute('material', 'color: #12FF12');
+  botoContinuar.setAttribute('position', `0 -0.6 -0.1`);
+  // Afegir texte continuar
+  botoContinuar.appendChild(texteContinuar);
+  texteContinuar.setAttribute('text', 'value: Continuar; align: center;');
+  texteContinuar.setAttribute('position', '0 0 -0.1');
+  texteContinuar.setAttribute('rotation', '0 180 0');
+  texteContinuar.setAttribute('scale', '3 3 1');
+
+  botoContinuar.addEventListener('hitstart', () => {
+    console.log("hit cont")
+    vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${vagoneta.object3D.position.z + avancVagoneta}; dur: 120; easing: linear; loop: false`);
+    fonsModal.removeFromParent();
+    // carregar cami davant i eliminar anterior
+  });
+  escena.appendChild(fonsModal);
+}
 
 document.addEventListener('jocAcabat', () => {
   let botoAcabat = document.createElement('a-entity');
