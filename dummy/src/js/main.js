@@ -9,8 +9,9 @@ const jocAcabatEvent = new Event('jocAcabat');
 // Variables del joc
 let vida = 10;
 let punts = 0;
-let numEnemicsMax = 5;  // Num d'enemics màxims simultàniament en pantalla
-let delayGeneracioEnemics = 4000; // Temps en ms que tarda el controlador en generar un nou enemic.
+let numEnemicsMax = 10;  // Num d'enemics màxims simultàniament en pantalla
+let delayGeneracioEnemics = 100; // Temps en ms que tarda el controlador en generar un nou enemic.
+let duracioAvancVagoneta = 120000;
 
 // Variables i constants de l'escena
 const OFFSETFLETXA = new THREE.Quaternion(0.501213, 0.0, 0.0, 0.8653239);
@@ -18,6 +19,7 @@ let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
 let vagoneta = document.getElementById('vagoneta');
+let terraElement = document.getElementById('terra');
 let hud = document.getElementById('hud');
 let jugant = false;
 let enemicsEnPantalla = 0;
@@ -122,7 +124,7 @@ AFRAME.registerComponent('arc', {
         }
 
         //generarCamins();
-        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta}; dur: 120; easing: linear; loop: false`);
+        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta}; dur: 1000; easing: linear; loop: false`);
         vagoneta.play();
         controladorEnemics();
       }
@@ -423,13 +425,7 @@ function updatePosition() {
 }
 
 window.onload = () => {
-  //escena.setAttribute('pool__cami', `mixin: terra; size: ${CAMINSENDAVANT}`)
-  //diley();
-}
 
-async function diley() {
-  await delay(500);
-  generarCamins();
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -500,6 +496,7 @@ AFRAME.registerComponent('enemic', {
       let element = this.el
       let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
       if (distanciaVagoneta < vagoneta.object3D.position.z) {
+        // Boolean per controlar que no entri més d'un tick a eliminar l'element
         data.enEscena = false;
         enemicsEnPantalla--;
         vida--;
@@ -516,19 +513,6 @@ AFRAME.registerComponent('enemic', {
     this.el.removeFromParent();
   }
 });
-
-function generarCamins() {
-  while (numCaminsEndavant < CAMINSENDAVANT) {
-    let terraNou = escena.components.pool__cami.requestEntity();
-    /*const terraNou = document.createElement('a-entity');
-    terraNou.setAttribute('terra', 'asset: #terraAsset')*/
-    terraNou.setAttribute('position', `0 0 ${posicioCamins}`);
-    posicioCamins += 6;
-    terraNou.play();
-    numCaminsEndavant++;
-    //escena.appendChild(terraNou);
-  }
-}
 
 AFRAME.registerComponent('terra', {
   schema: {
@@ -565,9 +549,6 @@ AFRAME.registerComponent('terra', {
   },
   remove: function () {
     // Remove element.
-    escena.components.pool__cami.returnEntity(this.el);
-    numCaminsEndavant--;
-    generarCamins();
     //this.el.removeFromParent();
   }
 });
@@ -602,7 +583,7 @@ AFRAME.registerComponent('vagoneta', {
     this.el.addEventListener("animationcomplete", () => {
       jugant = false;
       // TODO
-      modalContinuarPatida();
+      modalContinuarPatida("continuar");
       //botoContinuar.play();
     });
   },
@@ -620,6 +601,7 @@ AFRAME.registerComponent('vagoneta', {
         vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
       } else {
         jugant = false;
+        vagoneta.pause();
         document.dispatchEvent(jocAcabatEvent);
       }
     }
@@ -627,12 +609,29 @@ AFRAME.registerComponent('vagoneta', {
   }
 });
 
-function modalContinuarPatida() {
+document.addEventListener(jocAcabatEvent.type, () => {
+  modalContinuarPatida("reiniciar");
+});
+
+function modalContinuarPatida(tipus) {
   let fonsModal = document.createElement('a-entity');
   let titolModal = document.createElement('a-entity');
   let texteModal = document.createElement('a-entity');
   let botoContinuar = document.createElement('a-entity');
   let texteContinuar = document.createElement('a-entity');
+  let stringTitol;
+  let stringTexte;
+  let stringBoto;
+
+  if (tipus === "continuar") {
+    stringTitol = "Punt de control";
+    stringTexte = "Descansa, beu aigua i continua quan estiguis llest.";
+    stringBoto = "Continuar";
+  } else if (tipus === "reiniciar") {
+    stringTitol = "Joc acabat";
+    stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
+    stringBoto = "Reiniciar";
+  }
 
   // Fons del modal
   fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
@@ -642,11 +641,11 @@ function modalContinuarPatida() {
   // Texte del modal
   fonsModal.appendChild(titolModal);
   fonsModal.appendChild(texteModal);
-  titolModal.setAttribute('text', 'value: Punt de control; align: center;');
+  titolModal.setAttribute('text', `value: ${stringTitol}; align: center;`);
   titolModal.setAttribute('position', '0 0.6 -0.1');
   titolModal.setAttribute('rotation', '0 180 0');
   titolModal.setAttribute('scale', '4 4 1');
-  texteModal.setAttribute('text', 'value: Descansa, beu aigua i continua quan estiguis llest.; align: center; width: 0.75');
+  texteModal.setAttribute('text', `value: ${stringTexte}; align: center; width: 0.75`);
   texteModal.setAttribute('position', '0 0.2 -0.1');
   texteModal.setAttribute('rotation', '0 180 0');
   texteModal.setAttribute('scale', '3 3 1');
@@ -659,26 +658,62 @@ function modalContinuarPatida() {
   botoContinuar.setAttribute('position', `0 -0.6 -0.1`);
   // Afegir texte continuar
   botoContinuar.appendChild(texteContinuar);
-  texteContinuar.setAttribute('text', 'value: Continuar; align: center;');
+  texteContinuar.setAttribute('text', `value: ${stringBoto}; align: center;`);
   texteContinuar.setAttribute('position', '0 0 -0.1');
   texteContinuar.setAttribute('rotation', '0 180 0');
   texteContinuar.setAttribute('scale', '3 3 1');
 
-  botoContinuar.addEventListener('hitstart', () => {
-    console.log("hit cont")
-    vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${vagoneta.object3D.position.z + avancVagoneta}; dur: 120; easing: linear; loop: false`);
-    fonsModal.removeFromParent();
-    // carregar cami davant i eliminar anterior
-  });
+  if (tipus === "continuar") {
+    // Listener de la hitbox
+    botoContinuar.addEventListener('hitstart', () => {
+      escena.removeChild(fonsModal);
+      //fonsModal.removeFromParent();
+      // carregar cami davant i eliminar anterior
+      generarNouTerra();
+      // Modificar les variables per la següent ronda
+      jugant = true;
+      numEnemicsMax += 0.5;//
+      vagoneta.setAttribute('animation__moure', `property: position;
+      to: 0 0.9 ${vagoneta.object3D.position.z + avancVagoneta}; dur: 500;
+      easing: linear; loop: false`);
+      controladorEnemics().then(r => null);
+    });
+  } else if (tipus === "reiniciar") {
+    // Listener de la hitbox
+    botoContinuar.addEventListener('hitstart', () => {
+      escena.removeChild(fonsModal);
+      vagoneta.setAttribute('position', '0 0.9 0');
+      // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
+      generarNouTerra();
+      // Modificar les variables per la següent ronda
+      jugant = false;
+      numEnemicsMax = 4;
+
+      let arc = document.createElement('a-entity');
+      arc.setAttribute('arc', 'asset: #arcAsset');
+      arc.setAttribute('id', 'arc');
+      arc.setAttribute('position', '0.2 1 0.8');
+      arc.setAttribute('rotation', '30 180 30');
+      arc.setAttribute('grabbable', '');
+
+      arcEntity = arc;
+      vagoneta.appendChild(arc);
+      controladorEnemics().then(r => null);
+    });
+  }
+
   escena.appendChild(fonsModal);
 }
 
-document.addEventListener('jocAcabat', () => {
-  let botoAcabat = document.createElement('a-entity');
-  //fonsAcabat.setAttribute('overlay', '');
-  botoAcabat.setAttribute('boto', 'reiniciar');
-  //vagoneta.appendChild(fonsAcabat);
-});
+function generarNouTerra() {
+  let terraOld = document.getElementById('terra')
+  let terraNou = document.createElement('a-entity');
+  terraNou.setAttribute('terra', 'asset: #terraAsset');
+  terraNou.setAttribute('position', `0 0 ${vagoneta.object3D.position.z}`);
+  escena.appendChild(terraNou);
+  terraOld.remove();
+  terraNou.setAttribute('id', 'terra');
+}
 
 AFRAME.registerComponent("overlay", {
   schema: {
