@@ -4,7 +4,7 @@ const loader = new THREE.GLTFLoader();
 const TAMANYCARCAIX = 16;
 const CAMINSENDAVANT = 60;
 const avancVagoneta = 150;
-const jocAcabatEvent = new Event('jocAcabat');
+//const jocAcabatEvent = new Event('jocAcabat');
 
 // Variables del joc
 let vida = 10;
@@ -62,7 +62,7 @@ AFRAME.registerComponent('arc', {
     //cordaEntity.setAttribute('grabbable', '')
     //let poolFletxes = document.createElement('a-entity');
     //let opcions = "mixin: fletxa; size: ".concat(TAMANYCARCAIX.toString());
-    escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`)
+    escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`);
     //escena.setAttribute('pool__enemic', `mixin: enemic; size: ${NUMENEMICS}; dynamic: true`)
 
     //escena.appendChild(poolFletxes)
@@ -148,17 +148,6 @@ AFRAME.registerComponent('arc', {
     //if (data.agafat) updatePosition(document.getElementById(data.ma), this.el)
   }
 });
-
-function crearFletxes() {
-  for (let i = 0; i < carcaix.length; i++) {
-    const fletxa = document.createElement('a-entity');
-    fletxa.setAttribute('id', i.toString());
-    fletxa.setAttribute('class', 'fletxa');
-    fletxa.setAttribute('fletxa', '');
-    fletxa.setAttribute('grabbable', '');
-    escena.components.pool__fletxa.returnEntity(fletxa);
-  }
-}
 
 function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
@@ -487,6 +476,7 @@ AFRAME.registerComponent('enemic', {
       enemicsEnPantalla--;
       punts++;
       this.remove();
+      modificarVidaPunts();
     });
 
   },
@@ -500,7 +490,9 @@ AFRAME.registerComponent('enemic', {
         data.enEscena = false;
         enemicsEnPantalla--;
         vida--;
+        modificarVidaPunts();
         this.remove();
+        if (vida <= 0) partidaAcabada();
       }
       const controlsWorldPos = new THREE.Vector3();
       controls.object3D.getWorldPosition(controlsWorldPos);
@@ -513,6 +505,10 @@ AFRAME.registerComponent('enemic', {
     this.el.removeFromParent();
   }
 });
+
+function modificarVidaPunts() {
+  vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
+}
 
 AFRAME.registerComponent('terra', {
   schema: {
@@ -534,18 +530,6 @@ AFRAME.registerComponent('terra', {
     let data = this.data;  // Component property values.
     let element = this.el;  // Reference to the component's entity.
 
-
-  },
-  tick: function (time, timeDelta) {
-    let data = this.data;
-    /*if (data.enEscena) {
-      let element = this.el;
-      let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
-      if (distanciaVagoneta < vagoneta.object3D.position.z) {
-        data.enEscena = false;
-        this.remove();
-      }
-    }*/
   },
   remove: function () {
     // Remove element.
@@ -584,7 +568,6 @@ AFRAME.registerComponent('vagoneta', {
       jugant = false;
       // TODO
       modalContinuarPatida("continuar");
-      //botoContinuar.play();
     });
   },
   update: function (oldData) {
@@ -594,24 +577,14 @@ AFRAME.registerComponent('vagoneta', {
 
   },
   tick: function (time, timeDelta) {
-    let data = this.data;
-    let element = this.el
-    if (jugant) {
-      if (vida > 0) {
-        vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
-      } else {
-        jugant = false;
-        vagoneta.pause();
-        document.dispatchEvent(jocAcabatEvent);
-      }
-    }
-
   }
 });
 
-document.addEventListener(jocAcabatEvent.type, () => {
+function partidaAcabada(){
+  jugant = false;
+  vagoneta.components['animation__moure'].pause();
   modalContinuarPatida("reiniciar");
-});
+}
 
 function modalContinuarPatida(tipus) {
   let fonsModal = document.createElement('a-entity');
@@ -682,11 +655,11 @@ function modalContinuarPatida(tipus) {
     // Listener de la hitbox
     botoContinuar.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
-      vagoneta.setAttribute('position', '0 0.9 0');
+      //vagoneta.setAttribute('position', '0 0.9 0');
       // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
       generarNouTerra();
       // Modificar les variables per la següent ronda
-      jugant = false;
+      vida = 10;
       numEnemicsMax = 4;
 
       let arc = document.createElement('a-entity');
@@ -698,7 +671,10 @@ function modalContinuarPatida(tipus) {
 
       arcEntity = arc;
       vagoneta.appendChild(arc);
-      controladorEnemics().then(r => null);
+      escena.components.pool__fletxa.returnEntity(fletxaActual);
+      // TODO reiniciar model de la ma
+      maArc = null;
+      maCorda = null;
     });
   }
 
