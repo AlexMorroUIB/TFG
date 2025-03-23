@@ -4,7 +4,9 @@ const loader = new THREE.GLTFLoader();
 const TAMANYCARCAIX = 16;
 const CAMINSENDAVANT = 60;
 const avancVagoneta = 150;
-//const jocAcabatEvent = new Event('jocAcabat');
+const GRAVETAT = 9.81;
+// Factor de tensió per multiplicar a la distancia de la corda i obtenir la força
+const MULTIPLICADORTENSIO = 80;
 
 // Variables del joc
 let vida = 10;
@@ -54,7 +56,6 @@ AFRAME.registerComponent('arc', {
     }), undefined, function (error) {
       console.error(error);
     };
-
     //document.getElementById('arc').innerHTML = '<a-entity corda grabbable></a-entity>';
     //let cordaEntity = document.createElement('a-entity');
     cordaEntity.setAttribute('id', 'corda');
@@ -124,7 +125,8 @@ AFRAME.registerComponent('arc', {
         }
 
         //generarCamins();
-        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta}; dur: 1000; easing: linear; loop: false`);
+        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta};
+        dur: ${duracioAvancVagoneta}; easing: linear; loop: false`);
         vagoneta.play();
         controladorEnemics();
       }
@@ -140,23 +142,17 @@ AFRAME.registerComponent('arc', {
       //event.detail.hand.object3D.removeChild(element.object3D);
       // Aquí puedes agregar lógica para soltar el objeto si es necesario
     });
-  },
-  tick: function (time, timeDelta) {
-    let data = this.data;
-    //ikSolver?.update();
-    //if (data.agafat) arcEntity.object3D.position.copy(document.getElementById(data.ma).object3D.position.clone());
-    //if (data.agafat) updatePosition(document.getElementById(data.ma), this.el)
   }
 });
 
 function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
-  const distance = Math.abs(maArc.object3D.position.distanceTo(maCorda.object3D.position));
-  // Definir un factor de tensión (puedes ajustar este valor según sea necesario)
-  const tensionFactor = 1//2; // Ajusta este valor según la escala de tu modelo
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2) *3;
 
+  console.log(Math.sqrt( (0.9*250*distancia) / (0.2 + 0.05*0.9)));
+  console.log(distancia * MULTIPLICADORTENSIO)
   // Calcular la tensión (puedes usar una fórmula más compleja si es necesario)
-  return distance * tensionFactor;
+  return Math.sqrt( (0.9*250*distancia) / (0.2 + 0.05*0.9));
 }
 
 AFRAME.registerComponent('cordamath', {
@@ -197,15 +193,9 @@ AFRAME.registerComponent('cordamath', {
     }*/
   },
   remove: function () {
-    let data = this.data;
-    let element = this.el;
-
-    // Remove event listener.
-    if (data.event) {
-      el.removeEventListener(data.event, this.eventHandlerFn);
-    }
     // Remove element.
-    element.remove();
+    this.el.removeFromParent();
+    maArc.removeChild(this.el);
   }
 });
 
@@ -234,7 +224,7 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/fletxatest.glb'},
+    asset: {type: 'asset', default: '../assets/models/fletxatest2.glb'},
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.05},
     depth: {type: 'number', default: 0.5},
@@ -246,6 +236,11 @@ AFRAME.registerComponent('fletxa', {
     agafada: {type: 'boolean', default: false},
     disparada: {type: 'boolean', default: false},
     forca: {type: 'number', default: 0},
+    velX: {type: 'number', default: 0},
+    velY: {type: 'number', default: 0},
+    distAnteriorX: {type: 'number', default: 0},
+    distAnteriorY: {type: 'number', default: 0},
+    altura: {type: 'number', default: 0},
     temps: {type: 'number', default: 0}
   },
   init: function () {
@@ -291,17 +286,25 @@ AFRAME.registerComponent('fletxa', {
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
         data.forca = calculateTension()
+        data.velX = data.forca * Math.cos(-this.el.object3D.rotation.x);
+        data.velY = data.forca * Math.sin(-this.el.object3D.rotation.x);
+        data.altura = this.el.object3D.position.y;
 
         /*let worldDirection = element.object3D.getWorldDirection(new THREE.Vector3())
         data.posDispar[0] = worldDirection.x;
         data.posDispar[1] = worldDirection.y;
         data.posDispar[2] = worldDirection.z;*/
+        this.el.object3D.rotation.z = 0;
         data.disparada = true;
         fletxaActual = escena.components.pool__fletxa.requestEntity();
         // Resetetjar els valors de la fletxa disparada a 0
         fletxaActual.components.fletxa.data.disparada = false;
         fletxaActual.components.fletxa.data.temps = 0;
         fletxaActual.components.fletxa.data.forca = 0;
+        fletxaActual.components.fletxa.data.velX = 0;
+        fletxaActual.components.fletxa.data.velY = 0;
+        fletxaActual.components.fletxa.data.distAnteriorX = 0;
+        fletxaActual.components.fletxa.data.distAnteriorY = 0;
         fletxaActual.play()
         /*fletxaActual = (element.id + 1) % carcaix.length;
         let seguentFletxa = carcaix[fletxaActual];
@@ -333,8 +336,16 @@ AFRAME.registerComponent('fletxa', {
         y: el.getAttribute('position').y - data.temps * 0.1,
         z: el.getAttribute('position').z + data.temps * data.forca
       });*/
-      el.object3D.translateZ(data.temps * data.forca);
+      //let fraccio = (GRAVETAT * data.temps * data.temps)/2;
+      // TODO limit ticks per sec
+      let distX = data.velX * data.temps;
+      let distY = data.velY * data.temps - ((GRAVETAT * data.temps * data.temps) / 2);
+      el.object3D.translateZ(distX - data.distAnteriorX);
+      el.object3D.translateY(distY - data.distAnteriorY);
       data.temps += 0.01;
+      data.distAnteriorX = distX;
+      data.distAnteriorY = distY;
+      //calcularTrajectoria(this.el, this.el.object3D.rotationX, this.el.object3D.rotationY)
       if (data.temps >= 10) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
       // Solo actualizamos la posición en Z
@@ -371,7 +382,6 @@ AFRAME.registerComponent('fletxa', {
   }
 });
 
-
 /**
  * Iguala la rotació de la fletxa mab la rotació de l'arc
  * @param fletxa fletxa actualment a l'arc
@@ -402,9 +412,7 @@ function updatePosition() {
     new THREE.Vector3(-0.5, -0.05, 0),
     new THREE.Vector3(0, -0.92, 0)
   ]);
-  /*function getDistance(p1, p2) {
-  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-}*/
+
   cordaEntity.object3D.geometry = new THREE.BufferGeometry().setFromPoints(
     corda.getPoints(50)
   );
@@ -580,7 +588,7 @@ AFRAME.registerComponent('vagoneta', {
   }
 });
 
-function partidaAcabada(){
+function partidaAcabada() {
   jugant = false;
   vagoneta.components['animation__moure'].pause();
   modalContinuarPatida("reiniciar");
@@ -658,27 +666,45 @@ function modalContinuarPatida(tipus) {
       //vagoneta.setAttribute('position', '0 0.9 0');
       // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
       generarNouTerra();
+      eliminarEnemics();
       // Modificar les variables per la següent ronda
       vida = 10;
       numEnemicsMax = 4;
+      vagoneta.setAttribute('animation__moure', `property: position;
+      to: 0 0.9 0; dur: 1;
+      easing: linear; loop: false`);
+      // TODO reiniciar model de la ma
+      let maAsset = "../assets/models/maEsquerra.glb"
+      if (maArc.id === "maDreta") "../assets/models/maDreta.glb"
+      maArc.setAttribute('gltf-model', maAsset);
+      cordaEntity.remove();
 
-      let arc = document.createElement('a-entity');
+      /*let arc = document.createElement('a-entity');
       arc.setAttribute('arc', 'asset: #arcAsset');
       arc.setAttribute('id', 'arc');
       arc.setAttribute('position', '0.2 1 0.8');
       arc.setAttribute('rotation', '30 180 30');
-      arc.setAttribute('grabbable', '');
+      arc.setAttribute('grabbable', '');*/
 
-      arcEntity = arc;
-      vagoneta.appendChild(arc);
+      //arcEntity = arc;
+      arcEntity.removeAttribute('hidden');
+      //vagoneta.appendChild(arc);
       escena.components.pool__fletxa.returnEntity(fletxaActual);
-      // TODO reiniciar model de la ma
+
       maArc = null;
       maCorda = null;
     });
   }
 
   escena.appendChild(fonsModal);
+}
+
+function eliminarEnemics() {
+  let enemics = document.getElementsByClassName('enemic');
+  for (const enemic in enemics) {
+    enemic.remove()
+  }
+  enemicsEnPantalla = 0;
 }
 
 function generarNouTerra() {
