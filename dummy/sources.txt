@@ -31,3 +31,7 @@ https://x-engineer.org/calculate-wheel-radius/
 
 euler rotation (radians) to quaternion
 https://www.andre-gaschler.com/rotationconverter/
+
+equacio forca arc
+https://ffden-2.phys.uaf.edu/webproj/212_spring_2015/Addis_Gonzalez/Addis_Gonzalez/bow.html
+

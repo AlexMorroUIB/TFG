@@ -1,12 +1,19 @@
 const loader = new THREE.GLTFLoader();
 
 // Constants del joc
-const TAMANYCARCAIX = 16;
-const CAMINSENDAVANT = 60;
-const avancVagoneta = 150;
+const TAMANYCARCAIX = 16; // Quantitat de fletxes dins la pool
+//const CAMINSENDAVANT = 60;
+const AVANCVAGONETA = 150; // Metres que avança la vagoneta cada pic
 const GRAVETAT = 9.81;
+// Forca de tensió de l'arc
+const FORCAARC = 300;
+const EFICIENCIAARC = 0.9;
+const MASSAARC = 0.9; // Massa de l'arc en kg
+const MASSAFLETXA = 0.065; // Massa de la fletxa en kg
+const FACTORKE = 0.05; // La suma de l'energia cinètica (KE) de les parts mòbils de l'arc.
 // Factor de tensió per multiplicar a la distancia de la corda i obtenir la força
-const MULTIPLICADORTENSIO = 80;
+const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE*MASSAARC));
+//const MULTIPLICADORTENSIO = 80;
 
 // Variables del joc
 let vida = 10;
@@ -125,7 +132,7 @@ AFRAME.registerComponent('arc', {
         }
 
         //generarCamins();
-        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${avancVagoneta};
+        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${AVANCVAGONETA};
         dur: ${duracioAvancVagoneta}; easing: linear; loop: false`);
         vagoneta.play();
         controladorEnemics();
@@ -149,10 +156,9 @@ function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
   const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2) *3;
 
-  console.log(Math.sqrt( (0.9*250*distancia) / (0.2 + 0.05*0.9)));
-  console.log(distancia * MULTIPLICADORTENSIO)
   // Calcular la tensión (puedes usar una fórmula más compleja si es necesario)
-  return Math.sqrt( (0.9*250*distancia) / (0.2 + 0.05*0.9));
+  //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
+  return TENSIO*Math.sqrt(distancia);
 }
 
 AFRAME.registerComponent('cordamath', {
@@ -655,7 +661,7 @@ function modalContinuarPatida(tipus) {
       jugant = true;
       numEnemicsMax += 0.5;//
       vagoneta.setAttribute('animation__moure', `property: position;
-      to: 0 0.9 ${vagoneta.object3D.position.z + avancVagoneta}; dur: 500;
+      to: 0 0.9 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: 500;
       easing: linear; loop: false`);
       controladorEnemics().then(r => null);
     });
