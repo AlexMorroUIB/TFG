@@ -12,7 +12,20 @@ const MASSAARC = 0.9; // Massa de l'arc en kg
 const MASSAFLETXA = 0.065; // Massa de la fletxa en kg
 const FACTORKE = 0.05; // La suma de l'energia cinètica (KE) de les parts mòbils de l'arc.
 // Factor de tensió per multiplicar a la distancia de la corda i obtenir la força
-const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE*MASSAARC));
+const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE * MASSAARC));
+const COLORFONSMODAL = '#323232';
+const COLORBOTOPRINCIPAL = '#12FF12';
+const COLORBOTOSECUNDARI = '#626262';
+// Tipus d'enemics possibles
+const TIPUSENEMIC = {
+  enemic: "enemic",
+  diana: "diana"
+};
+// Tipus de terres possibles (entorn joc principal o practica)
+const TERRES = {
+  cami: "#terraAsset",
+  practica: "#practicaAsset"
+};
 //const MULTIPLICADORTENSIO = 80;
 
 // Variables del joc
@@ -27,6 +40,7 @@ const OFFSETFLETXA = new THREE.Quaternion(0.501213, 0.0, 0.0, 0.8653239);
 let escena = document.getElementById('escena');
 let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
+let camera = document.getElementById('camera');
 let vagoneta = document.getElementById('vagoneta');
 let terraElement = document.getElementById('terra');
 let hud = document.getElementById('hud');
@@ -132,10 +146,7 @@ AFRAME.registerComponent('arc', {
         }
 
         //generarCamins();
-        vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${AVANCVAGONETA};
-        dur: ${duracioAvancVagoneta}; easing: linear; loop: false`);
-        vagoneta.play();
-        controladorEnemics();
+        modalContinuarPatida("menu");
       }
     });
 
@@ -154,11 +165,11 @@ AFRAME.registerComponent('arc', {
 
 function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
-  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2) *3;
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2) * 3;
 
   // Calcular la tensión (puedes usar una fórmula más compleja si es necesario)
   //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
-  return TENSIO*Math.sqrt(distancia);
+  return TENSIO * Math.sqrt(distancia);
 }
 
 AFRAME.registerComponent('cordamath', {
@@ -433,14 +444,27 @@ window.onload = () => {
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-async function controladorEnemics() {
-  const xMin = 4;
-  const xMax = 8;
+/**
+ * Controlador que va generant els enemics fins a un màxim d'enemics simultanis en pantalla
+ * @param tipus Tipus d'enemic a generar TIPUSENEMIC
+ */
+async function controladorEnemics(tipus) {
+  // x = distancia del centre del cami
+  let xMin = 4;
+  let xMax = 8;
+  let distancia = 20; // distancia a la vagoneta
+  let altura = 1;
+  if (tipus === TIPUSENEMIC.diana) {
+    xMin = 0;
+    xMax = 4;
+    distancia = 10;
+    altura = 2.0;
+  }
   //console.log(escena.components.pool__enemic)
   while (jugant) {
     if (enemicsEnPantalla <= numEnemicsMax) {
       const enemic = document.createElement('a-entity');
-      enemic.setAttribute('enemic', '');
+      enemic.setAttribute(tipus, '');
       enemic.setAttribute('class', 'enemic');
       //console.log(enemic)
       /*enemic.setAttribute('animation', `property: position;
@@ -448,8 +472,8 @@ async function controladorEnemics() {
       dur: 1; easing: linear; loop: false`);*/
       enemic.setAttribute('position', {
         x: (Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1),
-        y: 1,
-        z: vagoneta.object3D.position.z + 20
+        y: tipus === TIPUSENEMIC.enemic ? altura : (Math.random() * (altura - 0.5) + 0.5).toFixed(1),
+        z: vagoneta.object3D.position.z + tipus === TIPUSENEMIC.enemic ? distancia : (Math.random() * (distancia - 5) + 5)
       });
 
       escena.appendChild(enemic);
@@ -568,12 +592,12 @@ AFRAME.registerComponent('vagoneta', {
       console.error(error);
     };
     element.setAttribute('scale', '0.5 0.5 0.5');
-    element.setAttribute('position', '0 0.85 0');
+    element.setAttribute('position', '0 0 0');
 
     vidaEntity = document.createElement('a-entity');
-    vidaEntity.setAttribute('text', `value: Vida: ${vida};align: center`);
-    vidaEntity.setAttribute('rotation', `-20 180 0`);
-    vidaEntity.setAttribute('position', `0 0.2 1`);
+    vidaEntity.setAttribute('text', `value: Vida: ${vida}\n\nPunts: ${punts};align: center`);
+    vidaEntity.setAttribute('rotation', `-11   180 0`);
+    vidaEntity.setAttribute('position', `0 1.45 0.86`);
     /*vidaEntity.setAttribute('src', data.cor);
     vidaEntity.setAttribute('repeat', vida);*/
     vagoneta.appendChild(vidaEntity);
@@ -591,6 +615,10 @@ AFRAME.registerComponent('vagoneta', {
 
   },
   tick: function (time, timeDelta) {
+    if (controls.object3D.position.x > 1) controls.object3D.position.x = 1;
+    if (controls.object3D.position.x < -1) controls.object3D.position.x = -1;
+    if (controls.object3D.position.z > 1) controls.object3D.position.z = 1;
+    if (controls.object3D.position.z < -1) controls.object3D.position.z = -1;
   }
 });
 
@@ -604,25 +632,33 @@ function modalContinuarPatida(tipus) {
   let fonsModal = document.createElement('a-entity');
   let titolModal = document.createElement('a-entity');
   let texteModal = document.createElement('a-entity');
-  let botoContinuar = document.createElement('a-entity');
-  let texteContinuar = document.createElement('a-entity');
+  let botoPrincipal = document.createElement('a-entity');
+  let botoSecundari = document.createElement('a-entity');
+  let textePrincipal = document.createElement('a-entity');
+  let texteSecundari = document.createElement('a-entity');
   let stringTitol;
   let stringTexte;
-  let stringBoto;
+  let stringBotoPrincipal;
+  let stringBotoSecundari;
 
   if (tipus === "continuar") {
     stringTitol = "Punt de control";
     stringTexte = "Descansa, beu aigua i continua quan estiguis llest.";
-    stringBoto = "Continuar";
+    stringBotoPrincipal = "Continuar";
   } else if (tipus === "reiniciar") {
     stringTitol = "Joc acabat";
     stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
-    stringBoto = "Reiniciar";
+    stringBotoPrincipal = "Reiniciar";
+  } else if (tipus === "menu") {
+    stringTitol = "Benvingut/da";
+    stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots començar una partida o jugar en el mode de pràctica.";
+    stringBotoPrincipal = "Començar";
+    stringBotoSecundari = "Pràctica";
   }
 
   // Fons del modal
   fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
-  fonsModal.setAttribute('material', 'color: #323232');
+  fonsModal.setAttribute('material', `color: ${COLORFONSMODAL}`);
   fonsModal.setAttribute('position', `0 2 ${vagoneta.object3D.position.z + 3}`);
 
   // Texte del modal
@@ -638,46 +674,46 @@ function modalContinuarPatida(tipus) {
   texteModal.setAttribute('scale', '3 3 1');
 
   // Boto Continuar
-  fonsModal.appendChild(botoContinuar);
-  botoContinuar.setAttribute('class', 'enemic');
-  botoContinuar.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
-  botoContinuar.setAttribute('material', 'color: #12FF12');
-  botoContinuar.setAttribute('position', `0 -0.6 -0.1`);
+  fonsModal.appendChild(botoPrincipal);
+  botoPrincipal.setAttribute('class', 'enemic');
+  botoPrincipal.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
+  botoPrincipal.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
+  botoPrincipal.setAttribute('position', '0 -0.6 -0.1');
   // Afegir texte continuar
-  botoContinuar.appendChild(texteContinuar);
-  texteContinuar.setAttribute('text', `value: ${stringBoto}; align: center;`);
-  texteContinuar.setAttribute('position', '0 0 -0.1');
-  texteContinuar.setAttribute('rotation', '0 180 0');
-  texteContinuar.setAttribute('scale', '3 3 1');
+  botoPrincipal.appendChild(textePrincipal);
+  textePrincipal.setAttribute('text', `value: ${stringBotoPrincipal}; align: center;`);
+  textePrincipal.setAttribute('position', '0 0 -0.1');
+  textePrincipal.setAttribute('rotation', '0 180 0');
+  textePrincipal.setAttribute('scale', '3 3 1');
 
   if (tipus === "continuar") {
     // Listener de la hitbox
-    botoContinuar.addEventListener('hitstart', () => {
+    botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
       //fonsModal.removeFromParent();
       // carregar cami davant i eliminar anterior
-      generarNouTerra();
+      generarNouTerra(TERRES.cami);
       // Modificar les variables per la següent ronda
       jugant = true;
       numEnemicsMax += 0.5;//
       vagoneta.setAttribute('animation__moure', `property: position;
-      to: 0 0.9 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: 500;
+      to: 0 0 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: 500;
       easing: linear; loop: false`);
-      controladorEnemics().then(r => null);
+      controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
     });
   } else if (tipus === "reiniciar") {
     // Listener de la hitbox
-    botoContinuar.addEventListener('hitstart', () => {
+    botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
-      //vagoneta.setAttribute('position', '0 0.9 0');
+      //vagoneta.setAttribute('position', '0 0 0');
       // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
-      generarNouTerra();
+      generarNouTerra(TERRES.cami);
       eliminarEnemics();
       // Modificar les variables per la següent ronda
       vida = 10;
       numEnemicsMax = 4;
       vagoneta.setAttribute('animation__moure', `property: position;
-      to: 0 0.9 0; dur: 1;
+      to: 0 0 0; dur: 1;
       easing: linear; loop: false`);
       // TODO reiniciar model de la ma
       let maAsset = "../assets/models/maEsquerra.glb"
@@ -700,6 +736,37 @@ function modalContinuarPatida(tipus) {
       maArc = null;
       maCorda = null;
     });
+  } else if (tipus === "menu") {
+    botoPrincipal.setAttribute('position', `-0.6 -0.6 -0.1`);
+    fonsModal.appendChild(botoSecundari);
+    botoSecundari.setAttribute('class', 'enemic');
+    botoSecundari.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
+    botoSecundari.setAttribute('material', `color: ${COLORBOTOSECUNDARI}`);
+    botoSecundari.setAttribute('position', '0.6 -0.6 -0.1');
+    // Afegir texte continuar
+    botoSecundari.appendChild(texteSecundari);
+    texteSecundari.setAttribute('text', `value: ${stringBotoSecundari}; align: center;`);
+    texteSecundari.setAttribute('position', '0 0 -0.1');
+    texteSecundari.setAttribute('rotation', '0 180 0');
+    texteSecundari.setAttribute('scale', '3 3 1');
+    // Listener de la hitbox
+    botoPrincipal.addEventListener('hitstart', () => {
+      numEnemicsMax = 10;
+      delayGeneracioEnemics = 100;
+      escena.removeChild(fonsModal);
+      vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${AVANCVAGONETA};
+        dur: ${duracioAvancVagoneta}; easing: linear; loop: false`);
+      vagoneta.play();
+      controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
+    });
+    botoSecundari.addEventListener('hitstart', () => {
+      numEnemicsMax = 5;
+      delayGeneracioEnemics = 1000;
+      escena.removeChild(fonsModal);
+      // Canvia el terra per un d'arqueria i afegeix el model 3D
+      //generarNouTerra(TERRES.practica);
+      controladorEnemics(TIPUSENEMIC.diana).then(r => null);
+    });
   }
 
   escena.appendChild(fonsModal);
@@ -713,68 +780,40 @@ function eliminarEnemics() {
   enemicsEnPantalla = 0;
 }
 
-function generarNouTerra() {
+function generarNouTerra(asset) {
   let terraOld = document.getElementById('terra')
   let terraNou = document.createElement('a-entity');
-  terraNou.setAttribute('terra', 'asset: #terraAsset');
+  terraNou.setAttribute('terra', `asset: ${asset}`);
   terraNou.setAttribute('position', `0 0 ${vagoneta.object3D.position.z}`);
   escena.appendChild(terraNou);
   terraOld.remove();
   terraNou.setAttribute('id', 'terra');
 }
 
-AFRAME.registerComponent("overlay", {
+AFRAME.registerComponent("diana", {
   schema: {
-    posicio: {type: 'string', default: '0 0 -2'},
-    width: {type: 'number', default: 1},
-    height: {type: 'number', default: 1},
+    asset: {type: 'asset', default: '../assets/models/diana.glb'},
     color: {type: 'string', default: '#525252'}
     //position="0 0 -2" width="1" height="1"
   },
-  dependencies: ['material'],
   init: function () {
     let data = this.data;
-    let element = this.el;
-    this.el.sceneEl.renderer.sortObjects = true;
-    this.el.object3D.renderOrder = 100;
-    this.el.components.material.material.depthTest = false;
+    let el = this.el;
 
-    let textAcabat = document.createElement('a-entity');
-    element.setAttribute('height', data.height);
-    element.setAttribute('width', data.width);
-    //element.setAttribute('color', data.color);
-    element.setAttribute('position', data.posicio);
-    textAcabat.setAttribute('position', '0 0 0.5');
-    textAcabat.setAttribute('text', 'value: Joc acabat!;align: center;');
+    loader.load(data.asset, function (gltf) {
+      el.setObject3D('mesh', gltf.scene);
+    }), undefined, function (error) {
+      console.error(error);
+    };
 
-    // Boto el qual reiniciara la partida quan se li dispari una fletxa
-    let botoReiniciar = document.createElement('a-box');
-    botoReiniciar.setAttribute('class', 'boto');
-
-    botoReiniciar.addEventListener('hitstart', () => {
-      // TODO reiniciar les variables del joc
-      vida = 10;
-      punts = 0;
-      vagoneta.setAttribute('position', '0 0.9 0');
-      /*TODO destriurCamins();
-      posicioCamins = 0;
-      generarCamins();*/
-
-      escena.removeChild(element);
-      element.removeFromParent();
+    this.el.addEventListener('hitstart', () => {
+      punts++;
+      this.remove();
     });
-
-    element.appendChild(textAcabat);
-    element.appendChild(botoReiniciar);
-
-    // Afegir laser al control que agafa les fletxes.
-    maCorda.setAttribute('laser-controls', '');
-    maCorda.setAttribute('raycaster', 'objects: .links; far: 5');
-    /*if (maCorda.id === "maDreta") {
-      maCorda.setAttribute('laser-controls', 'hand: right');
-    } else {
-      maCorda.setAttribute('laser-controls', 'hand: left');
-    }*/
+  },
+  remove: function () {
+    escena.removeChild(this.el);
+    this.el.removeFromParent();
   }
 });
 
