@@ -26,6 +26,12 @@ const TERRES = {
   cami: "#terraAsset",
   practica: "#practicaAsset"
 };
+const TIPUSMODALS = {
+  continuar: "continuar",
+  reiniciar: "reiniciar",
+  menu: "menu",
+  sortirPractica: "sortir practica"
+}
 //const MULTIPLICADORTENSIO = 80;
 
 // Variables del joc
@@ -146,7 +152,7 @@ AFRAME.registerComponent('arc', {
         }
 
         //generarCamins();
-        modalContinuarPatida("menu");
+        generadorModals(TIPUSMODALS.menu);
       }
     });
 
@@ -605,7 +611,7 @@ AFRAME.registerComponent('vagoneta', {
     this.el.addEventListener("animationcomplete", () => {
       jugant = false;
       // TODO
-      modalContinuarPatida("continuar");
+      generadorModals(TIPUSMODALS.continuar);
     });
   },
   update: function (oldData) {
@@ -625,10 +631,15 @@ AFRAME.registerComponent('vagoneta', {
 function partidaAcabada() {
   jugant = false;
   vagoneta.components['animation__moure'].pause();
-  modalContinuarPatida("reiniciar");
+  generadorModals(TIPUSMODALS.reiniciar);
 }
 
-function modalContinuarPatida(tipus) {
+/**
+ * Funcio que genera els modals amb texte i 1 o 2 botons.
+ * Segons el tipus, el texte i els botons mostren i/o fan una funció o una altra.
+ * @param tipus El tipus de modal que ha de generar (continuar, reiniciar, menu, sortir practica)
+ */
+function generadorModals(tipus) {
   let fonsModal = document.createElement('a-entity');
   let titolModal = document.createElement('a-entity');
   let texteModal = document.createElement('a-entity');
@@ -641,19 +652,23 @@ function modalContinuarPatida(tipus) {
   let stringBotoPrincipal;
   let stringBotoSecundari;
 
-  if (tipus === "continuar") {
+  if (tipus === TIPUSMODALS.continuar) {
     stringTitol = "Punt de control";
     stringTexte = "Descansa, beu aigua i continua quan estiguis llest.";
     stringBotoPrincipal = "Continuar";
-  } else if (tipus === "reiniciar") {
+  } else if (tipus === TIPUSMODALS.reiniciar) {
     stringTitol = "Joc acabat";
     stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
     stringBotoPrincipal = "Reiniciar";
-  } else if (tipus === "menu") {
+  } else if (tipus === TIPUSMODALS.menu) {
     stringTitol = "Benvingut/da";
     stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots començar una partida o jugar en el mode de pràctica.";
     stringBotoPrincipal = "Començar";
     stringBotoSecundari = "Pràctica";
+  } else if (tipus === TIPUSMODALS.sortirPractica) {
+    stringTitol = "Sortir";
+    stringTexte = "Surt del mode de pràctica.";
+    stringBotoPrincipal = "Sortir";
   }
 
   // Fons del modal
@@ -686,7 +701,7 @@ function modalContinuarPatida(tipus) {
   textePrincipal.setAttribute('rotation', '0 180 0');
   textePrincipal.setAttribute('scale', '3 3 1');
 
-  if (tipus === "continuar") {
+  if (tipus === TIPUSMODALS.continuar) {
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
@@ -701,7 +716,7 @@ function modalContinuarPatida(tipus) {
       easing: linear; loop: false`);
       controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
     });
-  } else if (tipus === "reiniciar") {
+  } else if (tipus === TIPUSMODALS.reiniciar) {
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
@@ -736,7 +751,7 @@ function modalContinuarPatida(tipus) {
       maArc = null;
       maCorda = null;
     });
-  } else if (tipus === "menu") {
+  } else if (tipus === TIPUSMODALS.menu) {
     botoPrincipal.setAttribute('position', `-0.6 -0.6 -0.1`);
     fonsModal.appendChild(botoSecundari);
     botoSecundari.setAttribute('class', 'enemic');
@@ -765,7 +780,20 @@ function modalContinuarPatida(tipus) {
       escena.removeChild(fonsModal);
       // Canvia el terra per un d'arqueria i afegeix el model 3D
       //generarNouTerra(TERRES.practica);
+      generadorModals(TIPUSMODALS.sortirPractica);
       controladorEnemics(TIPUSENEMIC.diana).then(r => null);
+    });
+  } else if (tipus === TIPUSMODALS.sortirPractica) {
+    fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
+    fonsModal.setAttribute('rotation', ` 0 90 0`);
+    botoPrincipal.addEventListener('hitstart', () => {
+      jugant = false;
+      eliminarEnemics();
+      // TODO reset variables
+      numEnemicsMax = 10;
+      delayGeneracioEnemics = 100;
+      escena.removeChild(fonsModal);
+      generadorModals(TIPUSMODALS.menu);
     });
   }
 
