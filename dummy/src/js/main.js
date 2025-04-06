@@ -1,12 +1,14 @@
 const loader = new THREE.GLTFLoader();
 
 // Constants del joc
-const TAMANYCARCAIX = 16; // Quantitat de fletxes dins la pool
-//const CAMINSENDAVANT = 60;
-const AVANCVAGONETA = 150; // Metres que avança la vagoneta cada pic
+
+// Quantitat de fletxes dins la pool
+const TAMANYCARCAIX = 16;
+// Metres que avança la vagoneta cada pic
+const AVANCVAGONETA = 150;
 const GRAVETAT = 9.81;
 // Forca de tensió de l'arc
-const FORCAARC = 300;
+const FORCAARC = 250;
 const EFICIENCIAARC = 0.9;
 const MASSAARC = 0.9; // Massa de l'arc en kg
 const MASSAFLETXA = 0.065; // Massa de la fletxa en kg
@@ -24,6 +26,7 @@ const TIPUSENEMIC = {
 // Tipus de terres possibles (entorn joc principal o practica)
 const TERRES = {
   cami: "#terraAsset",
+  cami2: "#terraAsset2",
   practica: "#practicaAsset"
 };
 const TIPUSMODALS = {
@@ -32,7 +35,6 @@ const TIPUSMODALS = {
   menu: "menu",
   sortirPractica: "sortir practica"
 }
-//const MULTIPLICADORTENSIO = 80;
 
 // Variables del joc
 let vida = 10;
@@ -48,7 +50,6 @@ let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
 let camera = document.getElementById('camera');
 let vagoneta = document.getElementById('vagoneta');
-let terraElement = document.getElementById('terra');
 let hud = document.getElementById('hud');
 let jugant = false;
 let enemicsEnPantalla = 0;
@@ -171,7 +172,7 @@ AFRAME.registerComponent('arc', {
 
 function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
-  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2) * 3;
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2);
 
   // Calcular la tensión (puedes usar una fórmula más compleja si es necesario)
   //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
@@ -247,7 +248,7 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/fletxatest2.glb'},
+    asset: {type: 'asset', default: '../assets/models/fletxa.glb'},
     width: {type: 'number', default: 0.05},
     height: {type: 'number', default: 0.05},
     depth: {type: 'number', default: 0.5},
@@ -289,14 +290,11 @@ AFRAME.registerComponent('fletxa', {
       console.log(event.detail.buttonEvent)
       console.log(event.detail.buttonEvent.type)*/
       let ma = event.detail.hand;
-      if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerdown") {
+      if (!data.agafada && ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerdown") {
         data.ma = document.getElementById(ma.id);
         data.agafada = true;
-        data.posInicial[0] = element.getAttribute('position').x;
-        data.posInicial[1] = element.getAttribute('position').y;
-        data.posInicial[2] = element.getAttribute('position').z;
         fletxaActual.removeAttribute('aabb-collider');
-        fletxaActual.setAttribute('aabb-collider', 'objects: .enemic; interval: 20');
+        fletxaActual.setAttribute('aabb-collider', 'objects: .hitbox; interval: 20');
       }
     });
 
@@ -309,15 +307,17 @@ AFRAME.registerComponent('fletxa', {
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
         data.forca = calculateTension()
-        data.velX = data.forca * Math.cos(-this.el.object3D.rotation.x);
-        data.velY = data.forca * Math.sin(-this.el.object3D.rotation.x);
-        data.altura = this.el.object3D.position.y;
+        // Agafa la rotació de l'objecte en radians comparant-la amb la rotació 0
+        let rotacio = this.el.object3D.quaternion.angleTo(
+          new THREE.Quaternion(0, 0, 0, 0)
+        );
+        console.log(rotacio)
+        data.velX = data.forca * Math.cos(rotacio);
+        data.velY = data.forca * Math.sin(rotacio);
 
-        /*let worldDirection = element.object3D.getWorldDirection(new THREE.Vector3())
-        data.posDispar[0] = worldDirection.x;
-        data.posDispar[1] = worldDirection.y;
-        data.posDispar[2] = worldDirection.z;*/
+        // Canvia la rotació Z a 0 per poder fer TranslateY i vagi cap abaix
         this.el.object3D.rotation.z = 0;
+        // Dispara la fletxa i agafa una de nova
         data.disparada = true;
         fletxaActual = escena.components.pool__fletxa.requestEntity();
         // Resetetjar els valors de la fletxa disparada a 0
@@ -354,34 +354,17 @@ AFRAME.registerComponent('fletxa', {
     let data = this.data;
     let el = this.el;
     if (data.disparada) {
-      /*el.setAttribute('position', {
-        x: el.getAttribute('position').x + data.temps * data.forca,
-        y: el.getAttribute('position').y - data.temps * 0.1,
-        z: el.getAttribute('position').z + data.temps * data.forca
-      });*/
-      //let fraccio = (GRAVETAT * data.temps * data.temps)/2;
-      // TODO limit ticks per sec
+      // Aplica la fórmula de la trajectòria de projectils per moure la fletxa cap endavant i cap abaix
       let distX = data.velX * data.temps;
-      let distY = data.velY * data.temps - ((GRAVETAT * data.temps * data.temps) / 2);
-      el.object3D.translateZ(distX - data.distAnteriorX);
+      let distY = data.velY * data.temps - (GRAVETAT * data.temps * data.temps * 0.5);
+      el.object3D.translateZ(-(distX - data.distAnteriorX));
       el.object3D.translateY(distY - data.distAnteriorY);
       data.temps += 0.01;
       data.distAnteriorX = distX;
       data.distAnteriorY = distY;
-      //calcularTrajectoria(this.el, this.el.object3D.rotationX, this.el.object3D.rotationY)
-      if (data.temps >= 10) escena.components.pool__fletxa.returnEntity(this.el);
+      // Si el temps es major a 15 retorna la fletxa a la pool
+      if (data.temps >= 15) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
-      // Solo actualizamos la posición en Z
-      /*el.setAttribute('position', {
-        x: controls.object3D.position.x - (maArc.object3D.position.x + data.ma.object3D.position.x) / 2,
-        y: maArc.object3D.position.y,
-        z: controls.object3D.position.z - (maArc.object3D.position.z + data.ma.object3D.position.z) / 2
-      });*/
-      /*el.setAttribute('position', {
-        x: controls.object3D.position.x - maArc.object3D.position.x,
-        y: maArc.object3D.position.y,
-        z: controls.object3D.position.z - maArc.object3D.position.z
-      });*/
       igualaPosicioRotacio(el);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.4 metres
       let distanciaMans = Math.min((maArc.object3D.position.distanceTo(data.ma.object3D.position) / 4), 0.2);
@@ -455,6 +438,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
  * @param tipus Tipus d'enemic a generar TIPUSENEMIC
  */
 async function controladorEnemics(tipus) {
+  jugant = true;
   // x = distancia del centre del cami
   let xMin = 4;
   let xMax = 8;
@@ -471,7 +455,7 @@ async function controladorEnemics(tipus) {
     if (enemicsEnPantalla <= numEnemicsMax) {
       const enemic = document.createElement('a-entity');
       enemic.setAttribute(tipus, '');
-      enemic.setAttribute('class', 'enemic');
+      enemic.setAttribute('class', 'hitbox enemic');
       //console.log(enemic)
       /*enemic.setAttribute('animation', `property: position;
       to: ${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)} 1 ${vagoneta.object3D.position.z + 20};
@@ -526,9 +510,9 @@ AFRAME.registerComponent('enemic', {
   },
   tick: function (time, timeDelta) {
     let data = this.data;
+    let element = this.el;
     if (data.enEscena) {
-      let element = this.el
-      let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta
+      let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta;
       if (distanciaVagoneta < vagoneta.object3D.position.z) {
         // Boolean per controlar que no entri més d'un tick a eliminar l'element
         data.enEscena = false;
@@ -536,7 +520,6 @@ AFRAME.registerComponent('enemic', {
         vida--;
         modificarVidaPunts();
         this.remove();
-        if (vida <= 0) partidaAcabada();
       }
       const controlsWorldPos = new THREE.Vector3();
       controls.object3D.getWorldPosition(controlsWorldPos);
@@ -550,14 +533,29 @@ AFRAME.registerComponent('enemic', {
   }
 });
 
+/**
+ * Modifica el texte que conté la vida i els punts del jugador,
+ * també comprova si la vida és <= a 0, si ho és acaba la partida.
+ */
 function modificarVidaPunts() {
   vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
+  if (vida <= 0) partidaAcabada();
+}
+
+/**
+ * Atura el controlador d'enemics, pausa la vagoneta
+ * i genera el modal d'acabament de partida
+ */
+function partidaAcabada() {
+  jugant = false;
+  vagoneta.components['animation__moure'].pause();
+  generadorModals(TIPUSMODALS.reiniciar);
 }
 
 AFRAME.registerComponent('terra', {
   schema: {
     asset: {type: 'asset', default: '../assets/models/terra.glb'},
-    maxDistanciaVagoneta: {type: 'number', default: 60},
+    maxDistanciaVagoneta: {type: 'number', default: 100},
     enEscena: {type: 'boolean', default: true}
   },
   init: function () {
@@ -570,16 +568,22 @@ AFRAME.registerComponent('terra', {
       console.error(error);
     };
   },
-  update: function (oldData) {
-    let data = this.data;  // Component property values.
-    let element = this.el;  // Reference to the component's entity.
-
+  comprovarDistancia: function () {
+    let element = this.el;
+    let data = this.data;
+    let distanciaVagoneta = element.object3D.position.z + data.maxDistanciaVagoneta;
+    if (distanciaVagoneta < vagoneta.object3D.position.z) {
+      this.remove();
+    }
   },
   remove: function () {
     // Remove element.
-    //this.el.removeFromParent();
+    escena.removeChild(this.el);
+    this.el.removeFromParent();
   }
 });
+
+
 // vagoneta
 AFRAME.registerComponent('vagoneta', {
   schema: {
@@ -608,31 +612,25 @@ AFRAME.registerComponent('vagoneta', {
     vidaEntity.setAttribute('repeat', vida);*/
     vagoneta.appendChild(vidaEntity);
 
-    this.el.addEventListener("animationcomplete", () => {
+    this.el.addEventListener("animationcomplete", async () => {
       jugant = false;
-      // TODO
-      generadorModals(TIPUSMODALS.continuar);
+      await delay(80).then( () => {
+        eliminarEnemics();
+        generadorModals(TIPUSMODALS.continuar);
+      });
     });
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
     let element = this.el;  // Reference to the component's entity.
-
-
   },
   tick: function (time, timeDelta) {
-    if (controls.object3D.position.x > 1) controls.object3D.position.x = 1;
+    /*if (controls.object3D.position.x > 1) controls.object3D.position.x = 1;
     if (controls.object3D.position.x < -1) controls.object3D.position.x = -1;
     if (controls.object3D.position.z > 1) controls.object3D.position.z = 1;
-    if (controls.object3D.position.z < -1) controls.object3D.position.z = -1;
+    if (controls.object3D.position.z < -1) controls.object3D.position.z = -1;*/
   }
 });
-
-function partidaAcabada() {
-  jugant = false;
-  vagoneta.components['animation__moure'].pause();
-  generadorModals(TIPUSMODALS.reiniciar);
-}
 
 /**
  * Funcio que genera els modals amb texte i 1 o 2 botons.
@@ -673,7 +671,7 @@ function generadorModals(tipus) {
 
   // Fons del modal
   fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
-  fonsModal.setAttribute('material', `color: ${COLORFONSMODAL}`);
+  fonsModal.setAttribute('material', `color: ${COLORFONSMODAL};opacity: 0.5`);
   fonsModal.setAttribute('position', `0 2 ${vagoneta.object3D.position.z + 3}`);
 
   // Texte del modal
@@ -690,7 +688,7 @@ function generadorModals(tipus) {
 
   // Boto Continuar
   fonsModal.appendChild(botoPrincipal);
-  botoPrincipal.setAttribute('class', 'enemic');
+  botoPrincipal.setAttribute('class', 'hitbox');
   botoPrincipal.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
   botoPrincipal.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
   botoPrincipal.setAttribute('position', '0 -0.6 -0.1');
@@ -703,17 +701,17 @@ function generadorModals(tipus) {
 
   if (tipus === TIPUSMODALS.continuar) {
     // Listener de la hitbox
+    generarNouTerra(TERRES.cami);
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
-      //fonsModal.removeFromParent();
       // carregar cami davant i eliminar anterior
-      generarNouTerra(TERRES.cami);
       // Modificar les variables per la següent ronda
       jugant = true;
-      numEnemicsMax += 0.5;//
+      numEnemicsMax += 0.5;
       vagoneta.setAttribute('animation__moure', `property: position;
-      to: 0 0 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: 500;
+      to: 0 0 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: 120;
       easing: linear; loop: false`);
+      vagoneta.play();
       controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
     });
   } else if (tipus === TIPUSMODALS.reiniciar) {
@@ -752,13 +750,14 @@ function generadorModals(tipus) {
       maCorda = null;
     });
   } else if (tipus === TIPUSMODALS.menu) {
+    // Mou el boto principal i afegeix el boto secundari
     botoPrincipal.setAttribute('position', `-0.6 -0.6 -0.1`);
     fonsModal.appendChild(botoSecundari);
-    botoSecundari.setAttribute('class', 'enemic');
+    botoSecundari.setAttribute('class', 'hitbox');
     botoSecundari.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
     botoSecundari.setAttribute('material', `color: ${COLORBOTOSECUNDARI}`);
     botoSecundari.setAttribute('position', '0.6 -0.6 -0.1');
-    // Afegir texte continuar
+    // Afegir texte mode practica
     botoSecundari.appendChild(texteSecundari);
     texteSecundari.setAttribute('text', `value: ${stringBotoSecundari}; align: center;`);
     texteSecundari.setAttribute('position', '0 0 -0.1');
@@ -766,13 +765,16 @@ function generadorModals(tipus) {
     texteSecundari.setAttribute('scale', '3 3 1');
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
+      // Reset de les variables de generació d'enemics
       numEnemicsMax = 10;
       delayGeneracioEnemics = 100;
       escena.removeChild(fonsModal);
+
+      // Activa el joc (animacions i controlador) ${duracioAvancVagoneta}
       vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${AVANCVAGONETA};
-        dur: ${duracioAvancVagoneta}; easing: linear; loop: false`);
+        dur: 200; easing: linear; loop: false`);
       vagoneta.play();
-      controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
+      //controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
     });
     botoSecundari.addEventListener('hitstart', () => {
       numEnemicsMax = 5;
@@ -784,8 +786,8 @@ function generadorModals(tipus) {
       controladorEnemics(TIPUSENEMIC.diana).then(r => null);
     });
   } else if (tipus === TIPUSMODALS.sortirPractica) {
-    fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
-    fonsModal.setAttribute('rotation', ` 0 90 0`);
+    /*fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
+    fonsModal.setAttribute('rotation', ` 0 90 0`);*/
     botoPrincipal.addEventListener('hitstart', () => {
       jugant = false;
       eliminarEnemics();
@@ -800,22 +802,37 @@ function generadorModals(tipus) {
   escena.appendChild(fonsModal);
 }
 
+/**
+ * Elimina tots els enemics actualment en pantalla
+ */
 function eliminarEnemics() {
-  let enemics = document.getElementsByClassName('enemic');
-  for (const enemic in enemics) {
-    enemic.remove()
+  let enemics = document.querySelectorAll('.enemic');
+  for (let i = 0; i < enemics.length; i++) {
+    escena.removeChild(enemics[i]);
+    enemics[i].removeFromParent();
   }
   enemicsEnPantalla = 0;
 }
 
-function generarNouTerra(asset) {
-  let terraOld = document.getElementById('terra')
+/**
+ * Elimina el terra actual i genera un de nou
+ * @param asset ruta al gltf del model del terra a generar
+ */
+async function generarNouTerra(asset) {
+  //let terraOld = document.getElementById('terra')
+  let terres = document.querySelectorAll('.terra');
+  for (let i = 0; i < terres.length; i++) {
+    terres[i].components.terra.comprovarDistancia();
+  }
   let terraNou = document.createElement('a-entity');
   terraNou.setAttribute('terra', `asset: ${asset}`);
+  terraNou.setAttribute('class', 'terra');
   terraNou.setAttribute('position', `0 0 ${vagoneta.object3D.position.z}`);
   escena.appendChild(terraNou);
-  terraOld.remove();
-  terraNou.setAttribute('id', 'terra');
+  //terraOld.parentNode.removeChild(terraOld);
+  // console.log(terraOld)
+  // terraOld.remove();
+  //terraNou.setAttribute('id', 'terra');
 }
 
 AFRAME.registerComponent("diana", {
@@ -835,25 +852,17 @@ AFRAME.registerComponent("diana", {
     };
 
     this.el.addEventListener('hitstart', () => {
-      punts++;
+      enemicsEnPantalla--;
       this.remove();
     });
   },
   remove: function () {
+    //this.el.parentNode.removeChild(this.el);
     escena.removeChild(this.el);
     this.el.removeFromParent();
   }
 });
 
-// Follow component
-/*AFRAME.registerComponent('follow', {
-  schema: {
-    target: {type: 'selector'},
-    speed: {type: 'number'}
-  }
-});*/
-
-// use pool for enemies https://aframe.io/docs/1.6.0/components/pool.html
 
 
 AFRAME.registerComponent('corda', {

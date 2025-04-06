@@ -12,48 +12,52 @@
   <script src="js/lib/aframe-aabb-collider-component.min.js"></script>
   <script src="js/lib/super-hands.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.js"></script>
-<!--  <script src="https://cdn.jsdelivr.net/npm/aframe-locomotion@0.2.0/dist/aframe-locomotion.umd.min.js"></script>-->
+  <!--  <script src="https://cdn.jsdelivr.net/npm/aframe-locomotion@0.2.0/dist/aframe-locomotion.umd.min.js"></script>-->
   <script type="module" src="./js/main.js"></script>
 </head>
 <body>
-<a-scene id="escena" physics="debug: true" obb-collider="showColliders: true" >
+<a-scene id="escena" physics="debug: true" obb-collider="showColliders: true">
   <a-assets>
     <!--    Mans -->
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
              sphere-collider="objects: #arc, .fletxa;"></a-mixin>
     <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1"
-             aabb-collider="objects: .enemic; interval: 20"></a-mixin>
+             aabb-collider="objects: .hitbox; interval: 20"></a-mixin>
     <a-mixin id="enemic" enemic></a-mixin>
     <a-mixin id="boto" boto></a-mixin>
-    <a-mixin id="terra" terra="asset: #terraAsset"></a-mixin>
+    <a-mixin id="terraMixin" terra="asset: #terraAsset"></a-mixin>
     <!--<a-mixin id="sticky-asset" hoverable
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
              event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"></a-mixin>-->
     <a-asset-item id="vagonetaModel" src="./assets/models/carttest2.glb"></a-asset-item>
-<!--    <a-asset-item id="navmesh" src="./assets/models/navmesh.gltf"></a-asset-item>-->
+    <!--    <a-asset-item id="navmesh" src="./assets/models/navmesh.gltf"></a-asset-item>-->
     <a-asset-item id="arcAsset" src="./assets/models/arctest.glb"></a-asset-item>
     <a-asset-item id="terraAsset" src="./assets/models/terra.glb"></a-asset-item>
+    <a-asset-item id="terraAsset2" src="./assets/models/terra2.glb"></a-asset-item>
     <a-asset-item id="practicaAsset" src="./assets/models/ArcheryTraining.glb"></a-asset-item>
     <img id="cel" src="./assets/textures/cel.jpg">
-    <img id="terra" src="./assets/textures/terra.jpg">
+    <!--<img id="terra" src="./assets/textures/terra.jpg">
     <img id="terra-nrm" src="./assets/textures/terra-nrm.jpg">
     <img id="terra-bosc" src="./assets/textures/terra-bosc.jpg">
-    <img id="terra-bosc-nrm" src="./assets/textures/terra-bosc-nrm.jpg">
+    <img id="terra-bosc-nrm" src="./assets/textures/terra-bosc-nrm.jpg">-->
   </a-assets>
   <!-- Entitat de camera  position="-1 0 -6"-->
   <!-- constraint="target: #cart"
   <a-entity class="navmesh" nav-mesh gltf-model="#navmesh" visible="false"></a-entity>-->
-  <a-entity id="vagoneta" vagoneta="asset: #vagonetaModel;">
+<!--  -->
+  <a-entity id="vagoneta" vagoneta="asset: #vagonetaModel;" animation__moure="property: position; to: 0 0 150;
+  dur: 500; easing: linear; loop: false">
 
     <a-sky src="#cel" rotation="0 94 0"></a-sky>
+    <!-- Altura de la base de la vagoneta 0.7 (altura a on tendries els peus) -->
     <a-entity id="controls" controls movement-controls="controls: keyboard; constrainToNavMesh: true"
-              rotation="0 180 0" position="0 0.64 -0.5" keyboard-controls>
+              rotation="0 180 0" position="0 0.7 -0.5" keyboard-controls>
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
-      <a-entity  id="camera" fixcamera="" look-controls="pointerLockEnabled: true" camera cursor="rayOrigin: mouse;"
-                position="0 1.6 0" rotation="" raycaster="">
-<!--        <a-plane id="hud"></a-plane>-->
+      <a-entity id="camera" fixcamera="" look-controls="pointerLockEnabled: true" camera cursor="rayOrigin: mouse;"
+                position="0 2 0" rotation="" raycaster="objects: .boto">
+        <!--        <a-plane id="hud"></a-plane>-->
       </a-entity>
       <a-entity id="maEsquerra" hand-controls="hand: left" mixin="mans"></a-entity>
       <a-entity id="maDreta" hand-controls="hand: right" mixin="mans"></a-entity>
@@ -73,7 +77,8 @@
         <a-entity id="corda" corda="" class="" position="-0.48 0 0" grabbable draggable>
         </a-entity>
       </a-entity>-->
-    <a-entity id="arc" arc="asset: #arcAsset;" class="" position="0.6 1.2 0.6" rotation="30 180 30" grabbable></a-entity>
+    <a-entity id="arc" arc="asset: #arcAsset;" class="" position="0.6 1.2 0.6" rotation="30 180 30"
+              grabbable></a-entity>
   </a-entity>
 
   <!-- Terra
@@ -81,7 +86,7 @@
    collisionFilterGroup: 1; collisionFilterMask: 1;
    shape="type: box"
    -->
-  <a-entity id="terra" terra="asset: #terraAsset;"></a-entity>
+  <a-entity id="terra" terra="asset: #terraAsset;" class="terra"></a-entity>
   <!--<a-plane
     material="color: #FFF; src: #terra; repeat: 1 6; normal-map: #terra-nrm; normal-texture-repeat: 1 6; normal-scale: 1 -1; roughness: 0.9"
     scale="4 200 2" rotation="-90 0 0" body="type: static;"
@@ -91,7 +96,7 @@
   <a-plane material="color: #0000FF" position="6 0 0"
            scale="8 200 0" rotation="-90 0 0" body="type: static;"></a-plane>-->
 
-  <a-sphere grabbable class="enemic" color="#FFAA00" radius="0.5" position="-0.5 2 -4">
+  <a-sphere grabbable class="" color="#FFAA00" radius="0.5" position="-0.5 2 -4">
   </a-sphere>
   <!--  <a-entity geometry="box" position="-1 1 -2" color="#D9614C"></a-entity>-->
   <!--  <a-entity id="vagoneta" vagoneta="message: asdf" position="-1 1 -2"></a-entity>-->
@@ -101,9 +106,7 @@
             material="color: red"
             position="1 1 -4"
             animation__mouseenter="property: components.material.material.color; type: color; to: blue; startEvents: mouseenter; dur: 500"
-            ;
-            animation__mouseleave="property: components.material.material.color; type: color; to: red; startEvents: mouseleave; dur: 500"
-            ;>
+            animation__mouseleave="property: components.material.material.color; type: color; to: red; startEvents: mouseleave; dur: 500">
   </a-entity>
 </a-scene>
 </body>
