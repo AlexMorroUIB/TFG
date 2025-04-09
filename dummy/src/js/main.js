@@ -35,6 +35,7 @@ const TIPUSMODALS = {
   menu: "menu",
   sortirPractica: "sortir practica"
 }
+const LLARGARIATERRA = 150;
 
 // Variables del joc
 let vida = 10;
@@ -60,10 +61,14 @@ let vidaEntity;
 let anchorDBone*/
 let cordaEntity = document.createElement('a-entity');
 //let carcaix = new Array(TAMANYCARCAIX);
-let fletxaActual; // entitat HTML de la fletxa que està actualment a l'arc i no s'ha disparat
-const arcBones = {};
-let maArc; // entitat HTML de la ma que ha agafat l'arc
-let maCorda; // entitat HTML de la ma que ha d'agafar les fletxes
+// entitat HTML de la fletxa que està actualment a l'arc i no s'ha disparat
+let fletxaActual;
+// entitat HTML de la ma que ha agafat l'arc
+let maArc;
+// entitat HTML de la ma que ha d'agafar les fletxes
+let maCorda;
+// Punt a on ha de començar el nou terra a generar
+let comencTerra = 300;
 
 // Arc
 AFRAME.registerComponent('arc', {
@@ -555,7 +560,7 @@ function partidaAcabada() {
 AFRAME.registerComponent('terra', {
   schema: {
     asset: {type: 'asset', default: '../assets/models/terra.glb'},
-    maxDistanciaVagoneta: {type: 'number', default: 100},
+    maxDistanciaVagoneta: {type: 'number', default: 299},
     enEscena: {type: 'boolean', default: true}
   },
   init: function () {
@@ -701,7 +706,7 @@ function generadorModals(tipus) {
 
   if (tipus === TIPUSMODALS.continuar) {
     // Listener de la hitbox
-    generarNouTerra(TERRES.cami);
+    generarNouTerra(TERRES.cami2);
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
       // carregar cami davant i eliminar anterior
@@ -820,15 +825,21 @@ function eliminarEnemics() {
  */
 async function generarNouTerra(asset) {
   //let terraOld = document.getElementById('terra')
+  // Comprova la distància de les terres ja existents a la vagoneta
   let terres = document.querySelectorAll('.terra');
   for (let i = 0; i < terres.length; i++) {
     terres[i].components.terra.comprovarDistancia();
   }
+
+  // Afegeix un nou terra davant
   let terraNou = document.createElement('a-entity');
-  terraNou.setAttribute('terra', `asset: ${asset}`);
+  terraNou.setAttribute('terra', `asset: ${asset};`);
   terraNou.setAttribute('class', 'terra');
-  terraNou.setAttribute('position', `0 0 ${vagoneta.object3D.position.z}`);
+  // 610 Llargària total
+  terraNou.setAttribute('position', `1 0 ${comencTerra}`);
   escena.appendChild(terraNou);
+  comencTerra += LLARGARIATERRA;
+  console.log(terraNou)
   //terraOld.parentNode.removeChild(terraOld);
   // console.log(terraOld)
   // terraOld.remove();
