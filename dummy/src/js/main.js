@@ -712,9 +712,10 @@ function generadorModals(tipus) {
       // carregar cami davant i eliminar anterior
       // Modificar les variables per la següent ronda
       jugant = true;
-      numEnemicsMax += 0.5;
+      if (numEnemicsMax < 10) numEnemicsMax += 0.5;
+      if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
       vagoneta.setAttribute('animation__moure', `property: position;
-      to: 0 0 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: 120;
+      to: 0 0 ${vagoneta.object3D.position.z + AVANCVAGONETA}; dur: ${duracioAvancVagoneta};
       easing: linear; loop: false`);
       vagoneta.play();
       controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
@@ -776,10 +777,10 @@ function generadorModals(tipus) {
       escena.removeChild(fonsModal);
 
       // Activa el joc (animacions i controlador) ${duracioAvancVagoneta}
-      vagoneta.setAttribute('animation__moure', `property: position; to: 0 0.9 ${AVANCVAGONETA};
-        dur: 200; easing: linear; loop: false`);
+      vagoneta.setAttribute('animation__moure', `property: position; to: 0 0 ${AVANCVAGONETA};
+        dur: ${duracioAvancVagoneta}; easing: linear; loop: false`);
       vagoneta.play();
-      //controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
+      controladorEnemics(TIPUSENEMIC.enemic).then(r => null);
     });
     botoSecundari.addEventListener('hitstart', () => {
       numEnemicsMax = 5;
@@ -791,14 +792,14 @@ function generadorModals(tipus) {
       controladorEnemics(TIPUSENEMIC.diana).then(r => null);
     });
   } else if (tipus === TIPUSMODALS.sortirPractica) {
-    /*fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
-    fonsModal.setAttribute('rotation', ` 0 90 0`);*/
+    fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
+    fonsModal.setAttribute('rotation', ` 0 90 0`);
     botoPrincipal.addEventListener('hitstart', () => {
       jugant = false;
       eliminarEnemics();
       // TODO reset variables
-      numEnemicsMax = 10;
-      delayGeneracioEnemics = 100;
+      numEnemicsMax = 4;
+      delayGeneracioEnemics = 4000;
       escena.removeChild(fonsModal);
       generadorModals(TIPUSMODALS.menu);
     });
