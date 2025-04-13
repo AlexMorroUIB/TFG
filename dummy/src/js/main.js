@@ -23,6 +23,11 @@ const TIPUSENEMIC = {
   enemic: "enemic",
   diana: "diana"
 };
+const ARMADURAENEMIC = {
+  pages: "pagesAsset",
+  armadura: "armaduraAsset",
+  casc: "cascAsset"
+}
 // Tipus de terres possibles (entorn joc principal o practica)
 const TERRES = {
   cami: "#terraAsset",
@@ -43,6 +48,7 @@ let punts = 0;
 let numEnemicsMax = 10;  // Num d'enemics màxims simultàniament en pantalla
 let delayGeneracioEnemics = 100; // Temps en ms que tarda el controlador en generar un nou enemic.
 let duracioAvancVagoneta = 120000;
+let ronda = 1;
 
 // Variables i constants de l'escena
 const OFFSETFLETXA = new THREE.Quaternion(0.501213, 0.0, 0.0, 0.8653239);
@@ -459,7 +465,7 @@ async function controladorEnemics(tipus) {
   while (jugant) {
     if (enemicsEnPantalla <= numEnemicsMax) {
       const enemic = document.createElement('a-entity');
-      enemic.setAttribute(tipus, '');
+      enemic.setAttribute(tipus, 'casc: true;vida: 2;');
       enemic.setAttribute('class', 'hitbox enemic');
       //console.log(enemic)
       /*enemic.setAttribute('animation', `property: position;
@@ -484,34 +490,69 @@ async function controladorEnemics(tipus) {
 // Component enemics
 AFRAME.registerComponent('enemic', {
   schema: {
+    asset: {type: 'asset', default: '../assets/models/pages.glb'},
     event: {type: 'string', default: ''},
     width: {type: 'number', default: 0.5},
-    height: {type: 'number', default: 1.75},
-    depth: {type: 'number', default: 0.5},
+    height: {type: 'number', default: 1.55},
+    depth: {type: 'number', default: 0.3},
+    widthCap: {type: 'number', default: 0.25},
+    heightCap: {type: 'number', default: 0.25},
     color: {type: 'color', default: '#FF9A00'},
+    armadura: {type: 'boolean', default: false},
+    casc: {type: 'boolean', default: false},
     maxDistanciaVagoneta: {type: 'number', default: 40},
     enEscena: {type: 'boolean', default: true}
   },
   init: function () {
     let data = this.data;
-    let element = this.el;
-    //el.object3D.lookAt(controls.object3D);
-    let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
-    let material = new THREE.MeshBasicMaterial({color: data.color});
-    this.mesh = new THREE.Mesh(geometry, material);
-    element.setObject3D('mesh', this.mesh);
-  },
-  update: function (oldData) {
-    let data = this.data;  // Component property values.
-    let element = this.el;  // Reference to the component's entity.
+    let el = this.el;
 
-    this.el.addEventListener('hitstart', (event) => {
-      enemicsEnPantalla--;
-      punts++;
-      this.remove();
-      modificarVidaPunts();
+    loader.load(data.asset, function (gltf) {
+      el.setObject3D('mesh', gltf.scene);
+    }), undefined, function (error) {
+      console.error(error);
+    };
+
+    // Geometria i hitbox del cos
+    let cosEntity = document.createElement('a-entity');
+    cosEntity.setAttribute('position', '0 0.78 0');
+    cosEntity.setAttribute('class', 'hitbox');
+    let material = new THREE.MeshBasicMaterial({color: data.color});
+    let cosGeometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
+    cosEntity.setObject3D('mesh', new THREE.Mesh(cosGeometry, material));
+
+    cosEntity.addEventListener('hitstart', (event) => {
+      if (data.armadura) {
+        // TODO armadura animation
+      } else {
+        enemicsEnPantalla--;
+        punts++;
+        this.remove();
+        modificarVidaPunts();
+      }
     });
 
+    // Geometria i hitbox del cap
+    let capEntity = document.createElement('a-entity');
+    capEntity.setAttribute('position', '0 1.7 0');
+    capEntity.setAttribute('class', 'hitbox');
+    material = new THREE.MeshBasicMaterial({color: '#FF0000'});
+    let capGeometry = new THREE.BoxGeometry(data.widthCap, data.heightCap, data.depth);
+    capEntity.setObject3D('mesh', new THREE.Mesh(capGeometry, material));
+
+    capEntity.addEventListener('hitstart', (event) => {
+      if (data.casc) {
+        // TODO casc animation
+      } else {
+        enemicsEnPantalla--;
+        punts++;
+        this.remove();
+        modificarVidaPunts();
+      }
+    });
+
+    el.appendChild(cosEntity);
+    el.appendChild(capEntity);
   },
   tick: function (time, timeDelta) {
     let data = this.data;
@@ -619,7 +660,7 @@ AFRAME.registerComponent('vagoneta', {
 
     this.el.addEventListener("animationcomplete", async () => {
       jugant = false;
-      await delay(80).then( () => {
+      await delay(80).then(() => {
         eliminarEnemics();
         generadorModals(TIPUSMODALS.continuar);
       });
@@ -874,7 +915,6 @@ AFRAME.registerComponent("diana", {
     this.el.removeFromParent();
   }
 });
-
 
 
 AFRAME.registerComponent('corda', {

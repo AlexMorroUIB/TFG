@@ -3,6 +3,9 @@ bow: https://poly.pizza/m/H6vbuPvWtg
 arrow: https://poly.pizza/m/6pMBOmBFxGt
 diana: https://poly.pizza/m/gKYbYR3z0M
 arbres: https://poly.pizza/m/oYtDty0fR6
+peasant: https://poly.pizza/m/qbDLeTtb8K
+armadura: https://poly.pizza/m/TMUoxILh9w
+yelmo: https://www.thingiverse.com/thing:2952496/files
 
 sketchfab account: ferere5144@gufutu.com - 1a2s3d4f5G
 subaru: https://sketchfab.com/3d-models/subaru-wrx-sti-36f4a47b619a49bda4c1870e7833b25b
