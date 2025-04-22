@@ -1,0 +1,11 @@
+database
+
+taula puntuacions
+1	nom varcahr PK
+2	edat int
+3	sexe H/D
+4	experiencia previa RV BOOLEAN
+5	dispars int
+6	encerts int
+7	punts int
+8	ronda int

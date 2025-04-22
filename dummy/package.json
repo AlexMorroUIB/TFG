@@ -7,19 +7,9 @@
   "author": "Alex Morro",
   "main": "src/js/main.js",
   "dependencies": {
-    "aframe": "~1.6.0",
-    "ammo.js": "^0.0.10",
     "express": "~4.21.1",
-    "super-hands": "3.0.5",
-    "three": "^0.173.0"
-  },
-  "devDependencies": {
-    "@babel/core": "latest",
-    "babel-loader": "latest",
-    "vite": "^6.0.11",
-    "webpack": "latest",
-    "webpack-cli": "latest",
-    "webpack-node-externals": "latest"
+    "dotenv": "~16.5.0",
+    "mariadb": "~3.4.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
