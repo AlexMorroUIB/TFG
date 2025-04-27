@@ -29,16 +29,16 @@ const VIDACOLORARREL = {
   3: "#00FCF4",
   4: "#F400FC"
 };
-const ARMADURAENEMIC = {
-  pages: "pagesAsset",
-  armadura: "armaduraAsset",
-  casc: "cascAsset"
-}
-// Tipus de terres possibles (entorn joc principal o practica)
-const TERRES = {
+// Tipus d'assets disponibles
+const ASSETS = {
+  arc: "#arcAsset",
+  fletxa: "#fletxaAsset",
+  arrel: "#arrelAsset",
+  fruita: "#fruitaAsset",
+  diana: "#dianaAsset",
+  vagoneta: "#vagonetaAsset",
   cami: "#camiAsset",
-  cami2: "#terraAsset2",
-  practica: "#practicaAsset"
+  camiInicial: "#camiAsset"
 };
 const TIPUSMODALS = {
   continuar: "continuar",
@@ -58,12 +58,12 @@ let numEnemicsMax = 4;
 // Màxim de vida que poden tenir els enemics en la ronda actual
 let enemicsVidaMax = 1;
 let delayGeneracioEnemics = 4000; // Temps en ms que tarda el controlador en generar un nou enemic.
-let duracioAvancVagoneta = 1000//120000;
+let duracioAvancVagoneta = 10000//120000;
 let ronda = 1;
 
 // Estadistiques
-let numDispars=0;
-let numEncerts=0;
+let numDispars = 0;
+let numEncerts = 0;
 
 // Variables i constants de l'escena
 const modalUsuari = document.getElementById("modalUsuari");
@@ -95,7 +95,7 @@ let comencTerra = 300;
 // Arc
 AFRAME.registerComponent('arc', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/arc.glb'},
+    asset: {type: 'asset', default: ASSETS.arc},
     width: {type: 'number', default: 0.4},
     height: {type: 'number', default: 0.6},
     depth: {type: 'number', default: 0.2},
@@ -115,14 +115,7 @@ AFRAME.registerComponent('arc', {
     //let cordaEntity = document.createElement('a-entity');
     cordaEntity.setAttribute('id', 'corda');
     cordaEntity.setAttribute('cordamath', '');
-    //cordaEntity.setAttribute('grabbable', '')
-    //let poolFletxes = document.createElement('a-entity');
-    //let opcions = "mixin: fletxa; size: ".concat(TAMANYCARCAIX.toString());
     escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`);
-    //escena.setAttribute('pool__enemic', `mixin: enemic; size: ${NUMENEMICS}; dynamic: true`)
-
-    //escena.appendChild(poolFletxes)
-    //crearFletxes();
 
     /*let transformControls = new THREE.TransformControls(escena.camera, escena.renderer.domElement);
     transformControls.size = 0.75;
@@ -181,18 +174,20 @@ AFRAME.registerComponent('arc', {
 
         // Elimina el laser control i el modal d'inici de sesió
         escena.removeChild(modalUsuari);
-        document.getElementById("maDreta").removeAttribute('laser-controls');
-        document.getElementById("maDreta").removeAttribute('raycaster');
-        document.getElementById("maDreta").removeAttribute('cursor');
+        let madreta = document.getElementById("maDreta");
+        madreta.removeAttribute('laser-controls');
+        madreta.setAttribute('cursor', 'visible: false;');
+        madreta.setAttribute('raycaster', 'enabled: false; far: 0;');
+
 
         // Si l'usuari ja existia genera el menu del joc directament,
         // si no existia genera les preguntes d'experiècia prèvia i sexe,
-        /*if (localStorage.getItem("existent") === "true") {
+        if (localStorage.getItem("existent") === "true") {
           generadorModals(TIPUSMODALS.menu);
         } else {
           generadorModals(TIPUSMODALS.experiencia);
-        }*/
-        generadorModals(TIPUSMODALS.menu);
+        }
+        // generadorModals(TIPUSMODALS.menu);
       }
     });
 
@@ -287,15 +282,10 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/fletxa.glb'},
-    width: {type: 'number', default: 0.05},
-    height: {type: 'number', default: 0.05},
-    depth: {type: 'number', default: 0.5},
-    color: {type: 'color', default: '#FFAA00'},
+    asset: {type: 'asset', default: ASSETS.fletxa},
     ma: {type: 'asset'},
     posInicial: {type: 'array', default: [0, 0, 0]},
     posDispar: {type: 'array', default: [0, 0, 0]},
-    //rotacio: {type: 'boolean', default: false},
     agafada: {type: 'boolean', default: false},
     disparada: {type: 'boolean', default: false},
     forca: {type: 'number', default: 0},
@@ -303,28 +293,14 @@ AFRAME.registerComponent('fletxa', {
     velY: {type: 'number', default: 0},
     distAnteriorX: {type: 'number', default: 0},
     distAnteriorY: {type: 'number', default: 0},
-    altura: {type: 'number', default: 0},
     temps: {type: 'number', default: 0}
   },
   init: function () {
     let data = this.data;
-    let el = this.el;
-    let geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
-    let material = new THREE.MeshBasicMaterial({color: data.color});
-    this.mesh = new THREE.Mesh(geometry, material);
-    el.setObject3D('mesh', this.mesh);
+    let element = this.el;
+    element.setAttribute('gltf-model', data.asset);
 
-    loader.load(data.asset, function (gltf) {
-      el.setObject3D('mesh', gltf.scene);
-    }), undefined, function (error) {
-      console.error(error);
-    };
-  },
-  update: function (oldData) {
-    let data = this.data;  // Component property values.
-    let element = this.el;  // Reference to the component's entity.
-
-    this.el.addEventListener('grab-start', (event) => {
+    element.addEventListener('grab-start', (event) => {
       /*console.log("start")
       console.log(event.detail.buttonEvent)
       console.log(event.detail.buttonEvent.type)*/
@@ -337,12 +313,14 @@ AFRAME.registerComponent('fletxa', {
       }
     });
 
-    this.el.addEventListener('grab-end', (event) => {
+    element.addEventListener('grab-end', (event) => {
       /*console.log("end: ")
       console.log(event.detail.buttonEvent.type)*/
       let ma = event.detail.hand;
       if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerup") {
         data.agafada = false;
+        numDispars++;
+        console.log("Dispars: " + numDispars);
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
         data.forca = calculateTension()
@@ -350,17 +328,16 @@ AFRAME.registerComponent('fletxa', {
         let rotacio = this.el.object3D.quaternion.angleTo(
           new THREE.Quaternion(0, 0, 0, 0)
         );
-        console.log(rotacio)
         data.velX = data.forca * Math.cos(rotacio);
         data.velY = data.forca * Math.sin(rotacio);
 
         // Canvia la rotació Z a 0 per poder fer TranslateY i vagi cap abaix
         this.el.object3D.rotation.z = 0;
-        // Dispara la fletxa i agafa una de nova
+        // Dispara la fletxa amollada
         data.disparada = true;
-        numDispars++;
+        // Agafa una fletxa nova
         fletxaActual = escena.components.pool__fletxa.requestEntity();
-        // Resetetjar els valors de la fletxa disparada a 0
+        // Resetetjar els valors de la fletxa nova a 0
         fletxaActual.components.fletxa.data.disparada = false;
         fletxaActual.components.fletxa.data.temps = 0;
         fletxaActual.components.fletxa.data.forca = 0;
@@ -369,25 +346,15 @@ AFRAME.registerComponent('fletxa', {
         fletxaActual.components.fletxa.data.distAnteriorX = 0;
         fletxaActual.components.fletxa.data.distAnteriorY = 0;
         fletxaActual.play()
-        /*fletxaActual = (element.id + 1) % carcaix.length;
-        let seguentFletxa = carcaix[fletxaActual];
-        seguentFletxa.el.data.carregada = true;*/
-
-        //fletxaEntity.setAttribute('dynamic-body', '')
-        // Moure una nova fletxa a l'arc
       }
     });
 
-    this.el.addEventListener('hitstart', (event) => {
-      //let enemic = event.detail.intersectedEls[0]
-      //console.log(enemic)
-      //console.log(hit.getAttribute('class') === 'enemic')
-      //if (hit.getAttribute('class') === 'enemic') {
-      /*console.log("fletxa: ")
-      console.log(this.el.object3D.position)*/
-      escena.components.pool__fletxa.returnEntity(this.el);
-      //}
-      this.data.disparada = false;
+    element.addEventListener('hitstart', (event) => {
+      numEncerts++;
+      if (this.data.disparada) {
+        escena.components.pool__fletxa.returnEntity(this.el);
+      }
+      data.disparada = false;
     });
   },
   tick: function (time, timeDelta) {
@@ -403,7 +370,7 @@ AFRAME.registerComponent('fletxa', {
       data.distAnteriorX = distX;
       data.distAnteriorY = distY;
       // Si el temps es major a 15 retorna la fletxa a la pool
-      if (data.temps >= 15) escena.components.pool__fletxa.returnEntity(this.el);
+      if (data.temps >= 8) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
       igualaPosicioRotacio(el);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.4 metres
@@ -414,17 +381,6 @@ AFRAME.registerComponent('fletxa', {
     } else {
       igualaPosicioRotacio(el);
     }
-  },
-  remove: function () {
-    let data = this.data;
-    let element = this.el;
-
-    // Remove event listener.
-    if (data.event) {
-      el.removeEventListener(data.event, this.eventHandlerFn);
-    }
-    // Remove element.
-    element.remove();
   }
 });
 
@@ -479,11 +435,11 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
  */
 async function controladorEnemics(tipus) {
   jugant = true;
-  // x = distancia del centre del cami
+  // x = distancia al centre del cami
   let xMin = 4;
   let xMax = 8;
   let distancia = 25; // distancia a la vagoneta
-  let altura = 2;
+  let altura = 0;
   if (tipus === TIPUSENEMIC.diana) {
     xMin = 0;
     xMax = 4;
@@ -494,26 +450,29 @@ async function controladorEnemics(tipus) {
   while (jugant) {
     if (enemicsEnPantalla <= numEnemicsMax) {
       const enemic = document.createElement('a-entity');
+
       enemic.setAttribute('position', {
-        x: (valorAleatori(xMin, xMax) * (Math.round(Math.random()) * 2 - 1)),
+        x: (valorAleatoriFloat(xMin, xMax) * (Math.round(Math.random()) * 2 - 1)),
         y: tipus === TIPUSENEMIC.arrel ? altura : (Math.random() * (altura - 0.5) + 0.5).toFixed(1),
-        z: vagoneta.object3D.position.z + valorAleatori(distancia-5, distancia+5)
+        z: vagoneta.object3D.position.z + valorAleatoriFloat(distancia - 5, distancia + 5)
       });
+
       if (tipus === TIPUSENEMIC.arrel) {
         // Assigna una quantitat de vida aleatòria
-        enemic.setAttribute(tipus, `vida: ${valorAleatori(1, enemicsVidaMax-1).toFixed(0)};
-                                          tamany: ${valorAleatori(0.5, 2).toFixed(2)}`);
+        enemic.setAttribute(tipus, `vida: ${valorAleatoriInt(1, enemicsVidaMax)};
+                                          tamany: ${valorAleatoriFloat(0.8, 2)}`);
+        enemic.setAttribute('class', 'enemic');
       } else {
         enemic.setAttribute(tipus, '');
+        enemic.setAttribute('class', 'hitbox enemic');
+        enemic.emit('startanimCreixer', null, false);
       }
-      enemic.setAttribute('class', 'hitbox enemic');
       //console.log(enemic)
       /*enemic.setAttribute('animation', `property: position;
       to: ${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)} 1 ${vagoneta.object3D.position.z + 20};
       dur: 1; easing: linear; loop: false`);*/
 
       escena.appendChild(enemic);
-      enemic.emit('startanimCreixer', null, false);
       /*console.log("enemic: ")
       console.log(enemic.getAttribute('position'))*/
       enemicsEnPantalla++;
@@ -522,15 +481,19 @@ async function controladorEnemics(tipus) {
   }
 }
 
-function valorAleatori(valorMinim, valorMaxim) {
-  return Math.random() * (valorMaxim - valorMinim + 1) + valorMinim;
+function valorAleatoriFloat(valorMinim, valorMaxim) {
+  return (Math.random() * (valorMaxim - valorMinim) + valorMinim).toFixed(2);
+}
+
+function valorAleatoriInt(valorMinim, valorMaxim) {
+  return Math.floor(Math.random() * (valorMaxim - valorMinim + 1)) + valorMinim;
 }
 
 // Component enemics
 AFRAME.registerComponent('arrel', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/arrel.glb'},
-    color: {type: 'color', default: '#FF9A00'},
+    asset: {type: 'asset', default: ASSETS.arrel},
+    assetFruita: {type: 'asset', default: ASSETS.fruita},
     tamany: {type: 'number', default: 1},
     vida: {type: 'number', default: 1},
     maxDistanciaVagoneta: {type: 'number', default: 40},
@@ -538,81 +501,60 @@ AFRAME.registerComponent('arrel', {
   },
   init: function () {
     let data = this.data;
-    let el = this.el;
+    let element = this.el;
 
-    loader.load(data.asset, function (gltf) {
-      el.setObject3D('mesh', gltf.scene);
-    }), undefined, function (error) {
-      console.error(error);
-    };
+    element.setAttribute('rotation', `0 ${valorAleatoriFloat(0, 360)} 0`);
+    element.setAttribute('scale', `${data.tamany} ${data.tamany} ${data.tamany}`);
 
-    el.setAttribute('rotation', `0 ${valorAleatori(0, 360)} 0`);
-
-    // Animacio creixer
-    el.setAttribute('animation__creixer',{'property': 'size',
-      'from': {x: 0, y: 0, z: 0},
-      'to': {x: data.tamany, y: data.tamany, z: data.tamany},
-      'dur': 0.4,
-      'easing': 'linear',
-      'loop': false,
-      'startEvents': 'startanimCreixer'});
-    /*el.setAttribute('animation__creixer',{'property': 'position',
-      'from': {x: 0, y: 0, z: 0},
-      'to': {x: el.getAttribute('position').x, y: el.getAttribute('position').y, z: el.getAttribute('position').z},
-      'dur': 0.4,
-      'easing': 'linear',
-      'loop': false,
-      'startEvents': 'startanimCreixer'});*/
-
-    // Animacio morir
-    el.setAttribute('animation__morir',{'property': 'size',
-      'to': {x: 0, y: 0, z: 0},
-      'dur': 0.25,
-      'easing': 'linear',
-      'loop': false,
-      'startEvents': 'startanimMorir'});
-    /*el.setAttribute('animation__morir2',{'property': 'position',
-      'to': {x: this.position.x, y: 0, z: this.position.z},
-      'dur': 0.25,
-      'easing': 'linear',
-      'loop': false,
-      'startEvents': 'startanimMorir'});*/
-
+    // Geometria i hitbox de l'arrel
+    let arrelEntity = document.createElement('a-entity');
+    arrelEntity.setAttribute('gltf-model', data.asset);
+    arrelEntity.setAttribute('animation-mixer', 'clip: arrelCreixer; loop: once; clampWhenFinished: true;');
 
     // Geometria i hitbox de la fruita
     let fruitaEntity = document.createElement('a-entity');
-    fruitaEntity.setAttribute('position', '0 0 0');
+    fruitaEntity.setAttribute('gltf-model', data.assetFruita);
     fruitaEntity.setAttribute('class', 'hitbox');
-    fruitaEntity.material = new THREE.MeshLambertMaterial({color: VIDACOLORARREL[data.vida]});
-    fruitaEntity.geometry = new THREE.SphereGeometry(0.5);
-    fruitaEntity.setObject3D('mesh', new THREE.Mesh(fruitaEntity.geometry, fruitaEntity.material));
+    fruitaEntity.setAttribute('animation-mixer', 'clip: fruitaCreixer; loop: once; clampWhenFinished: true;');
+
+    fruitaEntity.addEventListener('model-loaded', () => {
+      actualitzarColor();
+    });
 
     fruitaEntity.addEventListener('hitstart', (event) => {
-      numEncerts++;
-      if (data.vida > 1) {
-        data.vida--;
-        // TODO animation
-
-        // Actualitzar el color
-        let mesh = fruitaEntity.getObject3D('mesh')
-        mesh.material =  new THREE.MeshLambertMaterial({color: VIDACOLORARREL[data.vida]});
-        mesh.material.needsUpdate = true;
-      } else {
+      if (data.vida <= 2) {
         enemicsEnPantalla--;
         punts++;
-        this.el.removeChild(fruitaEntity);
-        el.emit('startanimMorir', null, false);
+        fruitaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;')
+        arrelEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;')
         actualitzarVidaPunts();
+      } else {
+        data.vida--;
+        actualitzarColor();
       }
     });
 
-    // Listener de l'animacio de morir
-    this.el.addEventListener("animationcomplete__morir", async () => {
-      this.remove();
+    /**
+     * Actualitza el color del material de l'objecte de fruita
+     */
+    function actualitzarColor() {
+      let mesh = fruitaEntity.getObject3D('mesh')
+      mesh.traverse(function (child) {
+        if (child.isMesh) {
+          child.material = new THREE.MeshLambertMaterial({color: VIDACOLORARREL[data.vida]});
+        }
+      });
+    }
+
+    // Listener de l'animacio de morir per eliminar l'objecte
+    this.el.addEventListener("animation-finished", (e) => {
+      if (e.detail.action._clip.name === 'arrelMorir') {
+        this.remove();
+      }
     });
 
-    //el.appendChild(cosEntity);
-    el.appendChild(fruitaEntity);
+    element.appendChild(fruitaEntity);
+    element.appendChild(arrelEntity);
   },
   tick: function (time, timeDelta) {
     let data = this.data;
@@ -625,14 +567,14 @@ AFRAME.registerComponent('arrel', {
         enemicsEnPantalla--;
         vida--;
         actualitzarVidaPunts();
-        element.emit('startanimMorir', null, false);
+        element.remove()
       }
     }
   },
   remove: function () {
     // Remove element.
     escena.removeChild(this.el);
-    this.el.removeFromParent();
+    // this.el.removeFromParent();
   }
 });
 
@@ -657,7 +599,7 @@ function partidaAcabada() {
 
 AFRAME.registerComponent('terra', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/terra.glb'},
+    asset: {type: 'asset', default: ASSETS.cami},
     maxDistanciaVagoneta: {type: 'number', default: 299},
     enEscena: {type: 'boolean', default: true}
   },
@@ -690,8 +632,7 @@ AFRAME.registerComponent('terra', {
 // vagoneta
 AFRAME.registerComponent('vagoneta', {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/cart.glb'},
-    cor: {type: 'asset', default: '../assets/models/cor.png'},
+    asset: {type: 'asset', default: ASSETS.vagoneta},
     width: {type: 'number', default: 5},
     height: {type: 'number', default: 5}
   },
@@ -708,12 +649,14 @@ AFRAME.registerComponent('vagoneta', {
     element.setAttribute('position', '0 0 0');
 
     // Animacio reiniciar
-    element.setAttribute('animation__reiniciar',{'property': 'position',
+    vagoneta.setAttribute('animation__reiniciar', {
+      'property': 'position',
       'to': {x: 0, y: 0, z: 0},
       'dur': 1,
       'easing': 'linear',
       'loop': false,
-      'startEvents': 'startanimReiniciar'});
+      'startEvents': 'startanimReiniciar'
+    });
 
     vidaEntity = document.createElement('a-entity');
     vidaEntity.setAttribute('text', `value: Vida: ${vida}\n\nPunts: ${punts};align: center`);
@@ -724,17 +667,19 @@ AFRAME.registerComponent('vagoneta', {
     vagoneta.appendChild(vidaEntity);
 
     this.el.addEventListener("animationcomplete__moure", async () => {
-        jugant = false;
-        await delay(80).then(() => {
-          eliminarEnemics();
-          generadorModals(TIPUSMODALS.continuar);
-        });
+      jugant = false;
+      await delay(80).then(() => {
+        eliminarEnemics();
+        generadorModals(TIPUSMODALS.continuar);
+      });
     });
     this.el.addEventListener("animationcomplete__reiniciar", async () => {
       eliminarTerres();
-      generarNouTerra(TERRES.cami);
+      generarNouTerra(ASSETS.camiInicial);
       actualitzarVidaPunts();
-      generadorModals(TIPUSMODALS.menu);
+      await delay(80).then(() => {
+        generadorModals(TIPUSMODALS.menu);
+      });
     });
   }
 });
@@ -759,7 +704,7 @@ function generadorModals(tipus) {
 
   if (tipus === TIPUSMODALS.continuar) {
     stringTitol = "Punt de control";
-    stringTexte = "Descansa, beu aigua i continua quan estiguis llest.";
+    stringTexte = "Descansa, beu aigua i continua quan estiguis llest/a.";
     stringBotoPrincipal = "Continuar";
   } else if (tipus === TIPUSMODALS.reiniciar) {
     stringTitol = "Joc acabat";
@@ -767,12 +712,12 @@ function generadorModals(tipus) {
     stringBotoPrincipal = "Reiniciar";
   } else if (tipus === TIPUSMODALS.menu) {
     stringTitol = "Benvingut/da";
-    stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots començar una partida o jugar en el mode de pràctica.";
+    stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + localStorage.getItem("puntuacio");
     stringBotoPrincipal = "Iniciar";
-    stringBotoSecundari = "Pràctica";
+    stringBotoSecundari = "Practica";
   } else if (tipus === TIPUSMODALS.sortirPractica) {
     stringTitol = "Sortir";
-    stringTexte = "Surt del mode de pràctica.";
+    stringTexte = "Surt del mode de practica.";
     stringBotoPrincipal = "Sortir";
   } else if (tipus === TIPUSMODALS.experiencia) {
     stringTitol = "Benvingut/da";
@@ -795,7 +740,7 @@ function generadorModals(tipus) {
   fonsModal.appendChild(titolModal);
   fonsModal.appendChild(texteModal);
   titolModal.setAttribute('text', `value: ${stringTitol}; align: center;`);
-  titolModal.setAttribute('position', '0 0.6 -0.1');
+  titolModal.setAttribute('position', '0 0.7 -0.1');
   titolModal.setAttribute('rotation', '0 180 0');
   titolModal.setAttribute('scale', '4 4 1');
   texteModal.setAttribute('text', `value: ${stringTexte}; align: center; width: 0.75`);
@@ -834,7 +779,7 @@ function generadorModals(tipus) {
 
   if (tipus === TIPUSMODALS.continuar) {
     // Generar cami davant
-    generarNouTerra(TERRES.cami);
+    generarNouTerra(ASSETS.cami);
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
@@ -845,43 +790,14 @@ function generadorModals(tipus) {
       if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
       if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
 
-      // Començar la següent ronda
-      vagoneta.setAttribute('animation__moure', {'property': 'position',
-        'to': {x:0, y:0, z: vagoneta.object3D.position.z + AVANCVAGONETA},
-        'dur': duracioAvancVagoneta,
-        'easing': 'linear',
-        'loop': false,
-        'startEvents': 'startanimMoure'});
-      vagoneta.emit(`startanimMoure`, null, false);
-      controladorEnemics(TIPUSENEMIC.arrel).then(r => null);
+      comencarRonda();
     });
   } else if (tipus === TIPUSMODALS.reiniciar) {
-    // Si no existia envia la informació de les preguntes
-    /*if (localStorage.getItem("existent") === "false") {
-      fetch("/preguntesUsuari", {
-        method: "POST",
-        body: JSON.stringify({
-          nom: localStorage.getItem("nom"),
-          edat: localStorage.getItem("edat"),
-          experiencia: localStorage.getItem(TIPUSMODALS.experiencia),
-          sexe: localStorage.getItem(TIPUSMODALS.sexe)})
-      }).then((res) => {
-        if (res.status !== 200) console.log("Error insertant les respostes de les preguntes a la BBDD.")
-      });
+    // Envia la informació de les puntuacions si la puntuacio obtinguda és major
+    console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
+    if (punts >= localStorage.getItem("puntuacio")) {
+      enviarPuntuacions().then(r => null);
     }
-    fetch("/updatePuntuacio", {
-      method: "POST",
-      body: JSON.stringify({
-        nom: localStorage.getItem("nom"),
-        edat: localStorage.getItem("edat"),
-        dispars: numDispars,
-        encerts: numEncerts,
-        punts: punts,
-        ronda: ronda
-      })
-    }).then((res) => {
-      if (res.status !== 200) console.log("Error insertant les respostes de les preguntes a la BBDD.")
-    });*/
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       eliminarEnemics();
@@ -897,9 +813,8 @@ function generadorModals(tipus) {
       ronda = 1;
       vida = 10;
       numEnemicsMax = 4;
-        //'property: position; to: 0 0 0; dur: 1; easing: linear; loop: false'
-      //vagoneta.play()
-      vagoneta.emit(`startanimReiniciar`, null, false);
+
+      vagoneta.emit('startanimReiniciar', null, false);
     });
   } else if (tipus === TIPUSMODALS.menu) {
     // Listener de la hitbox
@@ -907,19 +822,11 @@ function generadorModals(tipus) {
       // Reset de les variables de generació d'enemics
       numEnemicsMax = 12;
       enemicsVidaMax = 1;
-      delayGeneracioEnemics = 10;
+      delayGeneracioEnemics = 100;
       escena.removeChild(fonsModal);
 
       // Activa el joc (animacions i controlador)
-      vagoneta.setAttribute('animation__moure', {'property': 'position',
-        'to': {x:0, y:0, z: vagoneta.object3D.position.z + AVANCVAGONETA},
-        'dur': duracioAvancVagoneta,
-        'easing': 'linear',
-        'loop': false,
-        'startEvents': 'startanimMoure'});
-      //vagoneta.play();
-      vagoneta.emit(`startanimMoure`, null, false);
-      controladorEnemics(TIPUSENEMIC.arrel).then(r => null);
+      comencarRonda();
     });
     botoSecundari.addEventListener('hitstart', () => {
       numEnemicsMax = 5;
@@ -957,17 +864,58 @@ function generadorModals(tipus) {
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
-      localStorage.setItem(TIPUSMODALS.sexe, "H");
+      localStorage.setItem(TIPUSMODALS.sexe, 'H');
+      enviarPreguntes();
       generadorModals(TIPUSMODALS.menu);
     });
     botoSecundari.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
-      localStorage.setItem(TIPUSMODALS.sexe, "D");
+      localStorage.setItem(TIPUSMODALS.sexe, 'D');
+      enviarPreguntes();
       generadorModals(TIPUSMODALS.menu);
     });
   }
 
   escena.appendChild(fonsModal);
+}
+
+async function enviarPuntuacions() {
+  await fetch("/updatePuntuacio", {
+    method: "POST",
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      nom: localStorage.getItem("nom"),
+      edat: localStorage.getItem("edat"),
+      dispars: numDispars,
+      encerts: numEncerts,
+      puntuacio: punts,
+      ronda: ronda
+    })
+  }).then((res) => {
+    if (res.status !== 200) console.log("Error insertant les respostes de les preguntes a la BBDD.")
+  });
+  console.log("Puntuacio enviada: ");
+}
+
+async function enviarPreguntes() {
+  await fetch("/preguntesUsuari", {
+    method: "POST",
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      nom: localStorage.getItem("nom"),
+      edat: localStorage.getItem("edat"),
+      experiencia: localStorage.getItem(TIPUSMODALS.experiencia),
+      sexe: localStorage.getItem(TIPUSMODALS.sexe)
+    })
+  }).then((res) => {
+    if (res.status !== 200) console.log("Error insertant les respostes de les preguntes a la BBDD.")
+  });
 }
 
 /**
@@ -980,6 +928,24 @@ function eliminarEnemics() {
     enemics[i].removeFromParent();
   }
   enemicsEnPantalla = 0;
+}
+
+/**
+ * Activa l'animacio de la vagoneta i el controlador d'enemics,
+ * ja sigui per avancar de ronda o per començar la primera
+ */
+function comencarRonda() {
+  vagoneta.removeAttribute('animation__moure');
+  vagoneta.setAttribute('animation__moure', {
+    'property': 'position',
+    'to': {x: 0, y: 0, z: vagoneta.object3D.position.z + AVANCVAGONETA},
+    'dur': duracioAvancVagoneta,
+    'easing': 'linear',
+    'loop': false,
+    'startEvents': 'startanimMoure'
+  });
+  vagoneta.emit('startanimMoure', null, false);
+  controladorEnemics(TIPUSENEMIC.arrel).then(r => null);
 }
 
 /**
@@ -1002,6 +968,7 @@ function generarNouTerra(asset) {
   comencTerra += LLARGARIATERRA;
   escena.appendChild(terraNou);
 }
+
 /**
  * Elimina totes les terres generades (útil per reiniciar el joc).
  */
@@ -1014,30 +981,34 @@ function eliminarTerres() {
 
 AFRAME.registerComponent("diana", {
   schema: {
-    asset: {type: 'asset', default: '../assets/models/diana.glb'},
+    asset: {type: 'asset', default: ASSETS.diana},
     color: {type: 'string', default: '#525252'}
     //position="0 0 -2" width="1" height="1"
   },
   init: function () {
     let data = this.data;
-    let el = this.el;
+    let element = this.el;
 
-    loader.load(data.asset, function (gltf) {
-      el.setObject3D('mesh', gltf.scene);
+    element.setAttribute('gltf-model', data.asset);
+
+    /*loader.load(data.asset, function (gltf) {
+      element.setObject3D('mesh', gltf.scene);
     }), undefined, function (error) {
       console.error(error);
-    };
+    };*/
 
-    el.setAttribute('animation__creixer',{'property': 'size',
-      'from': {x: 0, y: 0, z: 0},
-      'to': {x: 1, y: 1, z: 1},
+    element.setAttribute('animation__creixer', {
+      'property': 'scale',
+      'from': {x:0, y:0, z:0},
+      'to': {x:1, y:1, z:1},
       'dur': 0.2,
       'easing': 'linear',
       'loop': false,
-      'startEvents': 'startanimCreixer'});
+      'startEvents': 'startanimCreixer'
+    });
+    // element.emit('startanimCreixer', null, false);
 
-    this.el.addEventListener('hitstart', () => {
-      numEncerts++;
+    element.addEventListener('hitstart', () => {
       enemicsEnPantalla--;
       this.remove();
     });

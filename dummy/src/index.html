@@ -5,7 +5,7 @@
   <title>Bellver Defense</title>
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <script src="js/lib/aframe.min.js"></script>
+  <script src="./js/lib/aframe-v1.6.0.min.js"></script>
   <script>
     delete AFRAME.components["grabbable"];
   </script>
@@ -16,10 +16,10 @@
   <!--  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.js"></script>-->
   <!--  <script src="https://cdn.jsdelivr.net/npm/aframe-locomotion@0.2.0/dist/aframe-locomotion.umd.min.js"></script>-->
   <script type="module" src="./js/main.js"></script>
-  <script type="module" src="js/inicisessio.js"></script>
+  <script type="module" src="./js/inicisessio.js"></script>
 </head>
 <body>
-<a-scene id="escena" physics="debug: false" obb-collider="showColliders: false" vr-mode-ui device-orientation-permission-ui>
+<a-scene id="escena" physics="debug: false" obb-collider="showColliders: false">
   <a-assets>
     <!--    Mans -->
     <a-mixin id="mans" super-hands
@@ -34,70 +34,47 @@
              grabbable="startButtons: triggerdown; endButtons: trackpadup"
              event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
              event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"></a-mixin>-->
-    <a-asset-item id="vagonetaModel" src="./assets/models/carttest2.glb"></a-asset-item>
+    <a-asset-item id="vagonetaAsset" src="./assets/models/carttest2.glb"></a-asset-item>
     <a-asset-item id="navmesh" src="./assets/models/navmesh.gltf"></a-asset-item>
     <a-asset-item id="arcAsset" src="./assets/models/arctest.glb"></a-asset-item>
+    <a-asset-item id="fletxaAsset" src="./assets/models/fletxa.glb"></a-asset-item>
     <a-asset-item id="arrelAsset" src="./assets/models/arrel.glb"></a-asset-item>
+    <a-asset-item id="fruitaAsset" src="./assets/models/fruita.glb"></a-asset-item>
+    <a-asset-item id="dianaAsset" src="./assets/models/diana.glb"></a-asset-item>
     <a-asset-item id="camiAsset" src="./assets/models/cami.glb"></a-asset-item>
     <img id="cel" src="./assets/textures/cel.jpg">
-    <!--<img id="terra" src="./assets/textures/terra.jpg">
-    <img id="terra-nrm" src="./assets/textures/terra-nrm.jpg">
-    <img id="terra-bosc" src="./assets/textures/terra-bosc.jpg">
-    <img id="terra-bosc-nrm" src="./assets/textures/terra-bosc-nrm.jpg">-->
   </a-assets>
   <!-- Entitat de camera  position="-1 0 -6"-->
   <!-- constraint="target: #cart"-->
   <!-- <a-entity class="navmesh" nav-mesh gltf-model="#navmesh" visible="false"></a-entity>-->
   <!--  -->
-  <a-entity id="vagoneta" vagoneta="asset: #vagonetaModel;">
+  <a-entity id="vagoneta" vagoneta="asset: #vagonetaAsset;">
 
     <a-sky src="#cel" rotation="0 94 0"></a-sky>
     <!-- Altura de la base de la vagoneta 0.7 (altura a on tendries els peus) -->
     <a-entity id="controls" controls movement-controls="constrainToNavMesh: true;speed: 1"
               rotation="0 180 0" position="0 0.7 -0.5" keyboard-controls>
-      <!-- Altura dels ulls dels nins ~0.9 user-height="0.9" -->
-      <a-entity id="camera" fixcamera="" look-controls="pointerLockEnabled: true" camera cursor="rayOrigin: mouse;"
-                position="0 2 0" rotation="">
-        <!--        <a-plane id="hud"></a-plane>-->
+      <!-- Altura dels ulls dels nins ~0.9 user-height="0.9"m adults 1.6 cursor="rayOrigin: mouse;"-->
+      <a-entity id="camera" fixcamera="" look-controls="pointerLockEnabled: true" camera
+                position="0 1.6 0" rotation="">
       </a-entity>
+      <!-- Mans -->
       <a-entity id="maEsquerra" hand-controls="hand: left" mixin="mans"></a-entity>
       <a-entity id="maDreta" hand-controls="hand: right" laser-controls="hand: right" raycaster="objects: .collidable" cursor="rayOrigin: controller" mixin="mans"></a-entity>
-      <!-- Ma esquerra
-      <a-entity id="leftHand" mixin="mans" static-body physics-collider collision-filter super-hands
-                hand-controls="hand: left" shadow="cast: false"
-                velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls
-                hp-mixed-reality></a-entity>
-      &lt;!&ndash; Ma dreta &ndash;&gt;
-      <a-entity id="rightHand" mixin="mans" static-body physics-collider collision-filter super-hands
-                hand-controls="hand: right" shadow="cast: false"º
-                velocity magicleap-controls vive-controls oculus-touch-controls windows-motion-controls
-                hp-mixed-reality></a-entity>-->
-      <!--    Arc  arc="event: event1; message: Hello, Metaverse!"-->
     </a-entity>
-    <!--  <a-entity id="arcComplet" position="-0.5 1 -5.5">
-        <a-entity id="corda" corda="" class="" position="-0.48 0 0" grabbable draggable>
-        </a-entity>
-      </a-entity>-->
-    <!--    style="display: none;" -->
+    <!-- Arc -->
     <a-entity id="arc" arc="asset: #arcAsset;" class="" position="0.6 1.2 0.6" rotation="30 180 30"></a-entity>
   </a-entity>
+<!--  <a-entity arrel="asset: #arrelAsset;" position="0.6 0 2"></a-entity>-->
+<!--  Modal inici de sessió -->
   <a-plane id="modalUsuari" color="#323232" opacity="0.95" position="0 1.5 1.5" height="2" width="3" rotation="0 180 0">
     <a-text color="#FFF"
             value="Introdueix el teu nom junt amb\nla teva edat separats per una coma.\nCom l'exemple:\nUn cop fet, pressiona 'Ent' per continuar."
             align="center" scale="0.5 0.5 0.5" position="0 0.7 0"></a-text>
     <a-text id="inputNom" color="#FFF" value="Nom,0" align="center" scale="0.5 0.5 0.5" position="0 0.2 0"></a-text>
     <a-entity id="keyboard" a-keyboard position="-0.95 0 0" scale="4 4 4"></a-entity>
-
   </a-plane>
-  <!--  <a-input position="0.6 1 2.5" rotation="0 180 0" placeholder="Nom" color="black" width="1"></a-input>
-  <a-input position="0.6 0.8 2.5" rotation="0 180 0" type="password" placeholder="Password" color="black" width="1"></a-input>-->
-  <a-entity enemic="asset: #arrelAsset;tamany: 1;vida: 1" position="0.6 2 2"></a-entity>
 
-  <!-- Terra
-  ammojs:
-   collisionFilterGroup: 1; collisionFilterMask: 1;
-   shape="type: box"
-   -->
   <a-entity terra="asset: #camiAsset;" class="terra"></a-entity>
   <!--  <a-entity terra="asset: #terraAsset2;" class="terra"></a-entity>-->
   <!--<a-plane

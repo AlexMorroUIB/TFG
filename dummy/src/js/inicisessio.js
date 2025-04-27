@@ -10,11 +10,13 @@ function comprovarNomUsuari() {
     if (nomComplet.indexOf(separador) === -1) nomComplet = nomComplet.concat(`${separador}0`);
     let nom = nomComplet.substring(0, nomComplet.indexOf(separador));
     let edat = nomComplet.substring(nomComplet.indexOf(separador) + 1);
-    console.log(nom)
-    console.log(edat)
-    enviarNomUsuari(nom, edat)
+    document.removeEventListener('a-keyboard-update', updateInput);
+    document.getElementById('keyboard').removeAttribute('a-keyboard');
+    enviarNomUsuari(nom, edat).then(r => null);
   } else {
-    alert("Por favor, introduce tu nombre de usuario");
+    modalUsuari.innerHTML += `<a-text color="#F00"
+            value="Per favor, introdueix el teu nom."
+            align="center" scale="0.5 0.5 0.5" position="0 0.4 0"></a-text>`
   }
 }
 
@@ -35,7 +37,8 @@ async function enviarNomUsuari(nom, edat) {
       localStorage.setItem('nom', nom);
       localStorage.setItem('edat', edat);
       localStorage.setItem('existent', data.existent);
-      console.log(`Sessio iniciada, usuari: ${nom} - ${edat} - ${data.existent}`)
+      localStorage.setItem('puntuacio', data.puntuacio);
+      console.log(`Sessio iniciada, usuari: ${nom} - ${edat} - ${data.existent} - ${data.puntuacio}`)
       texteAgafaArc();
     })
   );
