@@ -1,5 +1,8 @@
 database
 
+docker  run --detach --name mariadb --env MARIADB_ROOT_PASSWORD=pass -p 3306:3306  mariadb:latest
+docker run --name phpmyadmin -d --link mariadb:db -p 8080:80 phpmyadmin
+
 taula puntuacions
 1	nom varcahr PK
 2	edat int

@@ -69,10 +69,14 @@ let input = '';
 function updateInput(e) {
   let code = parseInt(e.detail.code);
   switch (code) {
+    case 24: // Cancel
+      input = '';
+      break;
     case 8: // Backspace
       input = input.slice(0, -1);
       break;
     case 13: // Enter
+    case 6:  // Submit
       let inputField = document.getElementById('inputNom');
       inputField.setAttribute('value', input);
       input = ''; // Reset input value

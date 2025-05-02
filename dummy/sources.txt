@@ -7,6 +7,11 @@ peasant: https://poly.pizza/m/qbDLeTtb8K
 armadura: https://poly.pizza/m/TMUoxILh9w
 yelmo: https://www.thingiverse.com/thing:2952496/files
 
+### sons
+gameover: https://freesound.org/people/Fupicat/sounds/538151/
+-1 vida: https://pixabay.com/sound-effects/search/effect/ (drop sound effect)
+arrancant fruita: https://openverse.org/audio/42d2a0db-e82c-4732-aacf-986d7acfbec1?q=squashing+fruit&p=9
+
 sketchfab account: ferere5144@gufutu.com - 1a2s3d4f5G
 subaru: https://sketchfab.com/3d-models/subaru-wrx-sti-36f4a47b619a49bda4c1870e7833b25b
 

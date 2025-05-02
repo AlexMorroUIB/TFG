@@ -38,10 +38,14 @@
     <a-asset-item id="navmesh" src="./assets/models/navmesh.gltf"></a-asset-item>
     <a-asset-item id="arcAsset" src="./assets/models/arctest.glb"></a-asset-item>
     <a-asset-item id="fletxaAsset" src="./assets/models/fletxa.glb"></a-asset-item>
-    <a-asset-item id="arrelAsset" src="./assets/models/arrel.glb"></a-asset-item>
+    <a-asset-item id="plantaAsset" src="./assets/models/planta.glb"></a-asset-item>
     <a-asset-item id="fruitaAsset" src="./assets/models/fruita.glb"></a-asset-item>
     <a-asset-item id="dianaAsset" src="./assets/models/diana.glb"></a-asset-item>
     <a-asset-item id="camiAsset" src="./assets/models/cami.glb"></a-asset-item>
+    <a-asset-item id="camiInicialAsset" src="./assets/models/camiInicial.glb"></a-asset-item>
+    <audio id="gameOverSo" src="./assets/audio/GameOver.mp3" preload="auto"></audio>
+    <audio id="fruitaMortaSo" src="./assets/audio/FruitaMorta.mp3" preload="auto"></audio>
+    <audio id="perdreVidaSo" src="./assets/audio/PerdreVida.mp3" preload="auto"></audio>
     <img id="cel" src="./assets/textures/cel.jpg">
   </a-assets>
   <!-- Entitat de camera  position="-1 0 -6"-->
@@ -65,7 +69,7 @@
     <!-- Arc -->
     <a-entity id="arc" arc="asset: #arcAsset;" class="" position="0.6 1.2 0.6" rotation="30 180 30"></a-entity>
   </a-entity>
-<!--  <a-entity arrel="asset: #arrelAsset;" position="0.6 0 2"></a-entity>-->
+<!--  <a-entity planta="asset: #plantaAsset;" position="0.6 0 2"></a-entity>-->
 <!--  Modal inici de sessió -->
   <a-plane id="modalUsuari" color="#323232" opacity="0.95" position="0 1.5 1.5" height="2" width="3" rotation="0 180 0">
     <a-text color="#FFF"
@@ -75,7 +79,7 @@
     <a-entity id="keyboard" a-keyboard position="-0.95 0 0" scale="4 4 4"></a-entity>
   </a-plane>
 
-  <a-entity terra="asset: #camiAsset;" class="terra"></a-entity>
+  <a-entity terra="asset: #camiInicialAsset;" class="terra"></a-entity>
   <!--  <a-entity terra="asset: #terraAsset2;" class="terra"></a-entity>-->
   <!--<a-plane
     material="color: #FFF; src: #terra; repeat: 1 6; normal-map: #terra-nrm; normal-texture-repeat: 1 6; normal-scale: 1 -1; roughness: 0.9"

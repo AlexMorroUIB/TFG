@@ -1,5 +1,5 @@
 {
-  "name": "dummy",
+  "name": "towerdefense",
   "version": "0.0.1",
   "description": "",
   "private": true,
@@ -7,11 +7,9 @@
   "author": "Alex Morro",
   "main": "src/js/main.js",
   "dependencies": {
-    "aframe": "~1.6.0",
-    "ammo.js": "^0.0.10",
     "express": "~4.21.1",
-    "super-hands": "3.0.5",
-    "three": "^0.173.0"
+    "dotenv": "~16.5.0",
+    "mariadb": "~3.4.1"
   },
   "devDependencies": {
     "@babel/core": "latest",

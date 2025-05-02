@@ -18,27 +18,28 @@ const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE * 
 const COLORFONSMODAL = '#323232';
 const COLORBOTOPRINCIPAL = '#12FF12';
 const COLORBOTOSECUNDARI = '#626262';
+const LLARGARIATERRA = 150;
 // Tipus d'enemics possibles
 const TIPUSENEMIC = {
-  arrel: "arrel",
+  planta: "planta",
   diana: "diana"
 };
-const VIDACOLORARREL = {
+const VIDACOLORFRUITA = {
   1: "#FCAC00",
   2: "#FF0000",
   3: "#00FCF4",
   4: "#F400FC"
 };
 // Tipus d'assets disponibles
-const ASSETS = {
+const MODELS = {
   arc: "#arcAsset",
   fletxa: "#fletxaAsset",
-  arrel: "#arrelAsset",
+  planta: "#plantaAsset",
   fruita: "#fruitaAsset",
   diana: "#dianaAsset",
   vagoneta: "#vagonetaAsset",
   cami: "#camiAsset",
-  camiInicial: "#camiAsset"
+  camiInicial: "#camiInicialAsset"
 };
 const TIPUSMODALS = {
   continuar: "continuar",
@@ -48,7 +49,11 @@ const TIPUSMODALS = {
   experiencia: "experiencia",
   sexe: "sexe"
 }
-const LLARGARIATERRA = 150;
+const SONS = {
+  gameOver: "#gameOverSo",
+  fruitaMorta: "#fruitaMortaSo",
+  perdreVida: "#perdreVidaSo"
+}
 
 // Variables del joc
 let vida = 10;
@@ -95,7 +100,7 @@ let comencTerra = 300;
 // Arc
 AFRAME.registerComponent('arc', {
   schema: {
-    asset: {type: 'asset', default: ASSETS.arc},
+    asset: {type: 'asset', default: MODELS.arc},
     width: {type: 'number', default: 0.4},
     height: {type: 'number', default: 0.6},
     depth: {type: 'number', default: 0.2},
@@ -105,12 +110,14 @@ AFRAME.registerComponent('arc', {
   init: function (qualifiedName, value) {
     let data = this.data;
     let el = this.el;
-    loader.load(data.asset, function (gltf) {
+
+    el.setAttribute('gltf-model', data.asset);
+    /*loader.load(data.asset, function (gltf) {
       el.setObject3D('mesh', gltf.scene);
       //gltf.scene.position.set(document.getElementById('maEsquerra').object3D.position)
     }), undefined, function (error) {
       console.error(error);
-    };
+    };*/
     //document.getElementById('arc').innerHTML = '<a-entity corda grabbable></a-entity>';
     //let cordaEntity = document.createElement('a-entity');
     cordaEntity.setAttribute('id', 'corda');
@@ -282,7 +289,7 @@ function calcularCorda(distanciaMans) {
 
 AFRAME.registerComponent('fletxa', {
   schema: {
-    asset: {type: 'asset', default: ASSETS.fletxa},
+    asset: {type: 'asset', default: MODELS.fletxa},
     ma: {type: 'asset'},
     posInicial: {type: 'array', default: [0, 0, 0]},
     posDispar: {type: 'array', default: [0, 0, 0]},
@@ -453,11 +460,11 @@ async function controladorEnemics(tipus) {
 
       enemic.setAttribute('position', {
         x: (valorAleatoriFloat(xMin, xMax) * (Math.round(Math.random()) * 2 - 1)),
-        y: tipus === TIPUSENEMIC.arrel ? altura : (Math.random() * (altura - 0.5) + 0.5).toFixed(1),
-        z: vagoneta.object3D.position.z + valorAleatoriFloat(distancia - 5, distancia + 5)
+        y: tipus === TIPUSENEMIC.planta ? altura : (Math.random() * (altura - 0.5) + 0.5).toFixed(1),
+        z: vagoneta.object3D.position.z + valorAleatoriInt(distancia - 5, distancia + 5)
       });
 
-      if (tipus === TIPUSENEMIC.arrel) {
+      if (tipus === TIPUSENEMIC.planta) {
         // Assigna una quantitat de vida aleatòria
         enemic.setAttribute(tipus, `vida: ${valorAleatoriInt(1, enemicsVidaMax)};
                                           tamany: ${valorAleatoriFloat(0.8, 2)}`);
@@ -490,10 +497,10 @@ function valorAleatoriInt(valorMinim, valorMaxim) {
 }
 
 // Component enemics
-AFRAME.registerComponent('arrel', {
+AFRAME.registerComponent('planta', {
   schema: {
-    asset: {type: 'asset', default: ASSETS.arrel},
-    assetFruita: {type: 'asset', default: ASSETS.fruita},
+    asset: {type: 'asset', default: MODELS.planta},
+    assetFruita: {type: 'asset', default: MODELS.fruita},
     tamany: {type: 'number', default: 1},
     vida: {type: 'number', default: 1},
     maxDistanciaVagoneta: {type: 'number', default: 40},
@@ -506,16 +513,17 @@ AFRAME.registerComponent('arrel', {
     element.setAttribute('rotation', `0 ${valorAleatoriFloat(0, 360)} 0`);
     element.setAttribute('scale', `${data.tamany} ${data.tamany} ${data.tamany}`);
 
-    // Geometria i hitbox de l'arrel
-    let arrelEntity = document.createElement('a-entity');
-    arrelEntity.setAttribute('gltf-model', data.asset);
-    arrelEntity.setAttribute('animation-mixer', 'clip: arrelCreixer; loop: once; clampWhenFinished: true;');
+    // Geometria i hitbox de l'planta
+    let plantaEntity = document.createElement('a-entity');
+    plantaEntity.setAttribute('gltf-model', data.asset);
+    plantaEntity.setAttribute('animation-mixer', 'clip: arrelCreixer; loop: once; clampWhenFinished: true;');
 
     // Geometria i hitbox de la fruita
     let fruitaEntity = document.createElement('a-entity');
     fruitaEntity.setAttribute('gltf-model', data.assetFruita);
     fruitaEntity.setAttribute('class', 'hitbox');
-    fruitaEntity.setAttribute('animation-mixer', 'clip: fruitaCreixer; loop: once; clampWhenFinished: true;');
+    fruitaEntity.setAttribute('sound', `src: ${SONS.fruitaMorta}; autoplay: false; positional: true`);
+    fruitaEntity.setAttribute('visible', 'false');
 
     fruitaEntity.addEventListener('model-loaded', () => {
       actualitzarColor();
@@ -525,8 +533,9 @@ AFRAME.registerComponent('arrel', {
       if (data.vida <= 2) {
         enemicsEnPantalla--;
         punts++;
-        fruitaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;')
-        arrelEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;')
+        fruitaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;');
+        plantaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;');
+        fruitaEntity.components.sound.playSound();
         actualitzarVidaPunts();
       } else {
         data.vida--;
@@ -541,7 +550,7 @@ AFRAME.registerComponent('arrel', {
       let mesh = fruitaEntity.getObject3D('mesh')
       mesh.traverse(function (child) {
         if (child.isMesh) {
-          child.material = new THREE.MeshLambertMaterial({color: VIDACOLORARREL[data.vida]});
+          child.material = new THREE.MeshLambertMaterial({color: VIDACOLORFRUITA[data.vida]});
         }
       });
     }
@@ -550,11 +559,13 @@ AFRAME.registerComponent('arrel', {
     this.el.addEventListener("animation-finished", (e) => {
       if (e.detail.action._clip.name === 'arrelMorir') {
         this.remove();
+      } else if (e.detail.action._clip.name === 'arrelCreixer') {
+        fruitaEntity.setAttribute('visible', 'true');
       }
     });
 
     element.appendChild(fruitaEntity);
-    element.appendChild(arrelEntity);
+    element.appendChild(plantaEntity);
   },
   tick: function (time, timeDelta) {
     let data = this.data;
@@ -599,7 +610,7 @@ function partidaAcabada() {
 
 AFRAME.registerComponent('terra', {
   schema: {
-    asset: {type: 'asset', default: ASSETS.cami},
+    asset: {type: 'asset', default: MODELS.cami},
     maxDistanciaVagoneta: {type: 'number', default: 299},
     enEscena: {type: 'boolean', default: true}
   },
@@ -607,11 +618,12 @@ AFRAME.registerComponent('terra', {
     let data = this.data;
     let el = this.el;
 
-    loader.load(data.asset, function (gltf) {
+    el.setAttribute('gltf-model', data.asset);
+    /*loader.load(data.asset, function (gltf) {
       el.setObject3D('mesh', gltf.scene);
     }), undefined, function (error) {
       console.error(error);
-    };
+    };*/
   },
   comprovarDistancia: function () {
     let element = this.el;
@@ -632,7 +644,7 @@ AFRAME.registerComponent('terra', {
 // vagoneta
 AFRAME.registerComponent('vagoneta', {
   schema: {
-    asset: {type: 'asset', default: ASSETS.vagoneta},
+    asset: {type: 'asset', default: MODELS.vagoneta},
     width: {type: 'number', default: 5},
     height: {type: 'number', default: 5}
   },
@@ -640,11 +652,12 @@ AFRAME.registerComponent('vagoneta', {
     let data = this.data;
     let element = this.el
 
-    loader.load(data.asset, function (gltf) {
+    element.setAttribute('gltf-model', data.asset);
+    /*loader.load(data.asset, function (gltf) {
       element.setObject3D('mesh', gltf.scene);
     }), undefined, function (error) {
       console.error(error);
-    };
+    };*/
     element.setAttribute('scale', '0.5 0.5 0.5');
     element.setAttribute('position', '0 0 0');
 
@@ -675,7 +688,7 @@ AFRAME.registerComponent('vagoneta', {
     });
     this.el.addEventListener("animationcomplete__reiniciar", async () => {
       eliminarTerres();
-      generarNouTerra(ASSETS.camiInicial);
+      generarNouTerra(MODELS.camiInicial);
       actualitzarVidaPunts();
       await delay(80).then(() => {
         generadorModals(TIPUSMODALS.menu);
@@ -779,7 +792,7 @@ function generadorModals(tipus) {
 
   if (tipus === TIPUSMODALS.continuar) {
     // Generar cami davant
-    generarNouTerra(ASSETS.cami);
+    generarNouTerra(MODELS.cami);
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
@@ -793,6 +806,7 @@ function generadorModals(tipus) {
       comencarRonda();
     });
   } else if (tipus === TIPUSMODALS.reiniciar) {
+    fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);
     // Envia la informació de les puntuacions si la puntuacio obtinguda és major
     console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
     if (punts >= localStorage.getItem("puntuacio")) {
@@ -945,7 +959,7 @@ function comencarRonda() {
     'startEvents': 'startanimMoure'
   });
   vagoneta.emit('startanimMoure', null, false);
-  controladorEnemics(TIPUSENEMIC.arrel).then(r => null);
+  controladorEnemics(TIPUSENEMIC.planta).then(r => null);
 }
 
 /**
@@ -981,7 +995,7 @@ function eliminarTerres() {
 
 AFRAME.registerComponent("diana", {
   schema: {
-    asset: {type: 'asset', default: ASSETS.diana},
+    asset: {type: 'asset', default: MODELS.diana},
     color: {type: 'string', default: '#525252'}
     //position="0 0 -2" width="1" height="1"
   },
@@ -990,23 +1004,6 @@ AFRAME.registerComponent("diana", {
     let element = this.el;
 
     element.setAttribute('gltf-model', data.asset);
-
-    /*loader.load(data.asset, function (gltf) {
-      element.setObject3D('mesh', gltf.scene);
-    }), undefined, function (error) {
-      console.error(error);
-    };*/
-
-    element.setAttribute('animation__creixer', {
-      'property': 'scale',
-      'from': {x:0, y:0, z:0},
-      'to': {x:1, y:1, z:1},
-      'dur': 0.2,
-      'easing': 'linear',
-      'loop': false,
-      'startEvents': 'startanimCreixer'
-    });
-    // element.emit('startanimCreixer', null, false);
 
     element.addEventListener('hitstart', () => {
       enemicsEnPantalla--;
@@ -1020,8 +1017,67 @@ AFRAME.registerComponent("diana", {
   }
 });
 
-/*let arcHTML = document.getElementById('arc');
-let cordaHTML = document.getElementById('corda');
-let arcEntity = document.createElement('a-entity');
-let cordaEntity = document.createElement('a-entity');*/
+/**
+ * Zona Audio
+ */
+document.addEventListener("sound-ended", (e) => {
+  console.log("So:")
+  console.log(e.name)
+  console.log(e.id)
+  console.log("--------------------------------")
+});
 
+
+/**
+ * Eliminar les dades dels objectes 3D quan s'eliminen les entitats
+ */
+AFRAME.registerComponent("gltf-model", {
+  remove: function () {
+    if (!this.model) {
+      return;
+    }
+    this.el.removeObject3D("mesh");
+    // New code to remove all resources
+    this.model.traverse(disposeNode);
+    this.model = null;
+    THREE.Cache.clear();
+    // Empty renderLists to remove references to removed objects for garbage collection
+    this.el.sceneEl.renderer.renderLists.dispose();
+  },
+});
+
+// Explicitly dispose any textures assigned to this material
+function disposeTextures(material) {
+  for (const propertyName in material) {
+    const texture = material[propertyName];
+    if (texture instanceof THREE.Texture) {
+      const image = texture.source.data;
+      if (image instanceof ImageBitmap) {
+        image.close && image.close();
+      }
+      texture.dispose();
+    }
+  }
+}
+
+function disposeNode(node) {
+  if (node instanceof THREE.Mesh) {
+    const geometry = node.geometry;
+    if (geometry) {
+      geometry.dispose();
+    }
+    const material = node.material;
+    if (material) {
+      if (Array.isArray(material)) {
+        for (let i = 0, l = material.length; i < l; i++) {
+          const m = material[i];
+          disposeTextures(m);
+          m.dispose();
+        }
+      } else {
+        disposeTextures(material);
+        material.dispose(); // disposes any programs associated with the material
+      }
+    }
+  }
+}
