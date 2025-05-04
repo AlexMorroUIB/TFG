@@ -63,7 +63,7 @@ let numEnemicsMax = 4;
 // Màxim de vida que poden tenir els enemics en la ronda actual
 let enemicsVidaMax = 1;
 let delayGeneracioEnemics = 4000; // Temps en ms que tarda el controlador en generar un nou enemic.
-let duracioAvancVagoneta = 10000//120000;
+let duracioAvancVagoneta = 120000;
 let ronda = 1;
 
 // Estadistiques
@@ -81,13 +81,8 @@ let vagoneta = document.getElementById('vagoneta');
 let hud = document.getElementById('hud');
 let jugant = false;
 let enemicsEnPantalla = 0;
-let numCaminsEndavant = 0;
-let posicioCamins = 0;
 let vidaEntity;
-/*let cordaBone
-let anchorDBone*/
 let cordaEntity = document.createElement('a-entity');
-//let carcaix = new Array(TAMANYCARCAIX);
 // entitat HTML de la fletxa que està actualment a l'arc i no s'ha disparat
 let fletxaActual;
 // entitat HTML de la ma que ha agafat l'arc
@@ -834,9 +829,9 @@ function generadorModals(tipus) {
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       // Reset de les variables de generació d'enemics
-      numEnemicsMax = 12;
+      numEnemicsMax = 4;
       enemicsVidaMax = 1;
-      delayGeneracioEnemics = 100;
+      delayGeneracioEnemics = 4000;
       escena.removeChild(fonsModal);
 
       // Activa el joc (animacions i controlador)

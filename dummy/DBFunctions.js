@@ -2,8 +2,8 @@ const mariadb = require('mariadb');
 const serverPool = mariadb.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PWD, //connectionLimit: 10,
-  database: process.env.DB_NAME, //Default database to use when establishing the connection
+  password: process.env.DB_PWD,
+  database: process.env.DB_NAME, // Default database to use when establishing the connection
   //port: 3306, //it uses the port 3306 by default
   timezone: 'Z', //UTC timezone
   resetAfterUse: true,
@@ -12,21 +12,25 @@ const serverPool = mariadb.createPool({
 });
 
 module.exports = {
-  // Availability Query https://{host}/{GYGVERSION}/get-availabilities/
+  //
   GetUser(req, res) {
     let reqData = req.body;
     let resposta = {"existent": false}
     serverPool.getConnection().then(async conn => {
       try {
-        let sqlQuery = `SELECT puntuacio FROM puntuacions WHERE nom = '${reqData.nom}' AND edat = ${reqData.edat} `;
+        let sqlQuery = `SELECT puntuacio
+                        FROM puntuacions
+                        WHERE nom = '${reqData.nom}'
+                          AND edat = ${reqData.edat} `;
 
-        // Get SELECT rows and end connection
+        // Get SELECT rows
         let rows = await conn.query(sqlQuery);
         console.log(rows);
         if (rows.length < 1) {
           try {
-            let sqlQuery = `INSERT INTO puntuacions (nom, edat, puntuacio) VALUES ('${reqData.nom}', ${reqData.edat}, 0)`;
-            // Get SELECT rows and end connection
+            let sqlQuery = `INSERT INTO puntuacions (nom, edat, puntuacio)
+                            VALUES ('${reqData.nom}', ${reqData.edat}, 0)`;
+            // Get SELECT rows
             let rows = await conn.query(sqlQuery);
 
           } catch (err) {
@@ -39,7 +43,7 @@ module.exports = {
         }
 
         if (conn) await conn.end();
-        // Si no existia envia false, si existeix envia true
+        // Si no existia envia false, si existeix envia true junt amb la puntuacio
         res.status(200).send({existent: (rows.length > 0), puntuacio: (rows.length > 0) ? rows[0].puntuacio : 0});
       } catch (err) {
         console.log("Error fent select de l'usuari: ");
@@ -55,17 +59,11 @@ module.exports = {
     let experiencia = 0;
     if (reqData.experiencia === "true") experiencia = 1;
 
-    console.log(reqData.nom);
-    console.log(reqData.edat);
-    console.log(reqData.experiencia);
-    console.log(experiencia);
-    console.log(reqData.sexe);
-
     serverPool.getConnection().then(async conn => {
       try {
         let sqlQuery = `UPDATE puntuacions
                         SET experiencia = ${experiencia},
-                            sexe = '${reqData.sexe}'
+                            sexe        = '${reqData.sexe}'
                         WHERE nom = '${reqData.nom}'
                           AND edat = ${reqData.edat}`;
 
@@ -83,6 +81,7 @@ module.exports = {
       }
     });
   },
+  // Actualitza la puntuació de l'usuari que es rep per paràmetre
   UpdatePuntuacio(req, res) {
     let reqData = req.body;
     let experiencia = false;
@@ -92,10 +91,10 @@ module.exports = {
     serverPool.getConnection().then(async conn => {
       try {
         let sqlQuery = `UPDATE puntuacions
-                        SET dispars = ${reqData.dispars},
-                            encerts = ${reqData.encerts},
+                        SET dispars   = ${reqData.dispars},
+                            encerts   = ${reqData.encerts},
                             puntuacio = ${reqData.puntuacio},
-                            ronda = ${reqData.ronda}
+                            ronda     = ${reqData.ronda}
                         WHERE nom = '${reqData.nom}'
                           AND edat = ${reqData.edat}`;
 
