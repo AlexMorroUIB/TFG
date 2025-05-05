@@ -518,19 +518,10 @@ AFRAME.registerComponent('planta', {
     fruitaEntity.setAttribute('gltf-model', data.assetFruita);
     fruitaEntity.setAttribute('class', 'hitbox');
     fruitaEntity.setAttribute('sound', `src: ${SONS.fruitaMorta}; autoplay: false; positional: true`);
-    // fruitaEntity.setAttribute('visible', 'false');
-    fruitaEntity.setAttribute('scale', '0 0 0');
-    fruitaEntity.setAttribute('animation__creixer', {
-      'property': 'scale',
-      'to': {x: 1, y: 1, z: 1},
-      'dur': 750,
-      'easing': 'linear',
-      'loop': false
-    });;
+    fruitaEntity.setAttribute('visible', 'false');
 
     fruitaEntity.addEventListener('model-loaded', () => {
       actualitzarColor();
-      fruitaEntity.play();
     });
 
     fruitaEntity.addEventListener('hitstart', (event) => {
@@ -563,6 +554,8 @@ AFRAME.registerComponent('planta', {
     this.el.addEventListener("animation-finished", (e) => {
       if (e.detail.action._clip.name === 'arrelMorir') {
         this.remove();
+      } else if (e.detail.action._clip.name === 'arrelCreixer') {
+        fruitaEntity.setAttribute('visible', 'true');
       }
     });
 
