@@ -4,6 +4,8 @@ const loader = new THREE.GLTFLoader();
 
 // Quantitat de fletxes dins la pool
 const TAMANYCARCAIX = 16;
+// Temps de penalització quan tira moltes fletxes seguides
+const DELAYPENALITZACIO = 4000;
 // Metres que avança la vagoneta cada pic
 const AVANCVAGONETA = 150;
 const GRAVETAT = 9.81;
@@ -130,7 +132,7 @@ AFRAME.registerComponent('arc', {
 
 
     this.el.addEventListener('grab-start', (event) => {
-      if (!data.agafat && event.detail.buttonEvent.type === "gripdown" || event.detail.buttonEvent.type === "triggerdown") {
+      if (!data.agafat && (event.detail.buttonEvent.type === "gripdown" || event.detail.buttonEvent.type === "triggerdown")) {
         let ma = event.detail.hand;
         data.ma = ma.id
         // Funcionalitat d'agafar l'arc i substituir la má per l'arc
@@ -173,6 +175,7 @@ AFRAME.registerComponent('arc', {
           maCorda = document.getElementById("maEsquerra");
           //document.getElementById("maEsquerra").setAttribute('gltf-model', data.fletxa);
         }
+        maCorda.setAttribute('sphere-collider', 'objects: .fletxa;');
 
         // Elimina el laser control i el modal d'inici de sesió
         escena.removeChild(modalUsuari);
@@ -237,21 +240,6 @@ AFRAME.registerComponent('cordamath', {
     el.setObject3D('mesh', this.mesh);
 
   },
-  update: function (oldData) {
-
-  },
-  tick: function (time, timeDelta) {
-    /*let data = this.data;
-    let el = this.el;
-    if (data.agafat) {
-      // Solo actualizamos la posición en Z
-      el.setAttribute('position', {
-        x: data.posInicial[0],
-        y: data.posInicial[1],
-        z: data.ma.object3D.position.z
-      });
-    }*/
-  },
   remove: function () {
     // Remove element.
     this.el.removeFromParent();
@@ -303,11 +291,8 @@ AFRAME.registerComponent('fletxa', {
     element.setAttribute('gltf-model', data.asset);
 
     element.addEventListener('grab-start', (event) => {
-      /*console.log("start")
-      console.log(event.detail.buttonEvent)
-      console.log(event.detail.buttonEvent.type)*/
       let ma = event.detail.hand;
-      if (!data.agafada && ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerdown") {
+      if (!data.agafada && (event.detail.buttonEvent.type === "gripdown" || event.detail.buttonEvent.type === "triggerdown")) {
         data.ma = document.getElementById(ma.id);
         data.agafada = true;
         fletxaActual.removeAttribute('aabb-collider');
@@ -316,10 +301,7 @@ AFRAME.registerComponent('fletxa', {
     });
 
     element.addEventListener('grab-end', (event) => {
-      /*console.log("end: ")
-      console.log(event.detail.buttonEvent.type)*/
-      let ma = event.detail.hand;
-      if (ma.id === maCorda.id && event.detail.buttonEvent.type === "triggerup") {
+      if (event.detail.buttonEvent.type === "gripup" || event.detail.buttonEvent.type === "triggerup") {
         data.agafada = false;
         numDispars++;
         console.log("Dispars: " + numDispars);
@@ -339,6 +321,12 @@ AFRAME.registerComponent('fletxa', {
         data.disparada = true;
         // Agafa una fletxa nova
         fletxaActual = escena.components.pool__fletxa.requestEntity();
+        // Si ha tirat moltes fletxes seguides hi ha un delay com a "penalització"
+        if (fletxaActual === undefined) {
+          delay(DELAYPENALITZACIO).then(() => {
+            fletxaActual = escena.components.pool__fletxa.requestEntity();
+          });
+        }
         // Resetetjar els valors de la fletxa nova a 0
         fletxaActual.components.fletxa.data.disparada = false;
         fletxaActual.components.fletxa.data.temps = 0;
@@ -371,7 +359,7 @@ AFRAME.registerComponent('fletxa', {
       data.temps += 0.01;
       data.distAnteriorX = distX;
       data.distAnteriorY = distY;
-      // Si el temps es major a 15 retorna la fletxa a la pool
+      // Si el temps es major a 8 retorna la fletxa a la pool
       if (data.temps >= 8) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
       igualaPosicioRotacio(el);
@@ -517,15 +505,15 @@ AFRAME.registerComponent('planta', {
     let fruitaEntity = document.createElement('a-entity');
     fruitaEntity.setAttribute('gltf-model', data.assetFruita);
     fruitaEntity.setAttribute('class', 'hitbox');
-    fruitaEntity.setAttribute('sound', `src: ${SONS.fruitaMorta}; autoplay: false; positional: true`);
     fruitaEntity.setAttribute('visible', 'false');
+    fruitaEntity.setAttribute('sound', `src: ${SONS.fruitaMorta}; autoplay: false; positional: true; volume: 10`);
 
     fruitaEntity.addEventListener('model-loaded', () => {
       actualitzarColor();
     });
 
     fruitaEntity.addEventListener('hitstart', (event) => {
-      if (data.vida <= 2) {
+      if (data.vida < 2) {
         enemicsEnPantalla--;
         punts++;
         fruitaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;');
@@ -572,6 +560,7 @@ AFRAME.registerComponent('planta', {
         data.enEscena = false;
         enemicsEnPantalla--;
         vida--;
+        vagoneta.components.sound.playSound();
         actualitzarVidaPunts();
         element.remove()
       }
@@ -614,11 +603,6 @@ AFRAME.registerComponent('terra', {
     let el = this.el;
 
     el.setAttribute('gltf-model', data.asset);
-    /*loader.load(data.asset, function (gltf) {
-      el.setObject3D('mesh', gltf.scene);
-    }), undefined, function (error) {
-      console.error(error);
-    };*/
   },
   comprovarDistancia: function () {
     let element = this.el;
@@ -655,6 +639,7 @@ AFRAME.registerComponent('vagoneta', {
     };*/
     element.setAttribute('scale', '0.5 0.5 0.5');
     element.setAttribute('position', '0 0 0');
+    element.setAttribute('sound', `src: ${SONS.perdreVida}; autoplay: false; positional: false;`);
 
     // Animacio reiniciar
     vagoneta.setAttribute('animation__reiniciar', {
@@ -689,6 +674,9 @@ AFRAME.registerComponent('vagoneta', {
         generadorModals(TIPUSMODALS.menu);
       });
     });
+    this.el.addEventListener("sound-ended", () => {
+      vagoneta.removeAttribute('sound');
+    });
   }
 });
 
@@ -714,6 +702,7 @@ function generadorModals(tipus) {
     stringTitol = "Punt de control";
     stringTexte = "Descansa, beu aigua i continua quan estiguis llest/a.";
     stringBotoPrincipal = "Continuar";
+    stringBotoSecundari = "Sortir";
   } else if (tipus === TIPUSMODALS.reiniciar) {
     stringTitol = "Joc acabat";
     stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
@@ -788,6 +777,9 @@ function generadorModals(tipus) {
   if (tipus === TIPUSMODALS.continuar) {
     // Generar cami davant
     generarNouTerra(MODELS.cami);
+    if (punts >= localStorage.getItem("puntuacio")) {
+      enviarPuntuacions().then(r => null);
+    }
     // Listener de la hitbox
     botoPrincipal.addEventListener('hitstart', () => {
       escena.removeChild(fonsModal);
@@ -799,6 +791,9 @@ function generadorModals(tipus) {
       if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
 
       comencarRonda();
+    });
+    botoSecundari.addEventListener('hitstart', () => {
+      location.reload();
     });
   } else if (tipus === TIPUSMODALS.reiniciar) {
     fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);

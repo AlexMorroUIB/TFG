@@ -5,5 +5,9 @@ scp -r .\BellverDefense\src\* towerdefense@towerdefense.ltim.uib.es:app/src
 
 scp -r .\dummy\src\* towerdefense@towerdefense.ltim.uib.es:app/src
 
+scp -r .\dummy\src\index.html towerdefense@towerdefense.ltim.uib.es:app/src
+
+scp -r .\dummy\src\js\main.js towerdefense@towerdefense.ltim.uib.es:app/src/js
+
 
 ssh towerdefense@towerdefense.ltim.uib.es
