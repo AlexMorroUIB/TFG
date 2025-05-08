@@ -12,6 +12,8 @@ function comprovarNomUsuari() {
     let edat = nomComplet.substring(nomComplet.indexOf(separador) + 1);
     document.removeEventListener('a-keyboard-update', updateInput);
     document.getElementById('keyboard').removeAttribute('a-keyboard');
+    // Poder agafar l'arc abans de que es faci la petició al servidor per una millor experiècia
+    arc.setAttribute('grabbable', '');
     enviarNomUsuari(nom, edat).then(r => null);
   } else {
     modalUsuari.innerHTML += `<a-text color="#F00"
@@ -57,7 +59,6 @@ function texteAgafaArc() {
   agafaText.setAttribute('position', '0 0 0');
 
   modalUsuari.appendChild(agafaText);
-  arc.setAttribute('grabbable', '');
 }
 
 /**

@@ -5,7 +5,7 @@ const loader = new THREE.GLTFLoader();
 // Quantitat de fletxes dins la pool
 const TAMANYCARCAIX = 16;
 // Temps de penalització quan tira moltes fletxes seguides
-const DELAYPENALITZACIO = 4000;
+const DELAYPENALITZACIO = 5000;
 // Metres que avança la vagoneta cada pic
 const AVANCVAGONETA = 150;
 const GRAVETAT = 9.81;
@@ -323,9 +323,8 @@ AFRAME.registerComponent('fletxa', {
         fletxaActual = escena.components.pool__fletxa.requestEntity();
         // Si ha tirat moltes fletxes seguides hi ha un delay com a "penalització"
         if (fletxaActual === undefined) {
-          delay(DELAYPENALITZACIO).then(() => {
-            fletxaActual = escena.components.pool__fletxa.requestEntity();
-          });
+          delay(DELAYPENALITZACIO).then(r => null);
+          fletxaActual = escena.components.pool__fletxa.requestEntity();
         }
         // Resetetjar els valors de la fletxa nova a 0
         fletxaActual.components.fletxa.data.disparada = false;
