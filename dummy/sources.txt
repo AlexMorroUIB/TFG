@@ -1,5 +1,5 @@
 cart: https://poly.pizza/m/fjvk6xVJ3u3
-bow: https://poly.pizza/m/H6vbuPvWtg
+bow: https://poly.pizza/m/XkJVO6cACA
 arrow: https://poly.pizza/m/6pMBOmBFxGt
 diana: https://poly.pizza/m/gKYbYR3z0M
 arbres: https://poly.pizza/m/oYtDty0fR6

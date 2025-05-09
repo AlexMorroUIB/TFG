@@ -5,7 +5,7 @@ const loader = new THREE.GLTFLoader();
 // Quantitat de fletxes dins la pool
 const TAMANYCARCAIX = 16;
 // Temps de penalització quan tira moltes fletxes seguides
-const DELAYPENALITZACIO = 5000;
+const DELAYPENALITZACIO = 8000;
 // Metres que avança la vagoneta cada pic
 const AVANCVAGONETA = 150;
 const GRAVETAT = 9.81;
@@ -53,8 +53,10 @@ const TIPUSMODALS = {
 }
 const SONS = {
   gameOver: "#gameOverSo",
-  fruitaMorta: "#fruitaMortaSo",
-  perdreVida: "#perdreVidaSo"
+  fruitaMorta: "../assets/audio/FruitaMorta.mp3",
+  perdreVida: "../assets/audio/PerdreVida.mp3",
+  botoPressionat: "../assets/audio/BotoPressionat.mp3",
+  fletxaDisparada: "../assets/audio/FletxaDisparada.mp3"
 }
 
 // Variables del joc
@@ -109,22 +111,10 @@ AFRAME.registerComponent('arc', {
     let el = this.el;
 
     el.setAttribute('gltf-model', data.asset);
-    /*loader.load(data.asset, function (gltf) {
-      el.setObject3D('mesh', gltf.scene);
-      //gltf.scene.position.set(document.getElementById('maEsquerra').object3D.position)
-    }), undefined, function (error) {
-      console.error(error);
-    };*/
-    //document.getElementById('arc').innerHTML = '<a-entity corda grabbable></a-entity>';
-    //let cordaEntity = document.createElement('a-entity');
+
     cordaEntity.setAttribute('id', 'corda');
     cordaEntity.setAttribute('cordamath', '');
     escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`);
-
-    /*let transformControls = new THREE.TransformControls(escena.camera, escena.renderer.domElement);
-    transformControls.size = 0.75;
-    transformControls.space = 'world';
-    transformControls.attach(arcBones.corda);*/
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
@@ -163,8 +153,6 @@ AFRAME.registerComponent('arc', {
         fletxaActual = escena.components.pool__fletxa.requestEntity();
         fletxaActual.play();
         jugant = true;
-        /*let enemic = escena.components.pool__enemic.requestEntity();
-        enemic.play();*/
 
         if (ma.id === "maEsquerra") {
           // Canviar la ma dreta per una fletxa
@@ -196,16 +184,9 @@ AFRAME.registerComponent('arc', {
       }
     });
 
-    /*corda.el.addEventListener('grab-start', () => {
-      this.updatePosition.bind(this, hand, element);
-    });*/
-
-    this.el.addEventListener('grab-end', (event) => {
+    /*this.el.addEventListener('grab-end', (event) => {
       //data.agafat = false;
-
-      //event.detail.hand.object3D.removeChild(element.object3D);
-      // Aquí puedes agregar lógica para soltar el objeto si es necesario
-    });
+    });*/
   }
 });
 
@@ -302,9 +283,9 @@ AFRAME.registerComponent('fletxa', {
 
     element.addEventListener('grab-end', (event) => {
       if (event.detail.buttonEvent.type === "gripup" || event.detail.buttonEvent.type === "triggerup") {
+        new Audio(SONS.fletxaDisparada).play().then(r => null);
         data.agafada = false;
         numDispars++;
-        console.log("Dispars: " + numDispars);
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
         data.forca = calculateTension()
@@ -505,7 +486,7 @@ AFRAME.registerComponent('planta', {
     fruitaEntity.setAttribute('gltf-model', data.assetFruita);
     fruitaEntity.setAttribute('class', 'hitbox');
     fruitaEntity.setAttribute('visible', 'false');
-    fruitaEntity.setAttribute('sound', `src: ${SONS.fruitaMorta}; autoplay: false; positional: true; volume: 10`);
+    // fruitaEntity.setAttribute('sound', `src: ${SONS.fruitaMorta}; autoplay: false; positional: true; volume: 10`);
 
     fruitaEntity.addEventListener('model-loaded', () => {
       actualitzarColor();
@@ -517,7 +498,8 @@ AFRAME.registerComponent('planta', {
         punts++;
         fruitaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;');
         plantaEntity.setAttribute('animation-mixer', 'clip: *Morir; loop: once; clampWhenFinished: true;');
-        fruitaEntity.components.sound.playSound();
+        // fruitaEntity.components.sound.playSound();
+        new Audio(SONS.fruitaMorta).play().then(r => null);
         actualitzarVidaPunts();
       } else {
         data.vida--;
@@ -559,7 +541,8 @@ AFRAME.registerComponent('planta', {
         data.enEscena = false;
         enemicsEnPantalla--;
         vida--;
-        vagoneta.components.sound.playSound();
+        // vagoneta.components.sound.playSound();
+        new Audio(SONS.perdreVida).play().then(r => null);
         actualitzarVidaPunts();
         element.remove()
       }
@@ -631,14 +614,10 @@ AFRAME.registerComponent('vagoneta', {
     let element = this.el
 
     element.setAttribute('gltf-model', data.asset);
-    /*loader.load(data.asset, function (gltf) {
-      element.setObject3D('mesh', gltf.scene);
-    }), undefined, function (error) {
-      console.error(error);
-    };*/
+
     element.setAttribute('scale', '0.5 0.5 0.5');
     element.setAttribute('position', '0 0 0');
-    element.setAttribute('sound', `src: ${SONS.perdreVida}; autoplay: false; positional: false;`);
+    // element.setAttribute('sound', `src: ${SONS.perdreVida}; autoplay: false; positional: false;`);
 
     // Animacio reiniciar
     vagoneta.setAttribute('animation__reiniciar', {
@@ -697,35 +676,55 @@ function generadorModals(tipus) {
   let stringBotoPrincipal;
   let stringBotoSecundari;
 
-  if (tipus === TIPUSMODALS.continuar) {
-    stringTitol = "Punt de control";
-    stringTexte = "Descansa, beu aigua i continua quan estiguis llest/a.";
-    stringBotoPrincipal = "Continuar";
-    stringBotoSecundari = "Sortir";
-  } else if (tipus === TIPUSMODALS.reiniciar) {
-    stringTitol = "Joc acabat";
-    stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
-    stringBotoPrincipal = "Reiniciar";
-  } else if (tipus === TIPUSMODALS.menu) {
-    stringTitol = "Benvingut/da";
-    stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + localStorage.getItem("puntuacio");
-    stringBotoPrincipal = "Iniciar";
-    stringBotoSecundari = "Practica";
-  } else if (tipus === TIPUSMODALS.sortirPractica) {
-    stringTitol = "Sortir";
-    stringTexte = "Surt del mode de practica.";
-    stringBotoPrincipal = "Sortir";
-  } else if (tipus === TIPUSMODALS.experiencia) {
-    stringTitol = "Benvingut/da";
-    stringTexte = "Tens experiencia previa jugant realitat virtual?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
-    stringBotoPrincipal = "Si";
-    stringBotoSecundari = "No";
-  } else if (tipus === TIPUSMODALS.sexe) {
-    stringTitol = "Benvingut/da";
-    stringTexte = "Com t'identifiques?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
-    stringBotoPrincipal = "Home";
-    stringBotoSecundari = "Dona";
+  switch (tipus) {
+    case TIPUSMODALS.continuar: {
+      stringTitol = "Punt de control";
+      stringTexte = "Descansa, beu aigua i continua quan estiguis llest/a.";
+      stringBotoPrincipal = "Continuar";
+      stringBotoSecundari = "Sortir";
+      break;
+    }
+    case TIPUSMODALS.reiniciar:{
+      stringTitol = "Joc acabat";
+      stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
+      stringBotoPrincipal = "Reiniciar";
+      break;}
+    case TIPUSMODALS.menu:{
+      stringTitol = "Benvingut/da";
+      stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + localStorage.getItem("puntuacio");
+      stringBotoPrincipal = "Iniciar";
+      stringBotoSecundari = "Practica";
+      break;
+    }
+    case TIPUSMODALS.sortirPractica:{
+      stringTitol = "Sortir";
+      stringTexte = "Surt del mode de practica.";
+      stringBotoPrincipal = "Sortir";
+      break;
+    }
+    case TIPUSMODALS.experiencia:{
+      stringTitol = "Benvingut/da";
+      stringTexte = "Tens experiencia previa jugant realitat virtual?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
+      stringBotoPrincipal = "Si";
+      stringBotoSecundari = "No";
+      break;
+    }
+    case TIPUSMODALS.sexe:{
+      stringTitol = "Benvingut/da";
+      stringTexte = "Com t'identifiques?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
+      stringBotoPrincipal = "Home";
+      stringBotoSecundari = "Dona";
+      break;
+    }
   }
+
+  /*if (tipus === TIPUSMODALS.continuar) {
+  } else if (tipus === TIPUSMODALS.reiniciar) {
+  } else if (tipus === TIPUSMODALS.menu) {
+  } else if (tipus === TIPUSMODALS.sortirPractica) {
+  } else if (tipus === TIPUSMODALS.experiencia) {
+  } else if (tipus === TIPUSMODALS.sexe) {
+  }*/
 
   // Fons del modal
   fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
@@ -773,111 +772,141 @@ function generadorModals(tipus) {
     texteSecundari.setAttribute('scale', '3 3 1');
   }
 
-  if (tipus === TIPUSMODALS.continuar) {
-    // Generar cami davant
-    generarNouTerra(MODELS.cami);
-    if (punts >= localStorage.getItem("puntuacio")) {
-      enviarPuntuacions().then(r => null);
+  switch (tipus) {
+    case TIPUSMODALS.continuar: {
+      // Generar cami davant
+      generarNouTerra(MODELS.cami);
+      if (punts >= localStorage.getItem("puntuacio")) {
+        enviarPuntuacions().then(r => null);
+      }
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        // Modificar les variables per la següent ronda
+        ronda++;
+        jugant = true;
+        if (numEnemicsMax < 10) numEnemicsMax += 0.5;
+        if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
+        if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
+
+        comencarRonda();
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        new Audio(SONS.botoPressionat).play().then(r => location.reload());
+      });
+      break;
     }
-    // Listener de la hitbox
-    botoPrincipal.addEventListener('hitstart', () => {
-      escena.removeChild(fonsModal);
-      // Modificar les variables per la següent ronda
-      ronda++;
-      jugant = true;
-      if (numEnemicsMax < 10) numEnemicsMax += 0.5;
-      if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
-      if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
+    case TIPUSMODALS.reiniciar: {
+      fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);
+      // Envia la informació de les puntuacions si la puntuacio obtinguda és major
+      console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
+      if (punts >= localStorage.getItem("puntuacio")) {
+        enviarPuntuacions().then(r => null);
+      }
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        eliminarEnemics();
+        escena.removeChild(fonsModal);
+        //vagoneta.setAttribute('position', '0 0 0');
+        // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
+        comencTerra = 0;
+        eliminarTerres();
+        // Modificar les variables per la següent ronda
+        numDispars = 0;
+        numEncerts = 0;
+        punts = 0;
+        ronda = 1;
+        vida = 10;
+        numEnemicsMax = 4;
 
-      comencarRonda();
-    });
-    botoSecundari.addEventListener('hitstart', () => {
-      location.reload();
-    });
-  } else if (tipus === TIPUSMODALS.reiniciar) {
-    fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);
-    // Envia la informació de les puntuacions si la puntuacio obtinguda és major
-    console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
-    if (punts >= localStorage.getItem("puntuacio")) {
-      enviarPuntuacions().then(r => null);
+        vagoneta.emit('startanimReiniciar', null, false);
+      });
+      break;
     }
-    // Listener de la hitbox
-    botoPrincipal.addEventListener('hitstart', () => {
-      eliminarEnemics();
-      escena.removeChild(fonsModal);
-      //vagoneta.setAttribute('position', '0 0 0');
-      // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
-      comencTerra = 0;
-      eliminarTerres();
-      // Modificar les variables per la següent ronda
-      numDispars = 0;
-      numEncerts = 0;
-      punts = 0;
-      ronda = 1;
-      vida = 10;
-      numEnemicsMax = 4;
+    case TIPUSMODALS.menu: {
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        // Reset de les variables de generació d'enemics
+        numEnemicsMax = 4;
+        enemicsVidaMax = 1;
+        delayGeneracioEnemics = 4000;
+        escena.removeChild(fonsModal);
 
-      vagoneta.emit('startanimReiniciar', null, false);
-    });
-  } else if (tipus === TIPUSMODALS.menu) {
-    // Listener de la hitbox
-    botoPrincipal.addEventListener('hitstart', () => {
-      // Reset de les variables de generació d'enemics
-      numEnemicsMax = 4;
-      enemicsVidaMax = 1;
-      delayGeneracioEnemics = 4000;
-      escena.removeChild(fonsModal);
-
-      // Activa el joc (animacions i controlador)
-      comencarRonda();
-    });
-    botoSecundari.addEventListener('hitstart', () => {
-      numEnemicsMax = 5;
-      delayGeneracioEnemics = 1000;
-      escena.removeChild(fonsModal);
-      generadorModals(TIPUSMODALS.sortirPractica);
-      controladorEnemics(TIPUSENEMIC.diana).then(r => null);
-    });
-  } else if (tipus === TIPUSMODALS.sortirPractica) {
-    fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
-    fonsModal.setAttribute('rotation', ` 0 90 0`);
-    botoPrincipal.addEventListener('hitstart', () => {
-      jugant = false;
-      eliminarEnemics();
-      numEnemicsMax = 4;
-      delayGeneracioEnemics = 4000;
-      escena.removeChild(fonsModal);
-      generadorModals(TIPUSMODALS.menu);
-    });
-  } else if (tipus === TIPUSMODALS.experiencia) {
-    // Listener de la hitbox
-    botoPrincipal.addEventListener('hitstart', () => {
-      escena.removeChild(fonsModal);
-      localStorage.setItem(TIPUSMODALS.experiencia, "true");
-      generadorModals(TIPUSMODALS.sexe);
-    });
-    botoSecundari.addEventListener('hitstart', () => {
-      escena.removeChild(fonsModal);
-      localStorage.setItem(TIPUSMODALS.experiencia, "false");
-      generadorModals(TIPUSMODALS.sexe);
-    });
-  } else if (tipus === TIPUSMODALS.sexe) {
-    // Canvia el color del boto secundari
-    botoSecundari.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
-    // Listener de la hitbox
-    botoPrincipal.addEventListener('hitstart', () => {
-      escena.removeChild(fonsModal);
-      localStorage.setItem(TIPUSMODALS.sexe, 'H');
-      enviarPreguntes();
-      generadorModals(TIPUSMODALS.menu);
-    });
-    botoSecundari.addEventListener('hitstart', () => {
-      escena.removeChild(fonsModal);
-      localStorage.setItem(TIPUSMODALS.sexe, 'D');
-      enviarPreguntes();
-      generadorModals(TIPUSMODALS.menu);
-    });
+        // Activa el joc (animacions i controlador)
+        comencarRonda();
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        audioBoto();
+        numEnemicsMax = 5;
+        delayGeneracioEnemics = 1000;
+        escena.removeChild(fonsModal);
+        generadorModals(TIPUSMODALS.sortirPractica);
+        controladorEnemics(TIPUSENEMIC.diana).then(r => null);
+      });
+      break;
+    }
+    case TIPUSMODALS.sortirPractica: {
+      fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
+      fonsModal.setAttribute('rotation', ` 0 90 0`);
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        jugant = false;
+        eliminarEnemics();
+        numEnemicsMax = 4;
+        delayGeneracioEnemics = 4000;
+        escena.removeChild(fonsModal);
+        generadorModals(TIPUSMODALS.menu);
+      });
+      break;
+    }
+    case TIPUSMODALS.experiencia: {
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.experiencia, "true");
+        generadorModals(TIPUSMODALS.sexe);
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.experiencia, "false");
+        generadorModals(TIPUSMODALS.sexe);
+      });
+      break;
+    }
+    case TIPUSMODALS.sexe: {
+      // Canvia el color del boto secundari
+      botoSecundari.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.sexe, 'H');
+        enviarPreguntes();
+        generadorModals(TIPUSMODALS.menu);
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.sexe, 'D');
+        enviarPreguntes();
+        generadorModals(TIPUSMODALS.menu);
+      });
+      break;
+    }
   }
+
+  /*if (tipus === TIPUSMODALS.continuar) {
+  } else if (tipus === TIPUSMODALS.reiniciar) {
+  } else if (tipus === TIPUSMODALS.menu) {
+  } else if (tipus === TIPUSMODALS.sortirPractica) {
+  } else if (tipus === TIPUSMODALS.experiencia) {
+  } else if (tipus === TIPUSMODALS.sexe) {
+  }*/
 
   escena.appendChild(fonsModal);
 }
@@ -1009,12 +1038,9 @@ AFRAME.registerComponent("diana", {
 /**
  * Zona Audio
  */
-document.addEventListener("sound-ended", (e) => {
-  console.log("So:")
-  console.log(e.name)
-  console.log(e.id)
-  console.log("--------------------------------")
-});
+function audioBoto() {
+  new Audio(SONS.botoPressionat).play().then(r => null);
+}
 
 
 /**
