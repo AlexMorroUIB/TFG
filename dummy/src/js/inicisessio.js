@@ -6,7 +6,6 @@ function comprovarNomUsuari() {
   let separador = ','
   // Verificar que el nom d'usuari no sigui null
   if (nomComplet) {
-    console.log(nomComplet)
     if (nomComplet.indexOf(separador) === -1) nomComplet = nomComplet.concat(`${separador}0`);
     let nom = nomComplet.substring(0, nomComplet.indexOf(separador));
     let edat = nomComplet.substring(nomComplet.indexOf(separador) + 1);

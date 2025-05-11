@@ -13,12 +13,6 @@ gameover: https://freesound.org/people/Fupicat/sounds/538151/
 arrancant fruita: https://openverse.org/audio/42d2a0db-e82c-4732-aacf-986d7acfbec1?q=squashing+fruit&p=9
 
 sketchfab account: ferere5144@gufutu.com - 1a2s3d4f5G
-subaru: https://sketchfab.com/3d-models/subaru-wrx-sti-36f4a47b619a49bda4c1870e7833b25b
-
-magda rx-7: https://poly.pizza/m/SnIoWlh7S2
-
-base ammojs
-https://rawcdn.githack.com/kripken/ammo.js/8f8b7187ef74994093318645e5e96b11d982688a/examples/webgl_demo_vehicle/index.html
 
 CC0
 cel: https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
@@ -26,25 +20,19 @@ terra: https://polyhaven.com/a/gravel_road
 terra-bosc: https://polyhaven.com/a/forrest_ground_01
 
 
-que un objecte miri cap a la camara tot es temps
-https://stackoverflow.com/questions/59126800/a-frame-entity-positioning-and-rotation
-
-
-rpm from kmph
-https://x-engineer.org/calculate-wheel-vehicle-speed-engine-speed/
-https://motoristo.com/tools/vehicle-speed-calculator?wheelSizeIn=17&tyreWidthMm=205&tyreHeightRatio=50&rpmMax=7200&finalDrive=4.266&gears=3.3%2C2.25%2C1.75%2C1%2C0.85%2C0.8
-https://legacypic.uk/transmission/graph.php
-
-wheel radius
-https://x-engineer.org/calculate-wheel-radius/
-
-
 euler rotation (radians) to quaternion
 https://www.andre-gaschler.com/rotationconverter/
 
 equacio forca arc
 https://ffden-2.phys.uaf.edu/webproj/212_spring_2015/Addis_Gonzalez/Addis_Gonzalez/bow.html
+https://www.scribd.com/document/404414436/Application-of-Physics-to-Archery-pdf
 
 equacio trajectoria
 https://phys.libretexts.org/Bookshelves/University_Physics/Physics_(Boundless)/3%3A_Two-Dimensional_Kinematics/3.3%3A_Projectile_Motion
 https://www.youtube.com/watch?v=z7UogSqABVc
+
+ralentitzacio fletxa
+https://www.scribd.com/document/404414436/Application-of-Physics-to-Archery-pdf
+
+massa fletxa: https://exarc.net/issue-2019-3/mm/shooting-experiments-early-medieval-arrowheads
+força arc: https://en.wikipedia.org/wiki/English_longbow

@@ -56,7 +56,7 @@
 
     <a-sky src="#cel" rotation="0 94 0"></a-sky>
     <!-- Altura de la base de la vagoneta 0.7 (altura a on tendries els peus) -->
-    <a-entity id="controls" controls movement-controls="constrainToNavMesh: true;speed: 0.7"
+    <a-entity id="controls" movement-controls="constrainToNavMesh: true;speed: 0.7"
               rotation="0 180 0" position="0 0.7 -0.5" keyboard-controls>
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9"m adults 1.6 cursor="rayOrigin: mouse;"-->
       <a-entity id="camera" fixcamera="" look-controls="pointerLockEnabled: true" camera
@@ -70,7 +70,7 @@
     <!-- Arc -->
     <a-entity id="arc" arc="asset: #arcAsset;" class="" position="0.6 1.2 0.6" rotation="30 180 30"></a-entity>
   </a-entity>
-     <a-entity planta="asset: #plantaAsset;" position="0.6 0 2"></a-entity>
+<!--     <a-entity planta="asset: #plantaAsset;" position="0.6 0 2"></a-entity>-->
   <!--  Modal inici de sessió -->
   <a-plane id="modalUsuari" color="#323232" opacity="0.95" position="0 1.5 1.5" height="2" width="3" rotation="0 180 0">
     <a-text color="#FFF"

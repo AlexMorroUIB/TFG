@@ -9,11 +9,11 @@ const DELAYPENALITZACIO = 8000;
 // Metres que avança la vagoneta cada pic
 const AVANCVAGONETA = 150;
 const GRAVETAT = 9.81;
-// Forca (Nm) de tensió de l'arc
-const FORCAARC = 300;
+// Forca (N) de tensió de l'arc
+const FORCAARC = 330;
 const EFICIENCIAARC = 0.9;
 const MASSAARC = 0.9; // Massa de l'arc en kg
-const MASSAFLETXA = 0.065; // Massa de la fletxa en kg
+const MASSAFLETXA = 0.044; // Massa de la fletxa en kg
 const FACTORKE = 0.05; // La suma de l'energia cinètica (KE) de les parts mòbils de l'arc.
 // Factor de tensió per multiplicar a la distancia de la corda i obtenir la força
 const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE * MASSAARC));
@@ -192,9 +192,9 @@ AFRAME.registerComponent('arc', {
 
 function calculateTension() {
   // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
-  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.2);
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 2.8), 0.25);
 
-  // Calcular la tensión (puedes usar una fórmula más compleja si es necesario)
+  // Calcular la velocitat inicial
   //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
   return TENSIO * Math.sqrt(distancia);
 }
@@ -205,9 +205,6 @@ AFRAME.registerComponent('cordamath', {
     anclaInferior: {type: 'number', default: -0.56},
     puntIntermigSuperior: {type: 'number', default: 0.14},
     puntIntermigInferior: {type: 'number', default: 0.12},
-    width: {type: 'number', default: 0.05},
-    height: {type: 'number', default: 0.25},
-    depth: {type: 'number', default: 0.05},
     color: {type: 'color', default: '#2D2D2D'},
     cordaRecta: {type: 'number', default: 0.0}
   },
@@ -215,16 +212,11 @@ AFRAME.registerComponent('cordamath', {
     let data = this.data;
     let el = this.el;
 
-    // Create mesh.
+    // Crear la corva de la corda.
     this.mesh = calcularCorda(data.cordaRecta)
-    // Set mesh on entity.
+    // Aplicar la mesh de la corva.
     el.setObject3D('mesh', this.mesh);
 
-  },
-  remove: function () {
-    // Remove element.
-    this.el.removeFromParent();
-    maArc.removeChild(this.el);
   }
 });
 
@@ -271,24 +263,26 @@ AFRAME.registerComponent('fletxa', {
     let element = this.el;
     element.setAttribute('gltf-model', data.asset);
 
+    data.ma = maCorda;
+
     element.addEventListener('grab-start', (event) => {
-      let ma = event.detail.hand;
-      if (!data.agafada && (event.detail.buttonEvent.type === "gripdown" || event.detail.buttonEvent.type === "triggerdown")) {
-        data.ma = document.getElementById(ma.id);
+      if (!data.agafada && event.detail.buttonEvent.type === "triggerdown" && (maArc.object3D.position.distanceTo(maCorda.object3D.position) < 0.2)) {
         data.agafada = true;
         fletxaActual.removeAttribute('aabb-collider');
         fletxaActual.setAttribute('aabb-collider', 'objects: .hitbox; interval: 20');
+      } else {
+        element.removeAttribute('grabbed');
       }
     });
 
-    element.addEventListener('grab-end', (event) => {
-      if (event.detail.buttonEvent.type === "gripup" || event.detail.buttonEvent.type === "triggerup") {
+    element.addEventListener('grab-end', async (event) => {
+      if (data.agafada && event.detail.buttonEvent.type === "triggerup") {
         new Audio(SONS.fletxaDisparada).play().then(r => null);
         data.agafada = false;
         numDispars++;
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
-        data.forca = calculateTension()
+        data.forca = calculateTension();
         // Agafa la rotació de l'objecte en radians comparant-la amb la rotació 0
         let rotacio = this.el.object3D.quaternion.angleTo(
           new THREE.Quaternion(0, 0, 0, 0)
@@ -302,9 +296,11 @@ AFRAME.registerComponent('fletxa', {
         data.disparada = true;
         // Agafa una fletxa nova
         fletxaActual = escena.components.pool__fletxa.requestEntity();
+        console.log(fletxaActual);
         // Si ha tirat moltes fletxes seguides hi ha un delay com a "penalització"
         if (fletxaActual === undefined) {
-          delay(DELAYPENALITZACIO).then(r => null);
+          console.log("delay");
+          await delay(DELAYPENALITZACIO).then(r => null);
           fletxaActual = escena.components.pool__fletxa.requestEntity();
         }
         // Resetetjar els valors de la fletxa nova a 0
@@ -342,14 +338,13 @@ AFRAME.registerComponent('fletxa', {
       // Si el temps es major a 8 retorna la fletxa a la pool
       if (data.temps >= 8) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
-      igualaPosicioRotacio(el);
-      // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.4 metres
-      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(data.ma.object3D.position) / 4), 0.2);
-      //if (distanciaMans < 0.0) distanciaMans = 0.0;
+      igualaPosicioRotacio(el, maArc);
+      // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.25 metres
+      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 2.8), 0.25);
       el.object3D.translateZ(-distanciaMans);
       cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans * 2));
     } else {
-      igualaPosicioRotacio(el);
+      igualaPosicioRotacio(el, maCorda);
     }
   }
 });
@@ -357,11 +352,13 @@ AFRAME.registerComponent('fletxa', {
 /**
  * Iguala la rotació de la fletxa mab la rotació de l'arc
  * @param fletxa fletxa actualment a l'arc
+ * @param maFletxa La ma a la qual està adherida la fletxa,
+ *        o la ma de la corda o la ma de l'arc per disparar
  */
-function igualaPosicioRotacio(fletxa) {
+function igualaPosicioRotacio(fletxa, maFletxa) {
   // Mou la fletxa a la ma
   const maWorldPos = new THREE.Vector3();
-  maArc.object3D.getWorldPosition(maWorldPos);
+  maFletxa.object3D.getWorldPosition(maWorldPos);
   fletxa.setAttribute('position', {
     x: maWorldPos.x,
     y: maWorldPos.y,
@@ -369,10 +366,10 @@ function igualaPosicioRotacio(fletxa) {
   });
   // iguala la rotació de la ma
   let maQuaternion = new THREE.Quaternion(
-    -maArc.object3D.quaternion.x,
-    maArc.object3D.quaternion.y,
-    -maArc.object3D.quaternion.z,
-    maArc.object3D.quaternion.w)
+    -maFletxa.object3D.quaternion.x,
+    maFletxa.object3D.quaternion.y,
+    -maFletxa.object3D.quaternion.z,
+    maFletxa.object3D.quaternion.w)
   fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(OFFSETFLETXA));
 }
 
@@ -388,9 +385,6 @@ function updatePosition() {
   cordaEntity.object3D.geometry = new THREE.BufferGeometry().setFromPoints(
     corda.getPoints(50)
   );
-  //arcEntity.setAttribute('postion', ma.getAttribute('position'));
-  //cordaEntity.setAttribute('postion', ma.getAttribute('position'));
-  //cordaEntity.setAttribute('rotation', ma.getAttribute('rotation'));
 }
 
 window.onload = () => {
