@@ -63,11 +63,11 @@ const SONS = {
 let vida = 10;
 let punts = 0;
 // Num d'enemics màxims simultàniament en pantalla
-let numEnemicsMax = 4;
+let numEnemicsMax = 5;
 // Màxim de vida que poden tenir els enemics en la ronda actual
 let enemicsVidaMax = 1;
-let delayGeneracioEnemics = 4000; // Temps en ms que tarda el controlador en generar un nou enemic.
-let duracioAvancVagoneta = 120000;
+let delayGeneracioEnemics = 3500; // Temps en ms que tarda el controlador en generar un nou enemic.
+let duracioAvancVagoneta = 90000;
 let ronda = 1;
 
 // Estadistiques
@@ -190,9 +190,9 @@ AFRAME.registerComponent('arc', {
   }
 });
 
-function calculateTension() {
-  // Calcular la distancia entre el punto central de la cuerda y el punto de anclaje
-  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 2.8), 0.25);
+function calcularTensio() {
+  // Calcular la distancia entre les mans
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.25);
 
   // Calcular la velocitat inicial
   //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
@@ -266,7 +266,7 @@ AFRAME.registerComponent('fletxa', {
     data.ma = maCorda;
 
     element.addEventListener('grab-start', (event) => {
-      if (!data.agafada && event.detail.buttonEvent.type === "triggerdown" && (maArc.object3D.position.distanceTo(maCorda.object3D.position) < 0.2)) {
+      if (!data.agafada && event.detail.buttonEvent.type === "triggerdown" && (maArc.object3D.position.distanceTo(maCorda.object3D.position) < 0.3)) {
         data.agafada = true;
         fletxaActual.removeAttribute('aabb-collider');
         fletxaActual.setAttribute('aabb-collider', 'objects: .hitbox; interval: 20');
@@ -282,7 +282,7 @@ AFRAME.registerComponent('fletxa', {
         numDispars++;
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
-        data.forca = calculateTension();
+        data.forca = calcularTensio();
         // Agafa la rotació de l'objecte en radians comparant-la amb la rotació 0
         let rotacio = this.el.object3D.quaternion.angleTo(
           new THREE.Quaternion(0, 0, 0, 0)
@@ -299,9 +299,10 @@ AFRAME.registerComponent('fletxa', {
         console.log(fletxaActual);
         // Si ha tirat moltes fletxes seguides hi ha un delay com a "penalització"
         if (fletxaActual === undefined) {
-          console.log("delay");
-          await delay(DELAYPENALITZACIO).then(r => null);
-          fletxaActual = escena.components.pool__fletxa.requestEntity();
+          await delay(DELAYPENALITZACIO)
+            .then(r => {
+              fletxaActual = escena.components.pool__fletxa.requestEntity();
+            });
         }
         // Resetetjar els valors de la fletxa nova a 0
         fletxaActual.components.fletxa.data.disparada = false;
@@ -335,12 +336,12 @@ AFRAME.registerComponent('fletxa', {
       data.temps += 0.01;
       data.distAnteriorX = distX;
       data.distAnteriorY = distY;
-      // Si el temps es major a 8 retorna la fletxa a la pool
-      if (data.temps >= 8) escena.components.pool__fletxa.returnEntity(this.el);
+      // Si l'altura de la fletxa és menor a 0 o el temps es major a 8 retorna la fletxa a la pool
+      if (this.el.object3D.position.y < 0 || data.temps >= 8) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
       igualaPosicioRotacio(el, maArc);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.25 metres
-      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 2.8), 0.25);
+      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.25);
       el.object3D.translateZ(-distanciaMans);
       cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans * 2));
     } else {
@@ -571,7 +572,7 @@ function partidaAcabada() {
 AFRAME.registerComponent('terra', {
   schema: {
     asset: {type: 'asset', default: MODELS.cami},
-    maxDistanciaVagoneta: {type: 'number', default: 299},
+    maxDistanciaVagoneta: {type: 'number', default: 301},
     enEscena: {type: 'boolean', default: true}
   },
   init: function () {
