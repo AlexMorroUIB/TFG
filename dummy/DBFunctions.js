@@ -110,5 +110,25 @@ module.exports = {
         if (conn) await conn.end();
       }
     });
+  },
+  GetTop(req, res) {
+    serverPool.getConnection().then(async conn => {
+      try {
+        let sqlQuery = `SELECT nom, puntuacio, ronda
+                        FROM puntuacions
+                        ORDER BY puntuacio DESC LIMIT 10;`;
+
+        let rows = await conn.query(sqlQuery);
+        await conn.end()
+        // console.log(rows);
+        res.status(200).send(rows);
+      } catch (err) {
+        console.log("Error demanant el top 10 de puntuacions: ");
+        console.log(err);
+      } finally {
+        // Close Connection
+        if (conn) await conn.end();
+      }
+    });
   }
 }

@@ -24,7 +24,7 @@
     <!--    Mans -->
     <a-mixin id="mans" super-hands
              static-body="shape: sphere; sphereRadius: 0.02;"
-             sphere-collider="objects: #arc, .fletxa;"></a-mixin>
+             sphere-collider="objects: #arc;"></a-mixin>
     <a-mixin id="fletxa" fletxa grabbable="startButtons: triggerdown; endButtons: triggerup; maxGrabbers: 1"
              aabb-collider="objects: .hitbox; interval: 20"></a-mixin>
     <a-mixin id="enemic" enemic></a-mixin>
@@ -38,21 +38,25 @@
     <a-asset-item id="navmesh" src="./assets/models/navmesh.gltf"></a-asset-item>
     <a-asset-item id="arcAsset" src="./assets/models/arctest.glb"></a-asset-item>
     <a-asset-item id="fletxaAsset" src="./assets/models/fletxa.glb"></a-asset-item>
-    <a-asset-item id="arrelAsset" src="./assets/models/arrel.glb"></a-asset-item>
+    <a-asset-item id="plantaAsset" src="./assets/models/planta.glb"></a-asset-item>
     <a-asset-item id="fruitaAsset" src="./assets/models/fruita.glb"></a-asset-item>
     <a-asset-item id="dianaAsset" src="./assets/models/diana.glb"></a-asset-item>
     <a-asset-item id="camiAsset" src="./assets/models/cami.glb"></a-asset-item>
+    <a-asset-item id="camiInicialAsset" src="./assets/models/camiInicial.glb"></a-asset-item>
+    <audio id="gameOverSo" src="./assets/audio/GameOver.mp3" preload="auto"></audio>
+    <audio id="fruitaMortaSo" src="./assets/audio/FruitaMorta.mp3" preload="auto"></audio>
+    <audio id="perdreVidaSo" src="./assets/audio/PerdreVida.mp3" preload="auto"></audio>
     <img id="cel" src="./assets/textures/cel.jpg">
   </a-assets>
   <!-- Entitat de camera  position="-1 0 -6"-->
   <!-- constraint="target: #cart"-->
-  <!-- <a-entity class="navmesh" nav-mesh gltf-model="#navmesh" visible="false"></a-entity>-->
+  <a-entity class="navmesh" nav-mesh gltf-model="#navmesh" visible="false"></a-entity>
   <!--  -->
   <a-entity id="vagoneta" vagoneta="asset: #vagonetaAsset;">
 
     <a-sky src="#cel" rotation="0 94 0"></a-sky>
     <!-- Altura de la base de la vagoneta 0.7 (altura a on tendries els peus) -->
-    <a-entity id="controls" controls movement-controls="constrainToNavMesh: true;speed: 1"
+    <a-entity id="controls" movement-controls="constrainToNavMesh: true;speed: 0.7"
               rotation="0 180 0" position="0 0.7 -0.5" keyboard-controls>
       <!-- Altura dels ulls dels nins ~0.9 user-height="0.9"m adults 1.6 cursor="rayOrigin: mouse;"-->
       <a-entity id="camera" fixcamera="" look-controls="pointerLockEnabled: true" camera
@@ -60,13 +64,14 @@
       </a-entity>
       <!-- Mans -->
       <a-entity id="maEsquerra" hand-controls="hand: left" mixin="mans"></a-entity>
-      <a-entity id="maDreta" hand-controls="hand: right" laser-controls="hand: right" raycaster="objects: .collidable" cursor="rayOrigin: controller" mixin="mans"></a-entity>
+      <a-entity id="maDreta" hand-controls="hand: right" laser-controls="hand: right" raycaster="objects: .collidable"
+                cursor="rayOrigin: controller" mixin="mans"></a-entity>
     </a-entity>
     <!-- Arc -->
     <a-entity id="arc" arc="asset: #arcAsset;" class="" position="0.6 1.2 0.6" rotation="30 180 30"></a-entity>
   </a-entity>
-<!--  <a-entity arrel="asset: #arrelAsset;" position="0.6 0 2"></a-entity>-->
-<!--  Modal inici de sessió -->
+<!--     <a-entity planta="asset: #plantaAsset;" position="0.6 0 2"></a-entity>-->
+  <!--  Modal inici de sessió -->
   <a-plane id="modalUsuari" color="#323232" opacity="0.95" position="0 1.5 1.5" height="2" width="3" rotation="0 180 0">
     <a-text color="#FFF"
             value="Introdueix el teu nom junt amb\nla teva edat separats per una coma.\nCom l'exemple:\nUn cop fet, pressiona 'Ent' per continuar."
@@ -74,8 +79,14 @@
     <a-text id="inputNom" color="#FFF" value="Nom,0" align="center" scale="0.5 0.5 0.5" position="0 0.2 0"></a-text>
     <a-entity id="keyboard" a-keyboard position="-0.95 0 0" scale="4 4 4"></a-entity>
   </a-plane>
+  <!--<a-plane id="puntuacions" color="#323232" opacity="0.95" position="-3 1.5 0" height="3" width="3" rotation="0 90 0">
+    <a-text color="#FFF" value="Puntuacions" align="center" scale="0.7 0.7 0.7" position="0 1.3 0"></a-text>
+    <a-text color="#FFF" value="#" align="center" anchor="right" scale="0.5 0.5 0.5" position="0 1.1 0"></a-text>
+    <a-text color="#FFF" value="Nom\tPuntuacio" align="center" scale="0.5 0.5 0.5" position="0 1.1 0"></a-text>
+    <a-text color="#FFF" value="Ronda" align="center" anchor="left" scale="0.5 0.5 0.5" position="0 1.1 0"></a-text>
+  </a-plane>-->
 
-  <a-entity terra="asset: #camiAsset;" class="terra"></a-entity>
+  <a-entity terra="asset: #camiInicialAsset;" class="terra"></a-entity>
   <!--  <a-entity terra="asset: #terraAsset2;" class="terra"></a-entity>-->
   <!--<a-plane
     material="color: #FFF; src: #terra; repeat: 1 6; normal-map: #terra-nrm; normal-texture-repeat: 1 6; normal-scale: 1 -1; roughness: 0.9"

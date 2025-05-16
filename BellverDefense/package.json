@@ -1,6 +1,6 @@
 {
   "name": "towerdefense",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "private": true,
   "license": "",
@@ -10,14 +10,6 @@
     "express": "~4.21.1",
     "dotenv": "~16.5.0",
     "mariadb": "~3.4.1"
-  },
-  "devDependencies": {
-    "@babel/core": "latest",
-    "babel-loader": "latest",
-    "vite": "^6.0.11",
-    "webpack": "latest",
-    "webpack-cli": "latest",
-    "webpack-node-externals": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

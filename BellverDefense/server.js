@@ -28,4 +28,8 @@ app.post('/updatePuntuacio', function (req, res) {
   DBFunctions.UpdatePuntuacio(req, res);
 });
 
+app.get('/getTopPuntuacions', function (req, res) {
+  DBFunctions.GetTop(req, res);
+});
+
 http.createServer(app).listen(PORT);

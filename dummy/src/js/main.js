@@ -1,5 +1,3 @@
-const loader = new THREE.GLTFLoader();
-
 // Constants del joc
 
 // Quantitat de fletxes dins la pool
@@ -82,7 +80,7 @@ let arcEntity = document.getElementById('arc');
 let controls = document.getElementById('controls');
 let camera = document.getElementById('camera');
 let vagoneta = document.getElementById('vagoneta');
-let hud = document.getElementById('hud');
+let taulaPuntuacions = document.getElementById('puntuacions');
 let jugant = false;
 let enemicsEnPantalla = 0;
 let vidaEntity;
@@ -95,6 +93,7 @@ let maArc;
 let maCorda;
 // Punt a on ha de començar el nou terra a generar
 let comencTerra = 300;
+
 
 // Arc
 AFRAME.registerComponent('arc', {
@@ -374,7 +373,7 @@ function igualaPosicioRotacio(fletxa, maFletxa) {
   fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(OFFSETFLETXA));
 }
 
-function updatePosition() {
+/*function updatePosition() {
   // Copia la posició i rotació de la mà a l'arc
   let corda = new THREE.CatmullRomCurve3([
     new THREE.Vector3(0, 0.92, 0),
@@ -386,11 +385,7 @@ function updatePosition() {
   cordaEntity.object3D.geometry = new THREE.BufferGeometry().setFromPoints(
     corda.getPoints(50)
   );
-}
-
-window.onload = () => {
-
-}
+}*/
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -653,258 +648,6 @@ AFRAME.registerComponent('vagoneta', {
   }
 });
 
-/**
- * Funcio que genera els modals amb texte i 1 o 2 botons.
- * Segons el tipus, el texte i els botons mostren i/o fan una funció o una altra.
- * @param tipus El tipus de modal que ha de generar (continuar, reiniciar, menu, sortir practica)
- */
-function generadorModals(tipus) {
-  let fonsModal = document.createElement('a-entity');
-  let titolModal = document.createElement('a-entity');
-  let texteModal = document.createElement('a-entity');
-  let botoPrincipal = document.createElement('a-entity');
-  let botoSecundari = document.createElement('a-entity');
-  let textePrincipal = document.createElement('a-entity');
-  let texteSecundari = document.createElement('a-entity');
-  let stringTitol;
-  let stringTexte;
-  let stringBotoPrincipal;
-  let stringBotoSecundari;
-
-  switch (tipus) {
-    case TIPUSMODALS.continuar: {
-      stringTitol = "Punt de control";
-      stringTexte = "Descansa, beu aigua i continua quan estiguis llest/a.";
-      stringBotoPrincipal = "Continuar";
-      stringBotoSecundari = "Sortir";
-      break;
-    }
-    case TIPUSMODALS.reiniciar:{
-      stringTitol = "Joc acabat";
-      stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
-      stringBotoPrincipal = "Reiniciar";
-      break;}
-    case TIPUSMODALS.menu:{
-      stringTitol = "Benvingut/da";
-      stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + localStorage.getItem("puntuacio");
-      stringBotoPrincipal = "Iniciar";
-      stringBotoSecundari = "Practica";
-      break;
-    }
-    case TIPUSMODALS.sortirPractica:{
-      stringTitol = "Sortir";
-      stringTexte = "Surt del mode de practica.";
-      stringBotoPrincipal = "Sortir";
-      break;
-    }
-    case TIPUSMODALS.experiencia:{
-      stringTitol = "Benvingut/da";
-      stringTexte = "Tens experiencia previa jugant realitat virtual?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
-      stringBotoPrincipal = "Si";
-      stringBotoSecundari = "No";
-      break;
-    }
-    case TIPUSMODALS.sexe:{
-      stringTitol = "Benvingut/da";
-      stringTexte = "Com t'identifiques?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
-      stringBotoPrincipal = "Home";
-      stringBotoSecundari = "Dona";
-      break;
-    }
-  }
-
-  /*if (tipus === TIPUSMODALS.continuar) {
-  } else if (tipus === TIPUSMODALS.reiniciar) {
-  } else if (tipus === TIPUSMODALS.menu) {
-  } else if (tipus === TIPUSMODALS.sortirPractica) {
-  } else if (tipus === TIPUSMODALS.experiencia) {
-  } else if (tipus === TIPUSMODALS.sexe) {
-  }*/
-
-  // Fons del modal
-  fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
-  fonsModal.setAttribute('material', `color: ${COLORFONSMODAL};opacity: 0.95`);
-  fonsModal.setAttribute('position', `0 1.6 ${vagoneta.object3D.position.z + 2}`);
-
-  // Texte del modal
-  fonsModal.appendChild(titolModal);
-  fonsModal.appendChild(texteModal);
-  titolModal.setAttribute('text', `value: ${stringTitol}; align: center;`);
-  titolModal.setAttribute('position', '0 0.7 -0.1');
-  titolModal.setAttribute('rotation', '0 180 0');
-  titolModal.setAttribute('scale', '4 4 1');
-  texteModal.setAttribute('text', `value: ${stringTexte}; align: center; width: 0.75`);
-  texteModal.setAttribute('position', '0 0.2 -0.1');
-  texteModal.setAttribute('rotation', '0 180 0');
-  texteModal.setAttribute('scale', '3 3 1');
-
-  // Boto Continuar
-  fonsModal.appendChild(botoPrincipal);
-  botoPrincipal.setAttribute('class', 'hitbox');
-  botoPrincipal.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
-  botoPrincipal.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
-  botoPrincipal.setAttribute('position', '0 -0.6 -0.1');
-  // Afegir texte continuar
-  botoPrincipal.appendChild(textePrincipal);
-  textePrincipal.setAttribute('text', `value: ${stringBotoPrincipal}; align: center;`);
-  textePrincipal.setAttribute('position', '0 0 -0.1');
-  textePrincipal.setAttribute('rotation', '0 180 0');
-  textePrincipal.setAttribute('scale', '3 3 1');
-
-  if (stringBotoSecundari) {
-    // Mou el boto principal i afegeix el boto secundari
-    botoPrincipal.setAttribute('position', `-0.6 -0.6 -0.1`);
-    fonsModal.appendChild(botoSecundari);
-    botoSecundari.setAttribute('class', 'hitbox');
-    botoSecundari.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
-    botoSecundari.setAttribute('material', `color: ${COLORBOTOSECUNDARI}`);
-    botoSecundari.setAttribute('position', '0.6 -0.6 -0.1');
-    // Afegir texte boto secundari
-    botoSecundari.appendChild(texteSecundari);
-    texteSecundari.setAttribute('text', `value: ${stringBotoSecundari}; align: center;`);
-    texteSecundari.setAttribute('position', '0 0 -0.1');
-    texteSecundari.setAttribute('rotation', '0 180 0');
-    texteSecundari.setAttribute('scale', '3 3 1');
-  }
-
-  switch (tipus) {
-    case TIPUSMODALS.continuar: {
-      // Generar cami davant
-      generarNouTerra(MODELS.cami);
-      if (punts >= localStorage.getItem("puntuacio")) {
-        enviarPuntuacions().then(r => null);
-      }
-      // Listener de la hitbox
-      botoPrincipal.addEventListener('hitstart', () => {
-        audioBoto();
-        escena.removeChild(fonsModal);
-        // Modificar les variables per la següent ronda
-        ronda++;
-        jugant = true;
-        if (numEnemicsMax < 10) numEnemicsMax += 0.5;
-        if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
-        if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
-
-        comencarRonda();
-      });
-      botoSecundari.addEventListener('hitstart', () => {
-        new Audio(SONS.botoPressionat).play().then(r => location.reload());
-      });
-      break;
-    }
-    case TIPUSMODALS.reiniciar: {
-      fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);
-      // Envia la informació de les puntuacions si la puntuacio obtinguda és major
-      console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
-      if (punts >= localStorage.getItem("puntuacio")) {
-        enviarPuntuacions().then(r => null);
-      }
-      // Listener de la hitbox
-      botoPrincipal.addEventListener('hitstart', () => {
-        audioBoto();
-        eliminarEnemics();
-        escena.removeChild(fonsModal);
-        //vagoneta.setAttribute('position', '0 0 0');
-        // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
-        comencTerra = 0;
-        eliminarTerres();
-        // Modificar les variables per la següent ronda
-        numDispars = 0;
-        numEncerts = 0;
-        punts = 0;
-        ronda = 1;
-        vida = 10;
-        numEnemicsMax = 4;
-
-        vagoneta.emit('startanimReiniciar', null, false);
-      });
-      break;
-    }
-    case TIPUSMODALS.menu: {
-      // Listener de la hitbox
-      botoPrincipal.addEventListener('hitstart', () => {
-        audioBoto();
-        // Reset de les variables de generació d'enemics
-        numEnemicsMax = 4;
-        enemicsVidaMax = 1;
-        delayGeneracioEnemics = 4000;
-        escena.removeChild(fonsModal);
-
-        // Activa el joc (animacions i controlador)
-        comencarRonda();
-      });
-      botoSecundari.addEventListener('hitstart', () => {
-        audioBoto();
-        numEnemicsMax = 5;
-        delayGeneracioEnemics = 1000;
-        escena.removeChild(fonsModal);
-        generadorModals(TIPUSMODALS.sortirPractica);
-        controladorEnemics(TIPUSENEMIC.diana).then(r => null);
-      });
-      break;
-    }
-    case TIPUSMODALS.sortirPractica: {
-      fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
-      fonsModal.setAttribute('rotation', ` 0 90 0`);
-      botoPrincipal.addEventListener('hitstart', () => {
-        audioBoto();
-        jugant = false;
-        eliminarEnemics();
-        numEnemicsMax = 4;
-        delayGeneracioEnemics = 4000;
-        escena.removeChild(fonsModal);
-        generadorModals(TIPUSMODALS.menu);
-      });
-      break;
-    }
-    case TIPUSMODALS.experiencia: {
-      // Listener de la hitbox
-      botoPrincipal.addEventListener('hitstart', () => {
-        audioBoto();
-        escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.experiencia, "true");
-        generadorModals(TIPUSMODALS.sexe);
-      });
-      botoSecundari.addEventListener('hitstart', () => {
-        audioBoto();
-        escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.experiencia, "false");
-        generadorModals(TIPUSMODALS.sexe);
-      });
-      break;
-    }
-    case TIPUSMODALS.sexe: {
-      // Canvia el color del boto secundari
-      botoSecundari.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
-      // Listener de la hitbox
-      botoPrincipal.addEventListener('hitstart', () => {
-        audioBoto();
-        escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.sexe, 'H');
-        enviarPreguntes();
-        generadorModals(TIPUSMODALS.menu);
-      });
-      botoSecundari.addEventListener('hitstart', () => {
-        audioBoto();
-        escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.sexe, 'D');
-        enviarPreguntes();
-        generadorModals(TIPUSMODALS.menu);
-      });
-      break;
-    }
-  }
-
-  /*if (tipus === TIPUSMODALS.continuar) {
-  } else if (tipus === TIPUSMODALS.reiniciar) {
-  } else if (tipus === TIPUSMODALS.menu) {
-  } else if (tipus === TIPUSMODALS.sortirPractica) {
-  } else if (tipus === TIPUSMODALS.experiencia) {
-  } else if (tipus === TIPUSMODALS.sexe) {
-  }*/
-
-  escena.appendChild(fonsModal);
-}
 
 async function enviarPuntuacions() {
   await fetch("/updatePuntuacio", {
@@ -1090,4 +833,290 @@ function disposeNode(node) {
       }
     }
   }
+}
+
+/**
+ *  Generació de modals
+ */
+/**
+ * Funcio que genera els modals amb texte i 1 o 2 botons.
+ * Segons el tipus, el texte i els botons mostren i/o fan una funció o una altra.
+ * @param tipus El tipus de modal que ha de generar (continuar, reiniciar, menu, sortir practica)
+ */
+function generadorModals(tipus) {
+  let fonsModal = document.createElement('a-entity');
+  let titolModal = document.createElement('a-entity');
+  let texteModal = document.createElement('a-entity');
+  let botoPrincipal = document.createElement('a-entity');
+  let botoSecundari = document.createElement('a-entity');
+  let textePrincipal = document.createElement('a-entity');
+  let texteSecundari = document.createElement('a-entity');
+  let stringTitol;
+  let stringTexte;
+  let stringBotoPrincipal;
+  let stringBotoSecundari;
+
+  switch (tipus) {
+    case TIPUSMODALS.continuar: {
+      stringTitol = "Punt de control";
+      stringTexte = "Descansa, beu aigua i continua quan estiguis llest/a.";
+      stringBotoPrincipal = "Continuar";
+      stringBotoSecundari = "Sortir";
+      break;
+    }
+    case TIPUSMODALS.reiniciar: {
+      stringTitol = "Joc acabat";
+      stringTexte = "Has deixat passar massa enemics...\nPots tornar-ho a intentar.";
+      stringBotoPrincipal = "Reiniciar";
+      break;
+    }
+    case TIPUSMODALS.menu: {
+      stringTitol = "Benvingut/da";
+      stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + localStorage.getItem("puntuacio");
+      stringBotoPrincipal = "Iniciar";
+      stringBotoSecundari = "Practica";
+      break;
+    }
+    case TIPUSMODALS.sortirPractica: {
+      stringTitol = "Sortir";
+      stringTexte = "Surt del mode de practica.";
+      stringBotoPrincipal = "Sortir";
+      break;
+    }
+    case TIPUSMODALS.experiencia: {
+      stringTitol = "Benvingut/da";
+      stringTexte = "Tens experiencia previa jugant realitat virtual?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
+      stringBotoPrincipal = "Si";
+      stringBotoSecundari = "No";
+      break;
+    }
+    case TIPUSMODALS.sexe: {
+      stringTitol = "Benvingut/da";
+      stringTexte = "Com t'identifiques?\nUtilitza l'arc i les fletxes per seleccionar els botons.";
+      stringBotoPrincipal = "Home";
+      stringBotoSecundari = "Dona";
+      break;
+    }
+  }
+
+  // Fons del modal
+  fonsModal.setAttribute('geometry', 'primitive: box; width: 3; height: 2; depth: 0.1');
+  fonsModal.setAttribute('material', `color: ${COLORFONSMODAL};opacity: 0.95`);
+  fonsModal.setAttribute('position', `0 1.6 ${vagoneta.object3D.position.z + 2}`);
+
+  // Texte del modal
+  fonsModal.appendChild(titolModal);
+  fonsModal.appendChild(texteModal);
+  titolModal.setAttribute('text', `value: ${stringTitol}; align: center;`);
+  titolModal.setAttribute('position', '0 0.7 -0.1');
+  titolModal.setAttribute('rotation', '0 180 0');
+  titolModal.setAttribute('scale', '4 4 1');
+  texteModal.setAttribute('text', `value: ${stringTexte}; align: center; width: 0.75`);
+  texteModal.setAttribute('position', '0 0.2 -0.1');
+  texteModal.setAttribute('rotation', '0 180 0');
+  texteModal.setAttribute('scale', '3 3 1');
+
+  // Boto Continuar
+  fonsModal.appendChild(botoPrincipal);
+  botoPrincipal.setAttribute('class', 'hitbox');
+  botoPrincipal.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
+  botoPrincipal.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
+  botoPrincipal.setAttribute('position', '0 -0.6 -0.1');
+  // Afegir texte continuar
+  botoPrincipal.appendChild(textePrincipal);
+  textePrincipal.setAttribute('text', `value: ${stringBotoPrincipal}; align: center;`);
+  textePrincipal.setAttribute('position', '0 0 -0.1');
+  textePrincipal.setAttribute('rotation', '0 180 0');
+  textePrincipal.setAttribute('scale', '3 3 1');
+
+  if (stringBotoSecundari) {
+    // Mou el boto principal i afegeix el boto secundari
+    botoPrincipal.setAttribute('position', `-0.6 -0.6 -0.1`);
+    fonsModal.appendChild(botoSecundari);
+    botoSecundari.setAttribute('class', 'hitbox');
+    botoSecundari.setAttribute('geometry', 'primitive: box; width: 1; height: 0.5; depth: 0.1');
+    botoSecundari.setAttribute('material', `color: ${COLORBOTOSECUNDARI}`);
+    botoSecundari.setAttribute('position', '0.6 -0.6 -0.1');
+    // Afegir texte boto secundari
+    botoSecundari.appendChild(texteSecundari);
+    texteSecundari.setAttribute('text', `value: ${stringBotoSecundari}; align: center;`);
+    texteSecundari.setAttribute('position', '0 0 -0.1');
+    texteSecundari.setAttribute('rotation', '0 180 0');
+    texteSecundari.setAttribute('scale', '3 3 1');
+  }
+
+  switch (tipus) {
+    case TIPUSMODALS.continuar: {
+      // Generar cami davant
+      generarNouTerra(MODELS.cami);
+      if (punts >= localStorage.getItem("puntuacio")) {
+        enviarPuntuacions().then(r => null);
+      }
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        // Modificar les variables per la següent ronda
+        ronda++;
+        jugant = true;
+        if (numEnemicsMax < 10) numEnemicsMax += 0.5;
+        if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
+        if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
+
+        comencarRonda();
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        new Audio(SONS.botoPressionat).play().then(r => location.reload());
+      });
+      break;
+    }
+    case TIPUSMODALS.reiniciar: {
+      fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);
+      // Envia la informació de les puntuacions si la puntuacio obtinguda és major
+      console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
+      if (punts >= localStorage.getItem("puntuacio")) {
+        enviarPuntuacions().then(r => null);
+      }
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        eliminarEnemics();
+        escena.removeChild(fonsModal);
+        //vagoneta.setAttribute('position', '0 0 0');
+        // carregar cami a les coordenades 0 0 0 i eliminar l'anterior
+        comencTerra = 0;
+        eliminarTerres();
+        // Modificar les variables per la següent ronda
+        numDispars = 0;
+        numEncerts = 0;
+        punts = 0;
+        ronda = 1;
+        vida = 10;
+        numEnemicsMax = 4;
+
+        vagoneta.emit('startanimReiniciar', null, false);
+      });
+      break;
+    }
+    case TIPUSMODALS.menu: {
+      crearTaulaPuntuacions();
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        // Reset de les variables de generació d'enemics
+        numEnemicsMax = 4;
+        enemicsVidaMax = 1;
+        delayGeneracioEnemics = 4000;
+        escena.removeChild(fonsModal);
+        escena.removeChild(taulaPuntuacions);
+
+        // Activa el joc (animacions i controlador)
+        comencarRonda();
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        audioBoto();
+        numEnemicsMax = 5;
+        delayGeneracioEnemics = 1000;
+        escena.removeChild(fonsModal);
+        escena.removeChild(taulaPuntuacions);
+        generadorModals(TIPUSMODALS.sortirPractica);
+        controladorEnemics(TIPUSENEMIC.diana).then(r => null);
+      });
+      break;
+    }
+    case TIPUSMODALS.sortirPractica: {
+      fonsModal.setAttribute('position', `${vagoneta.object3D.position.x + 3} 2 ${vagoneta.object3D.position.z}`);
+      fonsModal.setAttribute('rotation', ` 0 90 0`);
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        jugant = false;
+        eliminarEnemics();
+        numEnemicsMax = 4;
+        delayGeneracioEnemics = 4000;
+        escena.removeChild(fonsModal);
+        generadorModals(TIPUSMODALS.menu);
+      });
+      break;
+    }
+    case TIPUSMODALS.experiencia: {
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.experiencia, "true");
+        generadorModals(TIPUSMODALS.sexe);
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.experiencia, "false");
+        generadorModals(TIPUSMODALS.sexe);
+      });
+      break;
+    }
+    case TIPUSMODALS.sexe: {
+      // Canvia el color del boto secundari
+      botoSecundari.setAttribute('material', `color: ${COLORBOTOPRINCIPAL}`);
+      // Listener de la hitbox
+      botoPrincipal.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.sexe, 'H');
+        enviarPreguntes();
+        generadorModals(TIPUSMODALS.menu);
+      });
+      botoSecundari.addEventListener('hitstart', () => {
+        audioBoto();
+        escena.removeChild(fonsModal);
+        localStorage.setItem(TIPUSMODALS.sexe, 'D');
+        enviarPreguntes();
+        generadorModals(TIPUSMODALS.menu);
+      });
+      break;
+    }
+  }
+
+  escena.appendChild(fonsModal);
+}
+
+async function crearTaulaPuntuacions() {
+  taulaPuntuacions = document.createElement('a-plane');
+  taulaPuntuacions.setAttribute('color', COLORFONSMODAL);
+  taulaPuntuacions.setAttribute('opacity', '0.95');
+  taulaPuntuacions.setAttribute('position', '-3 1.5 0');
+  taulaPuntuacions.setAttribute('height', '3');
+  taulaPuntuacions.setAttribute('width', '3');
+  taulaPuntuacions.setAttribute('rotation', '0 90 0');
+  taulaPuntuacions.innerHTML = "<a-text color=\"#FFF\" value=\"Puntuacions\" align=\"center\" scale=\"0.7 0.7 0.7\" position=\"0 1.3 0\"></a-text>\n" +
+    "    <a-text color=\"#FFF\" value=\"#\" align=\"center\" anchor=\"right\" scale=\"0.5 0.5 0.5\" position=\"0 1.1 0\"></a-text>\n" +
+    "    <a-text color=\"#FFF\" value=\"Nom\\tPuntuacio\" align=\"center\" scale=\"0.5 0.5 0.5\" position=\"0 1.1 0\"></a-text>\n" +
+    "    <a-text color=\"#FFF\" value=\"Ronda\" align=\"center\" anchor=\"left\" scale=\"0.5 0.5 0.5\" position=\"0 1.1 0\"></a-text>\n";
+
+  let colors = ["#323232", "#464646"];
+  await fetch("/getTopPuntuacions")
+    .then(res => res.json().then(
+      data => {
+        for (let i = 0; i < data.length; i++) {
+          let puntuacio = document.createElement('a-plane');
+          puntuacio.setAttribute('height', '0.2');
+          puntuacio.setAttribute('width', '2.9');
+          puntuacio.setAttribute('position', `0 ${0.9 - (i * 0.22)} 0.01`);
+          puntuacio.setAttribute('color', colors[i % 2]);
+          let texteNum = document.createElement('a-text');
+          texteNum.setAttribute('text', `value: ${i + 1}; align: center; anchor: right;`);
+          texteNum.setAttribute('scale', '0.5 0.5 0.5');
+          let texte = document.createElement('a-text');
+          texte.setAttribute('text', `value: ${data[i].nom}\t${data[i].puntuacio}; align: center;`);
+          texte.setAttribute('scale', '0.5 0.5 0.5');
+          let texteRonda = document.createElement('a-text');
+          texteRonda.setAttribute('text', `value: ${data[i].ronda}; align: center; anchor: left;`);
+          texteRonda.setAttribute('scale', '0.5 0.5 0.5');
+          puntuacio.appendChild(texteNum);
+          puntuacio.appendChild(texte);
+          puntuacio.appendChild(texteRonda);
+          taulaPuntuacions.appendChild(puntuacio);
+        }
+      })
+    );
+  escena.appendChild(taulaPuntuacions);
 }
