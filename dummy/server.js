@@ -33,7 +33,7 @@ app.post('/updatePuntuacio', function (req, res) {
 });
 
 app.get('/getTopPuntuacions', function (req, res) {
-  DBFunctions.GetTop(req, res);
+  DBFunctions.GetTopPuntuacions(req, res);
 });
 
 https.createServer(options, app).listen(PORT);

@@ -111,7 +111,7 @@ module.exports = {
       }
     });
   },
-  GetTop(req, res) {
+  GetTopPuntuacions(req, res) {
     serverPool.getConnection().then(async conn => {
       try {
         let sqlQuery = `SELECT nom, puntuacio, ronda
