@@ -15,6 +15,7 @@ const MASSAFLETXA = 0.044; // Massa de la fletxa en kg
 const FACTORKE = 0.05; // La suma de l'energia cinètica (KE) de les parts mòbils de l'arc.
 // Factor de tensió per multiplicar a la distancia de la corda i obtenir la força
 const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE * MASSAARC));
+const CORDAESTIRARMAX = 0.25;
 const COLORFONSMODAL = '#323232';
 const COLORBOTOPRINCIPAL = '#12FF12';
 const COLORBOTOSECUNDARI = '#626262';
@@ -52,11 +53,14 @@ const TIPUSMODALS = {
   sexe: "sexe"
 }
 const SONS = {
-  gameOver: "#gameOverSo",
+  gameOver: "../assets/audio/GameOver.mp3",
   fruitaMorta: "../assets/audio/FruitaMorta.mp3",
   perdreVida: "../assets/audio/PerdreVida.mp3",
   botoPressionat: "../assets/audio/BotoPressionat.mp3",
-  fletxaDisparada: "../assets/audio/FletxaDisparada.mp3"
+  fletxaDisparada: "../assets/audio/FletxaDisparada.mp3",
+  colisioDiana: "../assets/audio/ColisioDiana.mp3",
+  menuFons: "../assets/audio/MenuFons.mp3",
+  jocFons: "../assets/audio/JocFons.mp3"
 }
 
 // Variables del joc
@@ -192,7 +196,7 @@ AFRAME.registerComponent('arc', {
 
 function calcularTensio() {
   // Calcular la distancia entre les mans
-  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.25);
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), CORDAESTIRARMAX);
 
   // Calcular la velocitat inicial
   //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
@@ -201,8 +205,8 @@ function calcularTensio() {
 
 AFRAME.registerComponent('cordamath', {
   schema: {
-    anclaSuperior: {type: 'number', default: 0.82},
-    anclaInferior: {type: 'number', default: -0.56},
+    ancoraSuperior: {type: 'number', default: 0.82},
+    ancoraInferior: {type: 'number', default: -0.56},
     puntIntermigSuperior: {type: 'number', default: 0.14},
     puntIntermigInferior: {type: 'number', default: 0.12},
     color: {type: 'color', default: '#2D2D2D'},
@@ -226,20 +230,22 @@ AFRAME.registerComponent('cordamath', {
  * @returns {Line} La THREE.Line que simula la corda.
  */
 function calcularCorda(distanciaMans) {
+  // Crear la corba a partir dels punts proporcionats i la distància de les mans
   let corda = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, cordaEntity.components.cordamath.data.anclaSuperior, 0),
+    new THREE.Vector3(0, cordaEntity.components.cordamath.data.ancoraSuperior, 0),
     new THREE.Vector3(0, cordaEntity.components.cordamath.data.puntIntermigSuperior, distanciaMans),
     new THREE.Vector3(0, cordaEntity.components.cordamath.data.puntIntermigInferior, distanciaMans),
-    new THREE.Vector3(0, cordaEntity.components.cordamath.data.anclaInferior, 0)
+    new THREE.Vector3(0, cordaEntity.components.cordamath.data.ancoraInferior, 0)
   ]);
   let pointsCorda = corda.getPoints(50);
+  // Crear l'objecte 3D a partir dels punts de la corba
   let geometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
-  // Create material.
+  // Assignar el color
   let material = new THREE.LineBasicMaterial({
     color: cordaEntity.components.cordamath.data.color,
     linewidth: 1
   });
-  // Create mesh.
+  // Generar la corba junt amb el color
   return new THREE.Line(geometry, material);
 }
 
@@ -284,7 +290,7 @@ AFRAME.registerComponent('fletxa', {
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
         data.forca = calcularTensio();
-        // Agafa la rotació de l'objecte en radians comparant-la amb la rotació 0
+        // Agafa la rotació de l'objecte en radians comparant-la amb la rotació neutra 0
         let rotacio = this.el.object3D.quaternion.angleTo(
           new THREE.Quaternion(0, 0, 0, 0)
         );
@@ -322,7 +328,7 @@ AFRAME.registerComponent('fletxa', {
       if (this.data.disparada) {
         escena.components.pool__fletxa.returnEntity(this.el);
       }
-      data.disparada = false;
+      this.data.disparada = false;
     });
   },
   tick: function (time, timeDelta) {
@@ -342,7 +348,7 @@ AFRAME.registerComponent('fletxa', {
     } else if (data.agafada) {
       igualaPosicioRotacio(el, maArc);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.25 metres
-      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.25);
+      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), CORDAESTIRARMAX);
       el.object3D.translateZ(-distanciaMans);
       cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans * 2));
     } else {
@@ -549,6 +555,7 @@ function actualitzarVidaPunts() {
 function partidaAcabada() {
   jugant = false;
   vagoneta.components['animation__moure'].pause();
+  vagoneta.removeAttribute('sound');
   generadorModals(TIPUSMODALS.reiniciar);
 }
 
@@ -595,7 +602,6 @@ AFRAME.registerComponent('vagoneta', {
 
     element.setAttribute('scale', '0.5 0.5 0.5');
     element.setAttribute('position', '0 0 0');
-    // element.setAttribute('sound', `src: ${SONS.perdreVida}; autoplay: false; positional: false;`);
 
     // Animacio reiniciar
     vagoneta.setAttribute('animation__reiniciar', {
@@ -611,8 +617,6 @@ AFRAME.registerComponent('vagoneta', {
     vidaEntity.setAttribute('text', `value: Vida: ${vida}\n\nPunts: ${punts};align: center`);
     vidaEntity.setAttribute('rotation', `-11 180 0`);
     vidaEntity.setAttribute('position', `0 1.45 0.86`);
-    /*vidaEntity.setAttribute('src', data.cor);
-    vidaEntity.setAttribute('repeat', vida);*/
     vagoneta.appendChild(vidaEntity);
 
     this.el.addEventListener("animationcomplete__moure", async () => {
@@ -648,6 +652,7 @@ AFRAME.registerComponent("diana", {
 
     element.addEventListener('hitstart', () => {
       enemicsEnPantalla--;
+      new Audio(SONS.colisioDiana).play().then(r => null);
       this.remove();
     });
   },
@@ -993,6 +998,8 @@ function generadorModals(tipus) {
     }
     case TIPUSMODALS.menu: {
       crearTaulaPuntuacions();
+      fonsModal.setAttribute('sound', `src: ${SONS.menuFons}; autoplay: true; positional: false; loop: true; volume: 0.2;`);
+      // new Audio().play().then(r => null);
       // Listener de la hitbox
       botoPrincipal.addEventListener('hitstart', () => {
         audioBoto();
@@ -1002,6 +1009,7 @@ function generadorModals(tipus) {
         delayGeneracioEnemics = 3700;
         escena.removeChild(fonsModal);
         escena.removeChild(taulaPuntuacions);
+        vagoneta.setAttribute('sound', `src:${SONS.jocFons}; autoplay: true; positional: false; loop: true; volume: 0.2;`);
 
         // Activa el joc (animacions i controlador)
         comencarRonda();

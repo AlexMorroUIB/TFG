@@ -1,7 +1,7 @@
 // Constants del joc
 
 // Quantitat de fletxes dins la pool
-const TAMANYCARCAIX = 16;
+const MIDACARCAIX = 16;
 // Temps de penalització quan tira moltes fletxes seguides
 const DELAYPENALITZACIO = 8000;
 // Metres que avança la vagoneta cada pic
@@ -15,10 +15,13 @@ const MASSAFLETXA = 0.044; // Massa de la fletxa en kg
 const FACTORKE = 0.05; // La suma de l'energia cinètica (KE) de les parts mòbils de l'arc.
 // Factor de tensió per multiplicar a la distancia de la corda i obtenir la força
 const TENSIO = Math.sqrt((EFICIENCIAARC * FORCAARC) / (MASSAFLETXA + FACTORKE * MASSAARC));
+const CORDAESTIRARMAX = 0.25;
 const COLORFONSMODAL = '#323232';
 const COLORBOTOPRINCIPAL = '#12FF12';
 const COLORBOTOSECUNDARI = '#626262';
 const LLARGARIATERRA = 150;
+const PLANTAMIDAMIN = 0.8;
+const PLANTAMIDAMAX = 2;
 // Tipus d'enemics possibles
 const TIPUSENEMIC = {
   planta: "planta",
@@ -50,21 +53,24 @@ const TIPUSMODALS = {
   sexe: "sexe"
 }
 const SONS = {
-  gameOver: "#gameOverSo",
+  gameOver: "../assets/audio/GameOver",
   fruitaMorta: "../assets/audio/FruitaMorta.mp3",
   perdreVida: "../assets/audio/PerdreVida.mp3",
   botoPressionat: "../assets/audio/BotoPressionat.mp3",
-  fletxaDisparada: "../assets/audio/FletxaDisparada.mp3"
+  fletxaDisparada: "../assets/audio/FletxaDisparada.mp3",
+  colisioDiana: "../assets/audio/ColisioDiana.mp3",
+  menuFons: "../assets/audio/MenuFons.mp3",
+  jocFons: "../assets/audio/JocFons.mp3"
 }
 
 // Variables del joc
 let vida = 10;
 let punts = 0;
 // Num d'enemics màxims simultàniament en pantalla
-let numEnemicsMax = 5;
+let numEnemicsMax = 4;
 // Màxim de vida que poden tenir els enemics en la ronda actual
 let enemicsVidaMax = 1;
-let delayGeneracioEnemics = 3500; // Temps en ms que tarda el controlador en generar un nou enemic.
+let delayGeneracioEnemics = 3700; // Temps en ms que tarda el controlador en generar un nou enemic.
 let duracioAvancVagoneta = 90000;
 let ronda = 1;
 
@@ -113,7 +119,7 @@ AFRAME.registerComponent('arc', {
 
     cordaEntity.setAttribute('id', 'corda');
     cordaEntity.setAttribute('cordamath', '');
-    escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${TAMANYCARCAIX}`);
+    escena.setAttribute('pool__fletxa', `mixin: fletxa; size: ${MIDACARCAIX}`);
   },
   update: function (oldData) {
     let data = this.data;  // Component property values.
@@ -139,10 +145,10 @@ AFRAME.registerComponent('arc', {
         // Afegir la classe fletxa a totes les entitats de la pool de fletxes
         // perque l'sphere-collider de les mans les detecti
         let carcaixTemp = [];
-        for (let i = 0; i < TAMANYCARCAIX; i++) {
+        for (let i = 0; i < MIDACARCAIX; i++) {
           carcaixTemp.push(escena.components.pool__fletxa.requestEntity());
         }
-        for (let i = 0; i < TAMANYCARCAIX; i++) {
+        for (let i = 0; i < MIDACARCAIX; i++) {
           const fletxaTemp = carcaixTemp[i];
           fletxaTemp.setAttribute('class', 'fletxa');
           escena.components.pool__fletxa.returnEntity(fletxaTemp);
@@ -174,12 +180,11 @@ AFRAME.registerComponent('arc', {
 
         // Si l'usuari ja existia genera el menu del joc directament,
         // si no existia genera les preguntes d'experiècia prèvia i sexe,
-        if (localStorage.getItem("existent") === "true") {
+        if (sessionStorage.getItem("existent") === "true") {
           generadorModals(TIPUSMODALS.menu);
         } else {
           generadorModals(TIPUSMODALS.experiencia);
         }
-        // generadorModals(TIPUSMODALS.menu);
       }
     });
 
@@ -191,7 +196,7 @@ AFRAME.registerComponent('arc', {
 
 function calcularTensio() {
   // Calcular la distancia entre les mans
-  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.25);
+  const distancia = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), CORDAESTIRARMAX);
 
   // Calcular la velocitat inicial
   //return Math.sqrt( (0.9*300*distancia) / (0.065 + 0.05*0.9));
@@ -200,8 +205,8 @@ function calcularTensio() {
 
 AFRAME.registerComponent('cordamath', {
   schema: {
-    anclaSuperior: {type: 'number', default: 0.82},
-    anclaInferior: {type: 'number', default: -0.56},
+    ancoraSuperior: {type: 'number', default: 0.82},
+    ancoraInferior: {type: 'number', default: -0.56},
     puntIntermigSuperior: {type: 'number', default: 0.14},
     puntIntermigInferior: {type: 'number', default: 0.12},
     color: {type: 'color', default: '#2D2D2D'},
@@ -225,20 +230,22 @@ AFRAME.registerComponent('cordamath', {
  * @returns {Line} La THREE.Line que simula la corda.
  */
 function calcularCorda(distanciaMans) {
+  // Crear la corba a partir dels punts proporcionats i la distància de les mans
   let corda = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, cordaEntity.components.cordamath.data.anclaSuperior, 0),
+    new THREE.Vector3(0, cordaEntity.components.cordamath.data.ancoraSuperior, 0),
     new THREE.Vector3(0, cordaEntity.components.cordamath.data.puntIntermigSuperior, distanciaMans),
     new THREE.Vector3(0, cordaEntity.components.cordamath.data.puntIntermigInferior, distanciaMans),
-    new THREE.Vector3(0, cordaEntity.components.cordamath.data.anclaInferior, 0)
+    new THREE.Vector3(0, cordaEntity.components.cordamath.data.ancoraInferior, 0)
   ]);
   let pointsCorda = corda.getPoints(50);
+  // Crear l'objecte 3D a partir dels punts de la corba
   let geometry = new THREE.BufferGeometry().setFromPoints(pointsCorda);
-  // Create material.
+  // Assignar el color
   let material = new THREE.LineBasicMaterial({
     color: cordaEntity.components.cordamath.data.color,
     linewidth: 1
   });
-  // Create mesh.
+  // Generar la corba junt amb el color
   return new THREE.Line(geometry, material);
 }
 
@@ -255,7 +262,8 @@ AFRAME.registerComponent('fletxa', {
     velY: {type: 'number', default: 0},
     distAnteriorX: {type: 'number', default: 0},
     distAnteriorY: {type: 'number', default: 0},
-    temps: {type: 'number', default: 0}
+    temps: {type: 'number', default: 0},
+    gravetat: {type: 'number', default: GRAVETAT*0.5}
   },
   init: function () {
     let data = this.data;
@@ -282,7 +290,7 @@ AFRAME.registerComponent('fletxa', {
         cordaEntity.setObject3D('mesh', calcularCorda(0.0));
         // Calcular la força de dispar
         data.forca = calcularTensio();
-        // Agafa la rotació de l'objecte en radians comparant-la amb la rotació 0
+        // Agafa la rotació de l'objecte en radians comparant-la amb la rotació neutra 0
         let rotacio = this.el.object3D.quaternion.angleTo(
           new THREE.Quaternion(0, 0, 0, 0)
         );
@@ -320,7 +328,7 @@ AFRAME.registerComponent('fletxa', {
       if (this.data.disparada) {
         escena.components.pool__fletxa.returnEntity(this.el);
       }
-      data.disparada = false;
+      this.data.disparada = false;
     });
   },
   tick: function (time, timeDelta) {
@@ -329,18 +337,18 @@ AFRAME.registerComponent('fletxa', {
     if (data.disparada) {
       // Aplica la fórmula de la trajectòria de projectils per moure la fletxa cap endavant i cap abaix
       let distX = data.velX * data.temps;
-      let distY = data.velY * data.temps - (GRAVETAT * data.temps * data.temps * 0.5);
+      let distY = data.velY * data.temps - (data.gravetat * data.temps * data.temps);
       el.object3D.translateZ(-(distX - data.distAnteriorX));
       el.object3D.translateY(distY - data.distAnteriorY);
       data.temps += 0.01;
       data.distAnteriorX = distX;
       data.distAnteriorY = distY;
       // Si l'altura de la fletxa és menor a 0 o el temps es major a 8 retorna la fletxa a la pool
-      if (this.el.object3D.position.y < 0 || data.temps >= 8) escena.components.pool__fletxa.returnEntity(this.el);
+      if (this.el.object3D.position.y < 0 || data.temps > 8) escena.components.pool__fletxa.returnEntity(this.el);
     } else if (data.agafada) {
       igualaPosicioRotacio(el, maArc);
       // Es mou cap enrrere el màxim (en negatiu perque va cap enrrere) entre la distància entre les mans i 0.25 metres
-      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), 0.25);
+      let distanciaMans = Math.min((maArc.object3D.position.distanceTo(maCorda.object3D.position) / 4), CORDAESTIRARMAX);
       el.object3D.translateZ(-distanciaMans);
       cordaEntity.setObject3D('mesh', calcularCorda(distanciaMans * 2));
     } else {
@@ -372,20 +380,6 @@ function igualaPosicioRotacio(fletxa, maFletxa) {
     maFletxa.object3D.quaternion.w)
   fletxa.object3D.setRotationFromQuaternion(maQuaternion.multiply(OFFSETFLETXA));
 }
-
-/*function updatePosition() {
-  // Copia la posició i rotació de la mà a l'arc
-  let corda = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, 0.92, 0),
-    new THREE.Vector3(-0.5, 0.05, 0),
-    new THREE.Vector3(-0.5, -0.05, 0),
-    new THREE.Vector3(0, -0.92, 0)
-  ]);
-
-  cordaEntity.object3D.geometry = new THREE.BufferGeometry().setFromPoints(
-    corda.getPoints(50)
-  );
-}*/
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -420,7 +414,7 @@ async function controladorEnemics(tipus) {
       if (tipus === TIPUSENEMIC.planta) {
         // Assigna una quantitat de vida aleatòria
         enemic.setAttribute(tipus, `vida: ${valorAleatoriInt(1, enemicsVidaMax)};
-                                          tamany: ${valorAleatoriFloat(0.8, 2)}`);
+                                          mida: ${valorAleatoriFloat(PLANTAMIDAMIN, PLANTAMIDAMAX)}`);
         enemic.setAttribute('class', 'enemic');
       } else {
         enemic.setAttribute(tipus, '');
@@ -454,7 +448,7 @@ AFRAME.registerComponent('planta', {
   schema: {
     asset: {type: 'asset', default: MODELS.planta},
     assetFruita: {type: 'asset', default: MODELS.fruita},
-    tamany: {type: 'number', default: 1},
+    mida: {type: 'number', default: 1},
     vida: {type: 'number', default: 1},
     maxDistanciaVagoneta: {type: 'number', default: 40},
     enEscena: {type: 'boolean', default: true}
@@ -464,7 +458,7 @@ AFRAME.registerComponent('planta', {
     let element = this.el;
 
     element.setAttribute('rotation', `0 ${valorAleatoriFloat(0, 360)} 0`);
-    element.setAttribute('scale', `${data.tamany} ${data.tamany} ${data.tamany}`);
+    element.setAttribute('scale', `${data.mida} ${data.mida} ${data.mida}`);
 
     // Geometria i hitbox de l'planta
     let plantaEntity = document.createElement('a-entity');
@@ -501,7 +495,7 @@ AFRAME.registerComponent('planta', {
      * Actualitza el color del material de l'objecte de fruita
      */
     function actualitzarColor() {
-      let mesh = fruitaEntity.getObject3D('mesh')
+      let mesh = fruitaEntity.getObject3D('mesh');
       mesh.traverse(function (child) {
         if (child.isMesh) {
           child.material = new THREE.MeshLambertMaterial({color: VIDACOLORFRUITA[data.vida]});
@@ -547,11 +541,11 @@ AFRAME.registerComponent('planta', {
 
 /**
  * Modifica el texte que conté la vida i els punts del jugador,
- * també comprova si la vida és <= a 0, si ho és acaba la partida.
+ * també comprova si la vida és < a 1, si ho és acaba la partida.
  */
 function actualitzarVidaPunts() {
   vidaEntity.setAttribute('text', `value: Vida: ${vida}\nPunts: ${punts};align: center`);
-  if (vida <= 0) partidaAcabada();
+  if (vida < 1) partidaAcabada();
 }
 
 /**
@@ -561,6 +555,7 @@ function actualitzarVidaPunts() {
 function partidaAcabada() {
   jugant = false;
   vagoneta.components['animation__moure'].pause();
+  vagoneta.removeAttribute('sound');
   generadorModals(TIPUSMODALS.reiniciar);
 }
 
@@ -607,7 +602,6 @@ AFRAME.registerComponent('vagoneta', {
 
     element.setAttribute('scale', '0.5 0.5 0.5');
     element.setAttribute('position', '0 0 0');
-    // element.setAttribute('sound', `src: ${SONS.perdreVida}; autoplay: false; positional: false;`);
 
     // Animacio reiniciar
     vagoneta.setAttribute('animation__reiniciar', {
@@ -623,8 +617,6 @@ AFRAME.registerComponent('vagoneta', {
     vidaEntity.setAttribute('text', `value: Vida: ${vida}\n\nPunts: ${punts};align: center`);
     vidaEntity.setAttribute('rotation', `-11 180 0`);
     vidaEntity.setAttribute('position', `0 1.45 0.86`);
-    /*vidaEntity.setAttribute('src', data.cor);
-    vidaEntity.setAttribute('repeat', vida);*/
     vagoneta.appendChild(vidaEntity);
 
     this.el.addEventListener("animationcomplete__moure", async () => {
@@ -648,7 +640,34 @@ AFRAME.registerComponent('vagoneta', {
   }
 });
 
+AFRAME.registerComponent("diana", {
+  schema: {
+    asset: {type: 'asset', default: MODELS.diana}
+  },
+  init: function () {
+    let data = this.data;
+    let element = this.el;
 
+    element.setAttribute('gltf-model', data.asset);
+
+    element.addEventListener('hitstart', () => {
+      enemicsEnPantalla--;
+      new Audio(SONS.colisioDiana).play().then(r => null);
+      this.remove();
+    });
+  },
+  remove: function () {
+    //this.el.parentNode.removeChild(this.el);
+    escena.removeChild(this.el);
+    this.el.removeFromParent();
+  }
+});
+
+
+/**
+ * Funcions AJAX amb la base de dades
+ */
+// Envia la puntuació actual a la BBDD
 async function enviarPuntuacions() {
   await fetch("/updatePuntuacio", {
     method: "POST",
@@ -657,8 +676,8 @@ async function enviarPuntuacions() {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      nom: localStorage.getItem("nom"),
-      edat: localStorage.getItem("edat"),
+      nom: sessionStorage.getItem("nom"),
+      edat: sessionStorage.getItem("edat"),
       dispars: numDispars,
       encerts: numEncerts,
       puntuacio: punts,
@@ -670,6 +689,7 @@ async function enviarPuntuacions() {
   console.log("Puntuacio enviada: ");
 }
 
+// Envia la resposta a les preguntes d'experiència prèvia i sexe
 async function enviarPreguntes() {
   await fetch("/preguntesUsuari", {
     method: "POST",
@@ -678,10 +698,10 @@ async function enviarPreguntes() {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      nom: localStorage.getItem("nom"),
-      edat: localStorage.getItem("edat"),
-      experiencia: localStorage.getItem(TIPUSMODALS.experiencia),
-      sexe: localStorage.getItem(TIPUSMODALS.sexe)
+      nom: sessionStorage.getItem("nom"),
+      edat: sessionStorage.getItem("edat"),
+      experiencia: sessionStorage.getItem(TIPUSMODALS.experiencia),
+      sexe: sessionStorage.getItem(TIPUSMODALS.sexe)
     })
   }).then((res) => {
     if (res.status !== 200) console.log("Error insertant les respostes de les preguntes a la BBDD.")
@@ -748,30 +768,6 @@ function eliminarTerres() {
     terres[i].components.terra.remove();
   }
 }
-
-AFRAME.registerComponent("diana", {
-  schema: {
-    asset: {type: 'asset', default: MODELS.diana},
-    color: {type: 'string', default: '#525252'}
-    //position="0 0 -2" width="1" height="1"
-  },
-  init: function () {
-    let data = this.data;
-    let element = this.el;
-
-    element.setAttribute('gltf-model', data.asset);
-
-    element.addEventListener('hitstart', () => {
-      enemicsEnPantalla--;
-      this.remove();
-    });
-  },
-  remove: function () {
-    //this.el.parentNode.removeChild(this.el);
-    escena.removeChild(this.el);
-    this.el.removeFromParent();
-  }
-});
 
 /**
  * Zona Audio
@@ -872,7 +868,7 @@ function generadorModals(tipus) {
     }
     case TIPUSMODALS.menu: {
       stringTitol = "Benvingut/da";
-      stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + localStorage.getItem("puntuacio");
+      stringTexte = "Utilitza l'arc i les fletxes per seleccionar els botons.\nPots comencar una partida normal\no jugar en el mode de practica.\nEn el mode normal has de disparar a les fruites\nque surten de les branques liles.\n\nPuntuacio anterior: " + sessionStorage.getItem("puntuacio");
       stringBotoPrincipal = "Iniciar";
       stringBotoSecundari = "Practica";
       break;
@@ -948,11 +944,11 @@ function generadorModals(tipus) {
   switch (tipus) {
     case TIPUSMODALS.continuar: {
       // Generar cami davant
-      generarNouTerra(MODELS.cami);
-      if (punts >= localStorage.getItem("puntuacio")) {
+      if (ronda % 2 === 1) generarNouTerra(MODELS.cami);
+      if (punts > sessionStorage.getItem("puntuacio")) {
         enviarPuntuacions().then(r => null);
       }
-      // Listener de la hitbox
+      // Botó per continuar a la següent ronda
       botoPrincipal.addEventListener('hitstart', () => {
         audioBoto();
         escena.removeChild(fonsModal);
@@ -965,6 +961,8 @@ function generadorModals(tipus) {
 
         comencarRonda();
       });
+
+      // Botó per reiniciar el joc
       botoSecundari.addEventListener('hitstart', () => {
         new Audio(SONS.botoPressionat).play().then(r => location.reload());
       });
@@ -973,8 +971,8 @@ function generadorModals(tipus) {
     case TIPUSMODALS.reiniciar: {
       fonsModal.setAttribute('sound', `src: ${SONS.gameOver}; autoplay: true; positional: false`);
       // Envia la informació de les puntuacions si la puntuacio obtinguda és major
-      console.log("Puntuacio actual: " + punts + " - anterior: " + localStorage.getItem("puntuacio"))
-      if (punts >= localStorage.getItem("puntuacio")) {
+      console.log("Puntuacio actual: " + punts + " - anterior: " + sessionStorage.getItem("puntuacio"))
+      if (punts > sessionStorage.getItem("puntuacio")) {
         enviarPuntuacions().then(r => null);
       }
       // Listener de la hitbox
@@ -1000,15 +998,18 @@ function generadorModals(tipus) {
     }
     case TIPUSMODALS.menu: {
       crearTaulaPuntuacions();
+      fonsModal.setAttribute('sound', `src: ${SONS.menuFons}; autoplay: true; positional: false; loop: true; volume: 0.2;`);
+      // new Audio().play().then(r => null);
       // Listener de la hitbox
       botoPrincipal.addEventListener('hitstart', () => {
         audioBoto();
         // Reset de les variables de generació d'enemics
         numEnemicsMax = 4;
         enemicsVidaMax = 1;
-        delayGeneracioEnemics = 4000;
+        delayGeneracioEnemics = 3700;
         escena.removeChild(fonsModal);
         escena.removeChild(taulaPuntuacions);
+        vagoneta.setAttribute('sound', `src:${SONS.jocFons}; autoplay: true; positional: false; loop: true; volume: 0.2;`);
 
         // Activa el joc (animacions i controlador)
         comencarRonda();
@@ -1031,8 +1032,6 @@ function generadorModals(tipus) {
         audioBoto();
         jugant = false;
         eliminarEnemics();
-        numEnemicsMax = 4;
-        delayGeneracioEnemics = 4000;
         escena.removeChild(fonsModal);
         generadorModals(TIPUSMODALS.menu);
       });
@@ -1043,13 +1042,13 @@ function generadorModals(tipus) {
       botoPrincipal.addEventListener('hitstart', () => {
         audioBoto();
         escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.experiencia, "true");
+        sessionStorage.setItem(TIPUSMODALS.experiencia, "true");
         generadorModals(TIPUSMODALS.sexe);
       });
       botoSecundari.addEventListener('hitstart', () => {
         audioBoto();
         escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.experiencia, "false");
+        sessionStorage.setItem(TIPUSMODALS.experiencia, "false");
         generadorModals(TIPUSMODALS.sexe);
       });
       break;
@@ -1061,14 +1060,14 @@ function generadorModals(tipus) {
       botoPrincipal.addEventListener('hitstart', () => {
         audioBoto();
         escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.sexe, 'H');
+        sessionStorage.setItem(TIPUSMODALS.sexe, 'H');
         enviarPreguntes();
         generadorModals(TIPUSMODALS.menu);
       });
       botoSecundari.addEventListener('hitstart', () => {
         audioBoto();
         escena.removeChild(fonsModal);
-        localStorage.setItem(TIPUSMODALS.sexe, 'D');
+        sessionStorage.setItem(TIPUSMODALS.sexe, 'D');
         enviarPreguntes();
         generadorModals(TIPUSMODALS.menu);
       });

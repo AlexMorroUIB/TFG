@@ -24,7 +24,7 @@ function comprovarNomUsuari() {
 // Envia el nom i l'edat a la base de dades,
 // si no existia es crea i demana les preguntes d'experiècia prèvia i sexe,
 // si ja existia no demana les preguntes
-// finalment guarda l'usuari en localStorage
+// finalment guarda l'usuari en sessionStorage
 async function enviarNomUsuari(nom, edat) {
   await fetch("/getUsuari", {
     method: "POST",
@@ -35,10 +35,10 @@ async function enviarNomUsuari(nom, edat) {
     body: JSON.stringify({nom: nom, edat: edat})
   }).then(res => res.json().then(
     data => {
-      localStorage.setItem('nom', nom);
-      localStorage.setItem('edat', edat);
-      localStorage.setItem('existent', data.existent);
-      localStorage.setItem('puntuacio', data.puntuacio);
+      sessionStorage.setItem('nom', nom);
+      sessionStorage.setItem('edat', edat);
+      sessionStorage.setItem('existent', data.existent);
+      sessionStorage.setItem('puntuacio', data.puntuacio);
       console.log(`Sessio iniciada, usuari: ${nom} - ${edat} - ${data.existent} - ${data.puntuacio}`)
       texteAgafaArc();
     })
