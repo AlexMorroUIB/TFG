@@ -22,6 +22,7 @@ const COLORBOTOSECUNDARI = '#626262';
 const LLARGARIATERRA = 150;
 const PLANTAMIDAMIN = 0.8;
 const PLANTAMIDAMAX = 2;
+const PROBABILITATPUNTSEXTRA = 20;
 // Tipus d'enemics possibles
 const TIPUSENEMIC = {
   planta: "planta",
@@ -404,31 +405,36 @@ async function controladorEnemics(tipus) {
   while (jugant) {
     if (enemicsEnPantalla <= numEnemicsMax) {
       const enemic = document.createElement('a-entity');
-
+      if (tipus === TIPUSENEMIC.planta) {
+        // Si el valor aleatori és menor a la probabilitat resukta en un punt extra i es crea un enemic diana
+        if (valorAleatoriInt(0,100) < PROBABILITATPUNTSEXTRA) {
+          const enemicExtra = document.createElement('a-entity');
+          enemicExtra.setAttribute(TIPUSENEMIC.diana, '');
+          enemicExtra.setAttribute('class', 'hitbox enemic');
+          enemicExtra.setAttribute('position', {
+            x: (valorAleatoriFloat(xMin, xMax) * (Math.round(Math.random()) * 2 - 1)),
+            y: (Math.random() * (altura - 0.5) + 0.5).toFixed(1),
+            z: vagoneta.object3D.position.z + valorAleatoriInt(distancia - 5, distancia + 5)
+          });
+          enemicsEnPantalla++;
+          escena.appendChild(enemicExtra);
+        }
+        // Assigna una quantitat de vida aleatòria
+        enemic.setAttribute(tipus, `vida: ${valorAleatoriInt(1, enemicsVidaMax)};
+                                          mida: ${valorAleatoriFloat(PLANTAMIDAMIN, PLANTAMIDAMAX)}`);
+        enemic.setAttribute('class', 'enemic');
+      } else {
+        // Si és una diana
+        enemic.setAttribute(tipus, '');
+        enemic.setAttribute('class', 'hitbox enemic');
+      }
       enemic.setAttribute('position', {
         x: (valorAleatoriFloat(xMin, xMax) * (Math.round(Math.random()) * 2 - 1)),
         y: tipus === TIPUSENEMIC.planta ? altura : (Math.random() * (altura - 0.5) + 0.5).toFixed(1),
         z: vagoneta.object3D.position.z + valorAleatoriInt(distancia - 5, distancia + 5)
       });
 
-      if (tipus === TIPUSENEMIC.planta) {
-        // Assigna una quantitat de vida aleatòria
-        enemic.setAttribute(tipus, `vida: ${valorAleatoriInt(1, enemicsVidaMax)};
-                                          mida: ${valorAleatoriFloat(PLANTAMIDAMIN, PLANTAMIDAMAX)}`);
-        enemic.setAttribute('class', 'enemic');
-      } else {
-        enemic.setAttribute(tipus, '');
-        enemic.setAttribute('class', 'hitbox enemic');
-        enemic.emit('startanimCreixer', null, false);
-      }
-      //console.log(enemic)
-      /*enemic.setAttribute('animation', `property: position;
-      to: ${(Math.random() * (xMax - xMin + 1) + xMin) * (Math.round(Math.random()) * 2 - 1)} 1 ${vagoneta.object3D.position.z + 20};
-      dur: 1; easing: linear; loop: false`);*/
-
       escena.appendChild(enemic);
-      /*console.log("enemic: ")
-      console.log(enemic.getAttribute('position'))*/
       enemicsEnPantalla++;
     }
     await delay(delayGeneracioEnemics);
@@ -652,6 +658,8 @@ AFRAME.registerComponent("diana", {
 
     element.addEventListener('hitstart', () => {
       enemicsEnPantalla--;
+      punts++;
+      actualitzarVidaPunts();
       new Audio(SONS.colisioDiana).play().then(r => null);
       this.remove();
     });
@@ -774,61 +782,6 @@ function eliminarTerres() {
  */
 function audioBoto() {
   new Audio(SONS.botoPressionat).play().then(r => null);
-}
-
-
-/**
- * Eliminar les dades dels objectes 3D quan s'eliminen les entitats
- */
-AFRAME.registerComponent("gltf-model", {
-  remove: function () {
-    if (!this.model) {
-      return;
-    }
-    this.el.removeObject3D("mesh");
-    // New code to remove all resources
-    this.model.traverse(disposeNode);
-    this.model = null;
-    THREE.Cache.clear();
-    // Empty renderLists to remove references to removed objects for garbage collection
-    this.el.sceneEl.renderer.renderLists.dispose();
-  },
-});
-
-// Explicitly dispose any textures assigned to this material
-function disposeTextures(material) {
-  for (const propertyName in material) {
-    const texture = material[propertyName];
-    if (texture instanceof THREE.Texture) {
-      const image = texture.source.data;
-      if (image instanceof ImageBitmap) {
-        image.close && image.close();
-      }
-      texture.dispose();
-    }
-  }
-}
-
-function disposeNode(node) {
-  if (node instanceof THREE.Mesh) {
-    const geometry = node.geometry;
-    if (geometry) {
-      geometry.dispose();
-    }
-    const material = node.material;
-    if (material) {
-      if (Array.isArray(material)) {
-        for (let i = 0, l = material.length; i < l; i++) {
-          const m = material[i];
-          disposeTextures(m);
-          m.dispose();
-        }
-      } else {
-        disposeTextures(material);
-        material.dispose(); // disposes any programs associated with the material
-      }
-    }
-  }
 }
 
 /**
