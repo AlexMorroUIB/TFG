@@ -48,6 +48,7 @@ module.exports = {
       } catch (err) {
         console.log("Error fent select de l'usuari: ");
         console.log(err);
+        res.status(500);
       } finally {
         // Close Connection
         if (conn) await conn.end();
@@ -75,6 +76,7 @@ module.exports = {
       } catch (err) {
         console.log("Error insertant les respostes de les preguntes: ");
         console.log(err);
+        res.status(500);
       } finally {
         // Close Connection
         if (conn) await conn.end();
@@ -105,6 +107,7 @@ module.exports = {
       } catch (err) {
         console.log("Error actualitzant la puntuacio de l'usuari: ");
         console.log(err);
+        res.status(500);
       } finally {
         // Close Connection
         if (conn) await conn.end();
@@ -125,6 +128,7 @@ module.exports = {
       } catch (err) {
         console.log("Error demanant el top 10 de puntuacions: ");
         console.log(err);
+        res.status(500);
       } finally {
         // Close Connection
         if (conn) await conn.end();
