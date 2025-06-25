@@ -31,8 +31,8 @@ const TIPUSENEMIC = {
 const VIDACOLORFRUITA = {
   1: "#FCAC00",
   2: "#FF0000",
-  3: "#00FCF4",
-  4: "#F400FC"
+  3: "#F400FC",
+  4: "#00FCF4"
 };
 // Tipus d'assets disponibles
 const MODELS = {
@@ -910,7 +910,7 @@ function generadorModals(tipus) {
         jugant = true;
         if (numEnemicsMax < 10) numEnemicsMax += 0.5;
         if (delayGeneracioEnemics > 100) delayGeneracioEnemics -= 100;
-        if (ronda > 6 && enemicsVidaMax < 4) enemicsVidaMax += 0.25;
+        if (ronda > 2 && enemicsVidaMax < 4) enemicsVidaMax += 0.5;
 
         comencarRonda();
       });
