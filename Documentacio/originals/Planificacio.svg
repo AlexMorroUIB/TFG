@@ -30,7 +30,7 @@
      showgrid="true"
      showguides="false"
      inkscape:zoom="0.63072917"
-     inkscape:cx="1155.0124"
+     inkscape:cx="901.33773"
      inkscape:cy="377.34104"
      inkscape:window-width="2560"
      inkscape:window-height="1377"
@@ -310,7 +310,7 @@
        style="fill:#727272;fill-opacity:1;fill-rule:evenodd;stroke:#787878;stroke-width:0.278;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect10044-77"
        width="7.9273329"
-       height="888.93573"
+       height="993.57654"
        x="261.03046"
        y="84.60157"
        ry="3.9636662"
@@ -332,12 +332,12 @@
        transform="translate(131.59373,72.352638)"><tspan
          x="1691.6927"
          y="1022.6259"
-         id="tspan12537">Ciència per<tspan
+         id="tspan3874">Ciència per<tspan
    y="1022.6259"
-   id="tspan12539"> </tspan></tspan><tspan
+   id="tspan3876"> </tspan></tspan><tspan
          x="1691.6927"
          y="1052.6259"
-         id="tspan12541">a tothom</tspan></text>
+         id="tspan3878">a tothom</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -352,10 +352,10 @@
        transform="translate(7.260823,-65.004128)"><tspan
          x="50.734375"
          y="213.55431"
-         id="tspan12543">Selecció de </tspan><tspan
+         id="tspan3880">Selecció de </tspan><tspan
          x="50.734375"
          y="256.88768"
-         id="tspan12545">temàtica</tspan></text>
+         id="tspan3882">temàtica</tspan></text>
     <rect
        style="fill:#ed7700;fill-opacity:1;fill-rule:evenodd;stroke:#ff9b9b;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect27790"
@@ -373,10 +373,10 @@
        inkscape:label="2"><tspan
          x="19.025391"
          y="248.43517"
-         id="tspan12547">Recerca </tspan><tspan
+         id="tspan3884">Recerca </tspan><tspan
          x="19.025391"
          y="291.76854"
-         id="tspan12549">d'informació</tspan></text>
+         id="tspan3886">d'informació</tspan></text>
     <rect
        style="fill:#edd800;fill-opacity:1;fill-rule:evenodd;stroke:#edd800;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect27790-4"
@@ -394,10 +394,10 @@
        inkscape:label="3"><tspan
          x="52.320312"
          y="346.73399"
-         id="tspan12551">Aprenentatge </tspan><tspan
+         id="tspan3888">Aprenentatge </tspan><tspan
          x="52.320312"
          y="390.06737"
-         id="tspan12553">d'A-Frame</tspan></text>
+         id="tspan3890">d'A-Frame</tspan></text>
     <text
        xml:space="preserve"
        id="text20159-9"
@@ -406,10 +406,10 @@
        inkscape:label="3"><tspan
          x="52.320312"
          y="346.73399"
-         id="tspan12555">Aprenentatge </tspan><tspan
+         id="tspan3892">Aprenentatge </tspan><tspan
          x="52.320312"
          y="390.06737"
-         id="tspan12557">de Three.js</tspan></text>
+         id="tspan3894">de Three.js</tspan></text>
     <rect
        style="fill:#9bed00;fill-opacity:1;fill-rule:evenodd;stroke:#9bed00;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect27790-1"
@@ -427,7 +427,7 @@
        transform="translate(28.588655,-13.754564)"><tspan
          x="30.123047"
          y="451.37462"
-         id="tspan12559">Base del joc</tspan></text>
+         id="tspan3896">Base del joc</tspan></text>
     <text
        xml:space="preserve"
        id="text20891-8"
@@ -436,7 +436,7 @@
        transform="translate(27.496007,254.98197)"><tspan
          x="30.123047"
          y="451.37462"
-         id="tspan12561">Models 3D</tspan></text>
+         id="tspan3898">Models 3D</tspan></text>
     <text
        xml:space="preserve"
        id="text20891-8-6"
@@ -445,10 +445,10 @@
        transform="translate(17.884658,426.90926)"><tspan
          x="30.123047"
          y="451.37462"
-         id="tspan12563">Animacions i </tspan><tspan
+         id="tspan3900">Animacions i </tspan><tspan
          x="30.123047"
          y="494.70799"
-         id="tspan12565">sons</tspan></text>
+         id="tspan3902">sons</tspan></text>
     <rect
        style="fill:#00edc6;fill-opacity:1;fill-rule:evenodd;stroke:#00edc6;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect27790-0"
@@ -466,10 +466,10 @@
        transform="translate(33.349724,88.412321)"><tspan
          x="26.953125"
          y="514.79259"
-         id="tspan12567">Configuració </tspan><tspan
+         id="tspan3904">Configuració </tspan><tspan
          x="26.953125"
          y="558.12596"
-         id="tspan12569">del servidor</tspan></text>
+         id="tspan3906">del servidor</tspan></text>
     <rect
        style="fill:#14e2ff;fill-opacity:1;fill-rule:evenodd;stroke:#14e2ff;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect27790-0-9"
@@ -487,10 +487,10 @@
        inkscape:label="6"><tspan
          x="23.78125"
          y="617.84923"
-         id="tspan12571">Base de dades i </tspan><tspan
+         id="tspan3908">Base de dades i </tspan><tspan
          x="23.78125"
          y="661.1826"
-         id="tspan12573">estadístiques</tspan></text>
+         id="tspan3910">estadístiques</tspan></text>
     <text
        xml:space="preserve"
        id="text20903-2"
@@ -499,13 +499,13 @@
        inkscape:label="6"><tspan
          x="23.78125"
          y="617.84923"
-         id="tspan12575">Documentació i </tspan><tspan
+         id="tspan3912">Documentació i </tspan><tspan
          x="23.78125"
          y="661.1826"
-         id="tspan12577">preparació de </tspan><tspan
+         id="tspan3914">preparació de </tspan><tspan
          x="23.78125"
          y="704.51598"
-         id="tspan12579">l'entrega</tspan></text>
+         id="tspan3916">l'entrega</tspan></text>
     <rect
        style="fill:#0040ed;fill-opacity:1;fill-rule:evenodd;stroke:#0040ed;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        id="rect27790-0-9-9"

@@ -12,7 +12,7 @@ function comprovarNomUsuari() {
     document.removeEventListener('a-keyboard-update', updateInput);
     document.getElementById('keyboard').removeAttribute('a-keyboard');
     // Poder agafar l'arc abans de que es faci la petició al servidor per una millor experiècia
-    arc.setAttribute('grabbable', '');
+    // arc.setAttribute('grabbable', '');
     enviarNomUsuari(nom, edat).then(r => null);
   } else {
     modalUsuari.innerHTML += `<a-text color="#F00"
